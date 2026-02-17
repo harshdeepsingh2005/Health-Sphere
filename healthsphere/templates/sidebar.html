@@ -1,0 +1,627 @@
+{% load static %}
+{% comment %}
+HealthSphere AI - Sidebar Navigation Component
+=============================================
+Sticky & Retractable Healthcare Dashboard Sidebar
+{% endcomment %}
+
+<aside class="app-sidebar" id="app-sidebar" role="navigation" aria-label="Main navigation">
+    
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <div class="logo-icon">
+                <i class="fas fa-hospital-symbol"></i>
+            </div>
+            <div class="logo-text">
+                <span class="logo-title">HealthSphere</span>
+                <span class="logo-subtitle">AI Platform</span>
+            </div>
+        </div>
+        
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar navigation" title="Collapse sidebar">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation Menu -->
+    <nav class="sidebar-nav">
+        <ul class="nav-menu" role="menubar">
+            
+            <!-- Dashboard -->
+            <li class="nav-item" role="none">
+                <a href="{% url 'dashboard' %}" 
+                   class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                   role="menuitem"
+                   data-tooltip="Dashboard">
+                    <span class="nav-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </span>
+                    <span class="nav-text">Dashboard</span>
+                    <span class="nav-indicator"></span>
+                </a>
+            </li>
+            
+            <!-- Patients Section -->
+            <li class="nav-item nav-group" role="none">
+                <button class="nav-group-toggle" 
+                        data-group="patients" 
+                        aria-expanded="{% if 'patients' in request.resolver_match.namespace %}true{% else %}false{% endif %}"
+                        role="menuitem"
+                        data-tooltip="Patient Management">
+                    <span class="nav-icon">
+                        <i class="fas fa-users"></i>
+                    </span>
+                    <span class="nav-text">Patients</span>
+                    <span class="nav-chevron">
+                        <i class="fas fa-chevron-down"></i>
+                    </span>
+                </button>
+                
+                <ul class="nav-submenu {% if 'patients' in request.resolver_match.namespace %}expanded{% endif %}" 
+                    id="patients-submenu" 
+                    role="menu">
+                    <li class="nav-subitem" role="none">
+                        <a href="{% url 'patients:list' %}" 
+                           class="nav-sublink {% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}" 
+                           role="menuitem">
+                            <span class="nav-subtext">All Patients</span>
+                        </a>
+                    </li>
+                    <li class="nav-subitem" role="none">
+                        <a href="{% url 'patients:add' %}" 
+                           class="nav-sublink {% if request.resolver_match.url_name == 'patient_add' %}active{% endif %}" 
+                           role="menuitem">
+                            <span class="nav-subtext">Add Patient</span>
+                        </a>
+                    </li>
+                    <li class="nav-subitem" role="none">
+                        <a href="{% url 'patients:search' %}" 
+                           class="nav-sublink {% if request.resolver_match.url_name == 'patient_search' %}active{% endif %}" 
+                           role="menuitem">
+                            <span class="nav-subtext">Search Patients</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Appointments -->
+            <li class="nav-item" role="none">
+                <a href="{% url 'appointments:calendar' %}" 
+                   class="nav-link {% if 'appointments' in request.resolver_match.namespace %}active{% endif %}" 
+                   role="menuitem"
+                   data-tooltip="Appointment Management">
+                    <span class="nav-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </span>
+                    <span class="nav-text">Appointments</span>
+                    <span class="nav-indicator"></span>
+                    <span class="nav-badge" id="appointments-badge">12</span>
+                </a>
+            </li>
+            
+            <!-- AI Services Section -->
+            <li class="nav-item nav-group" role="none">
+                <button class="nav-group-toggle" 
+                        data-group="ai-services" 
+                        aria-expanded="{% if 'ai' in request.resolver_match.namespace %}true{% else %}false{% endif %}"
+                        role="menuitem"
+                        data-tooltip="AI-Powered Healthcare Tools">
+                    <span class="nav-icon">
+                        <i class="fas fa-brain"></i>
+                    </span>
+                    <span class="nav-text">AI Services</span>
+                    <span class="nav-chevron">
+                        <i class="fas fa-chevron-down"></i>
+                    </span>
+                </button>
+                
+                <ul class="nav-submenu {% if 'ai' in request.resolver_match.namespace %}expanded{% endif %}" 
+                    id="ai-services-submenu" 
+                    role="menu">
+                    <li class="nav-subitem" role="none">
+                        <a href="{% url 'ai:insights' %}" 
+                           class="nav-sublink {% if request.resolver_match.url_name == 'ai_insights' %}active{% endif %}" 
+                           role="menuitem">
+                            <span class="nav-subtext">AI Insights</span>
+                        </a>
+                    </li>
+                    <li class="nav-subitem" role="none">
+                        <a href="{% url 'ai:assistant' %}" 
+                           class="nav-sublink {% if request.resolver_match.url_name == 'ai_assistant' %}active{% endif %}" 
+                           role="menuitem">
+                            <span class="nav-subtext">AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-subitem" role="none">
+                        <a href="{% url 'ai:risk_assessment' %}" 
+                           class="nav-sublink {% if request.resolver_match.url_name == 'risk_assessment' %}active{% endif %}" 
+                           role="menuitem">
+                            <span class="nav-subtext">Risk Assessment</span>
+                        </a>
+                    </li>
+                    <li class="nav-subitem" role="none">
+                        <a href="{% url 'ai:triage' %}" 
+                           class="nav-sublink {% if request.resolver_match.url_name == 'ai_triage' %}active{% endif %}" 
+                           role="menuitem">
+                            <span class="nav-subtext">AI Triage</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
+            <!-- Reports & Analytics -->
+            <li class="nav-item" role="none">
+                <a href="{% url 'reports:analytics' %}" 
+                   class="nav-link {% if 'reports' in request.resolver_match.namespace %}active{% endif %}" 
+                   role="menuitem"
+                   data-tooltip="Reports & Analytics">
+                    <span class="nav-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </span>
+                    <span class="nav-text">Reports</span>
+                    <span class="nav-indicator"></span>
+                </a>
+            </li>
+            
+            <!-- Clinical Portal (for authorized users) -->
+            {% if user.profile.role == 'doctor' or user.profile.role == 'nurse' or user.is_staff %}
+            <li class="nav-item" role="none">
+                <a href="{% url 'clinical:dashboard' %}" 
+                   class="nav-link {% if 'clinical' in request.resolver_match.namespace %}active{% endif %}" 
+                   role="menuitem"
+                   data-tooltip="Clinical Portal">
+                    <span class="nav-icon">
+                        <i class="fas fa-stethoscope"></i>
+                    </span>
+                    <span class="nav-text">Clinical Portal</span>
+                    <span class="nav-indicator"></span>
+                </a>
+            </li>
+            {% endif %}
+            
+            <!-- Admin Portal (for admin users) -->
+            {% if user.is_staff %}
+            <li class="nav-item" role="none">
+                <a href="{% url 'admin_portal:dashboard' %}" 
+                   class="nav-link {% if 'admin_portal' in request.resolver_match.namespace %}active{% endif %}" 
+                   role="menuitem"
+                   data-tooltip="Administration">
+                    <span class="nav-icon">
+                        <i class="fas fa-cogs"></i>
+                    </span>
+                    <span class="nav-text">Administration</span>
+                    <span class="nav-indicator"></span>
+                </a>
+            </li>
+            {% endif %}
+            
+            <!-- Divider -->
+            <li class="nav-divider" role="separator"></li>
+            
+            <!-- Settings -->
+            <li class="nav-item" role="none">
+                <a href="{% url 'settings' %}" 
+                   class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" 
+                   role="menuitem"
+                   data-tooltip="Settings">
+                    <span class="nav-icon">
+                        <i class="fas fa-cog"></i>
+                    </span>
+                    <span class="nav-text">Settings</span>
+                    <span class="nav-indicator"></span>
+                </a>
+            </li>
+            
+            <!-- Help & Support -->
+            <li class="nav-item" role="none">
+                <a href="{% url 'help' %}" 
+                   class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}" 
+                   role="menuitem"
+                   data-tooltip="Help & Support">
+                    <span class="nav-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </span>
+                    <span class="nav-text">Help</span>
+                    <span class="nav-indicator"></span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+        <!-- System Status -->
+        <div class="system-status">
+            <div class="status-indicator">
+                <span class="status-dot status-online" id="system-status-dot"></span>
+                <span class="status-text" id="system-status-text">All Systems Operational</span>
+            </div>
+        </div>
+        
+        <!-- User Profile -->
+        <div class="user-profile">
+            <div class="user-avatar">
+                {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" class="avatar-img">
+                {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.get_full_name }}" class="avatar-img">
+                {% endif %}
+                <span class="avatar-status status-online"></span>
+            </div>
+            
+            <div class="user-info">
+                <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                <span class="user-role">{{ user.profile.role|default:'Healthcare Professional'|title }}</span>
+            </div>
+            
+            <div class="user-actions">
+                <button class="user-menu-trigger" 
+                        id="sidebar-user-menu" 
+                        aria-label="User options"
+                        data-tooltip="User Menu">
+                    <i class="fas fa-ellipsis-h"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Sidebar Overlay for Mobile -->
+<div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+<!-- Sidebar JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('app-sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const appMain = document.getElementById('app-main');
+    
+    // Sidebar toggle functionality
+    function toggleSidebar() {
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        
+        if (isCollapsed) {
+            expandSidebar();
+        } else {
+            collapseSidebar();
+        }
+    }
+    
+    function collapseSidebar() {
+        sidebar.classList.add('collapsed');
+        if (appMain) appMain.classList.add('sidebar-collapsed');
+        sidebarToggle.setAttribute('aria-label', 'Expand sidebar navigation');
+        sidebarToggle.setAttribute('title', 'Expand sidebar');
+        
+        // Update toggle icon
+        const icon = sidebarToggle.querySelector('i');
+        icon.className = 'fas fa-chevron-right';
+        
+        // Store state in localStorage
+        localStorage.setItem('healthsphere-sidebar-collapsed', 'true');
+    }
+    
+    function expandSidebar() {
+        sidebar.classList.remove('collapsed');
+        if (appMain) appMain.classList.remove('sidebar-collapsed');
+        sidebarToggle.setAttribute('aria-label', 'Collapse sidebar navigation');
+        sidebarToggle.setAttribute('title', 'Collapse sidebar');
+        
+        // Update toggle icon
+        const icon = sidebarToggle.querySelector('i');
+        icon.className = 'fas fa-chevron-left';
+        
+        // Store state in localStorage
+        localStorage.setItem('healthsphere-sidebar-collapsed', 'false');
+    }
+    
+    // Initialize sidebar state from localStorage
+    const sidebarCollapsed = localStorage.getItem('healthsphere-sidebar-collapsed');
+    if (sidebarCollapsed === 'true') {
+        collapseSidebar();
+    }
+    
+    // Toggle button event listener
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+    
+    // Mobile overlay close
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('mobile-open');
+            sidebarOverlay.style.display = 'none';
+        });
+    }
+    
+    // Submenu toggles
+    const navGroupToggles = document.querySelectorAll('.nav-group-toggle');
+    navGroupToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const groupName = this.getAttribute('data-group');
+            const submenu = document.getElementById(groupName + '-submenu');
+            const chevron = this.querySelector('.nav-chevron i');
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            
+            if (isExpanded) {
+                // Collapse
+                this.setAttribute('aria-expanded', 'false');
+                if (submenu) submenu.classList.remove('expanded');
+                if (chevron) chevron.className = 'fas fa-chevron-down';
+            } else {
+                // Expand
+                this.setAttribute('aria-expanded', 'true');
+                if (submenu) submenu.classList.add('expanded');
+                if (chevron) chevron.className = 'fas fa-chevron-up';
+            }
+        });
+    });
+    
+    // Tooltip functionality for collapsed sidebar
+    function initTooltips() {
+        const tooltipElements = sidebar.querySelectorAll('[data-tooltip]');
+        
+        tooltipElements.forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                if (sidebar.classList.contains('collapsed')) {
+                    showTooltip(this, this.getAttribute('data-tooltip'));
+                }
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                hideTooltip();
+            });
+        });
+    }
+    
+    function showTooltip(element, text) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'sidebar-tooltip';
+        tooltip.textContent = text;
+        document.body.appendChild(tooltip);
+        
+        const rect = element.getBoundingClientRect();
+        tooltip.style.left = (rect.right + 10) + 'px';
+        tooltip.style.top = (rect.top + rect.height / 2 - tooltip.offsetHeight / 2) + 'px';
+        
+        setTimeout(() => tooltip.classList.add('visible'), 10);
+    }
+    
+    function hideTooltip() {
+        const tooltip = document.querySelector('.sidebar-tooltip');
+        if (tooltip) {
+            tooltip.classList.remove('visible');
+            setTimeout(() => tooltip.remove(), 150);
+        }
+    }
+    
+    // Initialize tooltips
+    initTooltips();
+    
+    // Active link highlighting
+    function updateActiveStates() {
+        const currentPath = window.location.pathname;
+        const navLinks = sidebar.querySelectorAll('.nav-link, .nav-sublink');
+        
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && currentPath.startsWith(href) && href !== '/') {
+                link.classList.add('active');
+                
+                // If it's a sublink, also expand parent group
+                if (link.classList.contains('nav-sublink')) {
+                    const submenu = link.closest('.nav-submenu');
+                    if (submenu) {
+                        const submenuId = submenu.id;
+                        const groupName = submenuId.replace('-submenu', '');
+                        const toggle = sidebar.querySelector(`[data-group="${groupName}"]`);
+                        if (toggle) {
+                            toggle.setAttribute('aria-expanded', 'true');
+                            submenu.classList.add('expanded');
+                            const chevron = toggle.querySelector('.nav-chevron i');
+                            if (chevron) chevron.className = 'fas fa-chevron-up';
+                        }
+                    }
+                }
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    }
+    
+    // Update active states on page load
+    updateActiveStates();
+    
+    // Handle responsive behavior
+    function handleResize() {
+        const width = window.innerWidth;
+        
+        if (width <= 768) {
+            // Mobile
+            sidebar.classList.add('mobile');
+        } else {
+            // Desktop
+            sidebar.classList.remove('mobile', 'mobile-open');
+            if (sidebarOverlay) sidebarOverlay.style.display = 'none';
+        }
+    }
+    
+    // Initial resize check
+    handleResize();
+    
+    // Resize event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Mobile menu trigger (if exists)
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', function() {
+            sidebar.classList.add('mobile-open');
+            if (sidebarOverlay) sidebarOverlay.style.display = 'block';
+        });
+    }
+});
+</script>
+
+<aside class="sidebar" id="sidebar">
+    <!-- Brand -->
+    <div class="sidebar-brand">
+        <a href="/" class="brand-logo">
+            <div class="brand-icon-wrap">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <div class="brand-text">
+                <span class="logo-text">HealthSphere</span>
+                <span class="logo-subtitle">AI Healthcare</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- User -->
+    <div class="sidebar-user">
+        <div class="sidebar-user-avatar">
+            {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+        </div>
+        <div class="sidebar-user-info">
+            <span class="sidebar-user-name">{{ user.get_full_name|default:user.username }}</span>
+            <span class="user-role-badge 
+                {% if user.is_admin %}badge-admin
+                {% elif user.is_doctor %}badge-doctor
+                {% elif user.is_nurse %}badge-nurse
+                {% elif user.is_patient %}badge-patient{% endif %}">
+                <i class="fas fa-circle" style="font-size: 6px;"></i>
+                {% if user.role %}{{ user.role }}{% else %}User{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+        {% if user.is_admin %}
+        <div class="nav-section">
+            <span class="nav-section-title">Administration</span>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{% url 'admin_portal:dashboard' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'admin_portal:patients' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-users"></i></span>
+                        <span class="nav-text">Patients</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'admin_portal:resources' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-boxes-stacked"></i></span>
+                        <span class="nav-text">Resources</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'admin_portal:analytics' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+                        <span class="nav-text">Analytics</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        {% elif user.is_clinical_staff %}
+        <div class="nav-section">
+            <span class="nav-section-title">Clinical</span>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{% url 'clinical_portal:dashboard' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'clinical_portal:risk' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-shield-heart"></i></span>
+                        <span class="nav-text">Risk Insights</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'clinical_portal:journey' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-route"></i></span>
+                        <span class="nav-text">Treatment Journey</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'clinical_portal:triage' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-truck-medical"></i></span>
+                        <span class="nav-text">Triage</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        {% elif user.is_patient %}
+        <div class="nav-section">
+            <span class="nav-section-title">My Health</span>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{% url 'patient_portal:dashboard' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'patient_portal:report' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-file-medical"></i></span>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'patient_portal:risk' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-heart-pulse"></i></span>
+                        <span class="nav-text">Risk Score</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'patient_portal:appointments' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
+                        <span class="nav-text">Appointments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'patient_portal:assistant' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-robot"></i></span>
+                        <span class="nav-text">AI Assistant</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Account -->
+        <div class="nav-section">
+            <span class="nav-section-title">Account</span>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{% url 'users:profile' %}" class="nav-link">
+                        <span class="nav-icon"><i class="fas fa-user-gear"></i></span>
+                        <span class="nav-text">Profile</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'users:logout' %}" class="nav-link nav-link-logout">
+                        <span class="nav-icon"><i class="fas fa-right-from-bracket"></i></span>
+                        <span class="nav-text">Sign Out</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <span class="version-text">v2.0 &middot; HealthSphere AI</span>
+    </div>
+</aside>

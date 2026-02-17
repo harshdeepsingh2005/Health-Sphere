@@ -1,0 +1,366 @@
+{% comment %}
+HealthSphere AI - Base Application Shell Template
+================================================
+Soft Glass Dashboard | Healthcare Command Center Design
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HealthSphere AI - Intelligent Healthcare Platform">
+    <meta name="theme-color" content="#f8fafc">
+    <title>{% block title %}HealthSphere AI{% endblock %}</title>
+    
+    {% load static %}
+    
+    <!-- Core Stylesheets -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    
+    <!-- External Dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="healthcare-app {% if not user.is_authenticated %}auth-layout{% endif %}" data-theme="healthcare">
+    
+    <!-- Loading Overlay -->
+    <div id="app-loading" class="app-loading">
+        <div class="loading-spinner healthcare-spinner">
+            <div class="spinner-icon">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <span class="loading-text">Loading HealthSphere AI...</span>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+    <!-- Authenticated App Shell -->
+    <div class="app-shell" id="app-shell">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" id="app-sidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-hospital-symbol"></i>
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-title">HealthSphere</span>
+                        <span class="logo-subtitle">AI Platform</span>
+                    </div>
+                </div>
+                
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul class="nav-menu" role="menubar">
+                    {% block sidebar_menu %}
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" role="menuitem">
+                            <span class="nav-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </span>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'patients:list' %}" class="nav-link {% if 'patients' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
+                            <span class="nav-icon">
+                                <i class="fas fa-users"></i>
+                            </span>
+                            <span class="nav-text">Patients</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'appointments:calendar' %}" class="nav-link {% if 'appointments' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
+                            <span class="nav-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </span>
+                            <span class="nav-text">Appointments</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'ai:insights' %}" class="nav-link {% if 'ai' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
+                            <span class="nav-icon">
+                                <i class="fas fa-brain"></i>
+                            </span>
+                            <span class="nav-text">AI Insights</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'reports:analytics' %}" class="nav-link {% if 'reports' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
+                            <span class="nav-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </span>
+                            <span class="nav-text">Reports</span>
+                        </a>
+                    </li>
+                    {% endblock %}
+                </ul>
+
+                <div class="sidebar-footer">
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.get_full_name }}" class="avatar-img">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                            <span class="user-role">{{ user.profile.role|default:'Healthcare Professional' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="app-main" id="app-main">
+            
+            <!-- Top Navigation Bar -->
+            <header class="app-navbar" id="app-navbar" role="banner">
+                <div class="navbar-left">
+                    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle mobile menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <nav class="breadcrumb" aria-label="Breadcrumb">
+                        <ol class="breadcrumb-list">
+                            {% block breadcrumb %}
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'dashboard' %}" class="breadcrumb-link">Dashboard</a>
+                            </li>
+                            {% endblock %}
+                        </ol>
+                    </nav>
+                </div>
+
+                <div class="navbar-center">
+                    <div class="search-container">
+                        <form class="search-form" method="get" action="{% url 'search' %}">
+                            <div class="search-input-wrapper">
+                                <input type="search" 
+                                       name="q" 
+                                       class="search-input" 
+                                       placeholder="Search patients, appointments, records..."
+                                       value="{{ request.GET.q }}"
+                                       autocomplete="off">
+                                <button type="submit" class="search-submit" aria-label="Search">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="navbar-right">
+                    <div class="navbar-actions">
+                        <!-- Notifications -->
+                        <div class="navbar-item notifications-dropdown">
+                            <button class="notifications-btn" id="notifications-btn" aria-label="View notifications">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge" id="notification-badge">3</span>
+                            </button>
+                            <div class="notifications-panel" id="notifications-panel">
+                                <div class="notifications-header">
+                                    <h3>Notifications</h3>
+                                    <button class="mark-all-read">Mark all read</button>
+                                </div>
+                                <div class="notifications-list">
+                                    <!-- Notifications will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="navbar-item quick-actions-dropdown">
+                            <button class="quick-actions-btn" id="quick-actions-btn" aria-label="Quick actions">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <div class="quick-actions-panel" id="quick-actions-panel">
+                                <a href="{% url 'patients:add' %}" class="quick-action">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Add Patient</span>
+                                </a>
+                                <a href="{% url 'appointments:create' %}" class="quick-action">
+                                    <i class="fas fa-calendar-plus"></i>
+                                    <span>New Appointment</span>
+                                </a>
+                                <a href="{% url 'ai:assistant' %}" class="quick-action">
+                                    <i class="fas fa-robot"></i>
+                                    <span>AI Assistant</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- User Menu -->
+                        <div class="navbar-item user-dropdown">
+                            <button class="user-menu-btn" id="user-menu-btn" aria-label="User menu">
+                                <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.get_full_name }}" class="user-avatar-small">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="user-menu-panel" id="user-menu-panel">
+                                <div class="user-menu-header">
+                                    <div class="user-info">
+                                        <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                        <span>{{ user.email }}</span>
+                                    </div>
+                                </div>
+                                <div class="user-menu-items">
+                                    <a href="{% url 'profile' %}" class="user-menu-item">
+                                        <i class="fas fa-user"></i>
+                                        <span>Profile</span>
+                                    </a>
+                                    <a href="{% url 'settings' %}" class="user-menu-item">
+                                        <i class="fas fa-cog"></i>
+                                        <span>Settings</span>
+                                    </a>
+                                    <div class="menu-divider"></div>
+                                    <a href="{% url 'logout' %}" class="user-menu-item">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Sign Out</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- System Messages -->
+            {% if messages %}
+            <div class="messages-container" id="messages-container">
+                {% for message in messages %}
+                <div class="system-alert alert-{{ message.tags }}" role="alert" aria-live="polite">
+                    <div class="alert-icon">
+                        {% if message.tags == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="alert-content">
+                        <span class="alert-message">{{ message }}</span>
+                    </div>
+                    <button class="alert-close" onclick="closeAlert(this)" aria-label="Close alert">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Page Content Container -->
+            <main class="page-content" id="page-content" role="main">
+                <div class="content-container">
+                    {% block content %}
+                    <!-- Page content will be inserted here -->
+                    {% endblock %}
+                </div>
+            </main>
+
+            <!-- App Footer -->
+            <footer class="app-footer" role="contentinfo">
+                <div class="footer-container">
+                    <div class="footer-left">
+                        <span class="footer-copyright">
+                            &copy; 2026 HealthSphere AI &middot; 
+                            <a href="#" class="footer-link">Privacy Policy</a> &middot; 
+                            <a href="#" class="footer-link">Terms of Service</a>
+                        </span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="footer-version">Version 2.1.0</span>
+                        <span class="footer-status" id="system-status">
+                            <i class="fas fa-circle status-online"></i>
+                            All systems operational
+                        </span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Authentication Layout -->
+    <div class="auth-shell">
+        {% if messages %}
+        <div class="auth-messages-container">
+            {% for message in messages %}
+            <div class="auth-alert alert-{{ message.tags }}" role="alert">
+                <div class="alert-icon">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="fas fa-info-circle"></i>
+                    {% endif %}
+                </div>
+                <span class="alert-message">{{ message }}</span>
+                <button class="alert-close" onclick="closeAlert(this)" aria-label="Close alert">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <main class="auth-content" role="main">
+            {% block auth_content %}
+            <!-- Authentication content will be inserted here -->
+            {% endblock %}
+        </main>
+    </div>
+    {% endif %}
+
+    <!-- Core JavaScript -->
+    <script src="{% static 'js/app.js' %}"></script>
+    <script src="{% static 'js/components.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- App Initialization -->
+    <script>
+        // Initialize HealthSphere App
+        document.addEventListener('DOMContentLoaded', function() {
+            HealthSphereApp.init();
+            
+            // Hide loading overlay
+            const loading = document.getElementById('app-loading');
+            if (loading) {
+                loading.style.opacity = '0';
+                setTimeout(() => loading.remove(), 300);
+            }
+        });
+
+        // Alert close function
+        function closeAlert(button) {
+            const alert = button.closest('.system-alert, .auth-alert');
+            if (alert) {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => alert.remove(), 300);
+            }
+        }
+    </script>
+</body>
+</html>

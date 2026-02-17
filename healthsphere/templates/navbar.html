@@ -1,0 +1,433 @@
+{% load static %}
+{% comment %}
+HealthSphere AI - Top Navigation Bar Component
+=============================================
+Sticky Healthcare Dashboard Navbar with Glass Design
+{% endcomment %}
+
+<header class="app-navbar" id="app-navbar" role="banner">
+    <!-- Left Section -->
+    <div class="navbar-left">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-btn" 
+                id="mobile-menu-btn" 
+                aria-label="Toggle mobile menu"
+                title="Open navigation menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb" aria-label="Breadcrumb navigation">
+            <ol class="breadcrumb-list">
+                {% block breadcrumb %}
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard' %}" class="breadcrumb-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                {% endblock %}
+            </ol>
+        </nav>
+        
+        <!-- Page Title -->
+        <div class="page-title">
+            <h1 class="page-title-text">{% block page_title %}Dashboard{% endblock %}</h1>
+            {% block page_subtitle %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Center Section -->
+    <div class="navbar-center">
+        <!-- Global Search -->
+        <div class="search-container">
+            <form class="search-form" method="get" action="{% url 'search' %}" role="search">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="search" 
+                           name="q" 
+                           class="search-input" 
+                           placeholder="Search patients, appointments, records..."
+                           value="{{ request.GET.q }}"
+                           autocomplete="off"
+                           aria-label="Search healthcare records">
+                    <button type="submit" class="search-submit" aria-label="Execute search">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Search Suggestions Dropdown -->
+                <div class="search-suggestions" id="search-suggestions" style="display: none;">
+                    <div class="search-suggestions-header">
+                        <span class="suggestions-title">Recent Searches</span>
+                    </div>
+                    <ul class="suggestions-list" id="suggestions-list">
+                        <!-- Suggestions will be populated via JavaScript -->
+                    </ul>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="navbar-right">
+        <div class="navbar-actions">
+            
+            <!-- AI Assistant Quick Access -->
+            <div class="navbar-item ai-assistant-btn">
+                <a href="{% url 'ai:assistant' %}" 
+                   class="action-btn ai-btn" 
+                   title="AI Health Assistant"
+                   aria-label="Open AI Health Assistant">
+                    <i class="fas fa-robot"></i>
+                    <span class="btn-label">AI Assistant</span>
+                </a>
+            </div>
+            
+            <!-- Notifications -->
+            <div class="navbar-item notifications-dropdown">
+                <button class="action-btn notifications-btn" 
+                        id="notifications-btn" 
+                        aria-label="View notifications"
+                        title="Notifications"
+                        data-count="3">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notification-badge">3</span>
+                </button>
+                
+                <!-- Notifications Panel -->
+                <div class="notifications-panel" id="notifications-panel" style="display: none;">
+                    <div class="notifications-header">
+                        <h3 class="notifications-title">Notifications</h3>
+                        <button class="notifications-mark-all" id="mark-all-read">
+                            Mark all read
+                        </button>
+                    </div>
+                    
+                    <div class="notifications-list" id="notifications-list">
+                        <!-- Sample notifications -->
+                        <div class="notification-item urgent">
+                            <div class="notification-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="notification-content">
+                                <span class="notification-title">Critical Patient Alert</span>
+                                <span class="notification-message">Patient John Doe requires immediate attention</span>
+                                <span class="notification-time">2 minutes ago</span>
+                            </div>
+                            <button class="notification-close" aria-label="Dismiss notification">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="notification-item">
+                            <div class="notification-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="notification-content">
+                                <span class="notification-title">Appointment Reminder</span>
+                                <span class="notification-message">You have 3 appointments scheduled for today</span>
+                                <span class="notification-time">15 minutes ago</span>
+                            </div>
+                            <button class="notification-close" aria-label="Dismiss notification">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="notification-item">
+                            <div class="notification-icon">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="notification-content">
+                                <span class="notification-title">AI Insight Available</span>
+                                <span class="notification-message">New risk assessment completed for Patient ID: HS-2847</span>
+                                <span class="notification-time">1 hour ago</span>
+                            </div>
+                            <button class="notification-close" aria-label="Dismiss notification">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="notifications-footer">
+                        <a href="{% url 'notifications:all' %}" class="view-all-notifications">
+                            View all notifications
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="navbar-item quick-actions-dropdown">
+                <button class="action-btn quick-actions-btn" 
+                        id="quick-actions-btn" 
+                        aria-label="Quick actions menu"
+                        title="Quick Actions">
+                    <i class="fas fa-plus"></i>
+                </button>
+                
+                <!-- Quick Actions Panel -->
+                <div class="quick-actions-panel" id="quick-actions-panel" style="display: none;">
+                    <div class="quick-actions-header">
+                        <h3 class="quick-actions-title">Quick Actions</h3>
+                    </div>
+                    
+                    <div class="quick-actions-grid">
+                        <a href="{% url 'patients:add' %}" class="quick-action">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <span class="quick-action-text">Add Patient</span>
+                        </a>
+                        
+                        <a href="{% url 'appointments:create' %}" class="quick-action">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-calendar-plus"></i>
+                            </div>
+                            <span class="quick-action-text">New Appointment</span>
+                        </a>
+                        
+                        <a href="{% url 'ai:risk_assessment' %}" class="quick-action">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <span class="quick-action-text">Risk Assessment</span>
+                        </a>
+                        
+                        <a href="{% url 'reports:generate' %}" class="quick-action">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-file-medical"></i>
+                            </div>
+                            <span class="quick-action-text">Generate Report</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Profile Menu -->
+            <div class="navbar-item user-dropdown">
+                <button class="action-btn user-menu-btn" 
+                        id="user-menu-btn" 
+                        aria-label="User account menu"
+                        title="Account Menu">
+                    <div class="user-avatar-container">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" 
+                                 alt="{{ user.get_full_name }}" 
+                                 class="user-avatar-img">
+                        {% else %}
+                            <div class="user-avatar-placeholder">
+                                {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                            </div>
+                        {% endif %}
+                        <span class="user-status-indicator status-online"></span>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                        <span class="user-role">{{ user.profile.role|default:'Healthcare Professional'|title }}</span>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-chevron"></i>
+                </button>
+                
+                <!-- User Menu Panel -->
+                <div class="user-menu-panel" id="user-menu-panel" style="display: none;">
+                    <div class="user-menu-header">
+                        <div class="user-menu-avatar">
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" 
+                                     alt="{{ user.get_full_name }}" 
+                                     class="menu-avatar-img">
+                            {% else %}
+                                <div class="menu-avatar-placeholder">
+                                    {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="user-menu-info">
+                            <strong class="menu-user-name">{{ user.get_full_name|default:user.username }}</strong>
+                            <span class="menu-user-email">{{ user.email }}</span>
+                            <span class="menu-user-role">{{ user.profile.role|default:'Healthcare Professional'|title }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="user-menu-items">
+                        <a href="{% url 'users:profile' %}" class="user-menu-item">
+                            <i class="fas fa-user"></i>
+                            <span>My Profile</span>
+                        </a>
+                        
+                        <a href="{% url 'settings' %}" class="user-menu-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        
+                        <a href="{% url 'users:preferences' %}" class="user-menu-item">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Preferences</span>
+                        </a>
+                        
+                        <div class="menu-divider"></div>
+                        
+                        <a href="{% url 'help' %}" class="user-menu-item">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Help & Support</span>
+                        </a>
+                        
+                        <a href="{% url 'feedback' %}" class="user-menu-item">
+                            <i class="fas fa-comment"></i>
+                            <span>Send Feedback</span>
+                        </a>
+                        
+                        <div class="menu-divider"></div>
+                        
+                        <a href="{% url 'users:logout' %}" class="user-menu-item logout-item">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sign Out</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Status Bar (optional, shown when issues exist) -->
+    <div class="system-status-bar" id="system-status-bar" style="display: none;">
+        <div class="status-content">
+            <div class="status-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <span class="status-message">System maintenance scheduled for tonight at 11 PM EST</span>
+            <button class="status-close" onclick="hideSystemStatus()" aria-label="Dismiss status message">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Navbar JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.getElementById('app-sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    
+    if (mobileMenuBtn && sidebar) {
+        mobileMenuBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('mobile-open');
+            if (sidebarOverlay) {
+                sidebarOverlay.style.display = sidebar.classList.contains('mobile-open') ? 'block' : 'none';
+            }
+        });
+    }
+    
+    // Search functionality
+    const searchInput = document.querySelector('.search-input');
+    const searchSuggestions = document.getElementById('search-suggestions');
+    
+    if (searchInput) {
+        searchInput.addEventListener('focus', function() {
+            if (searchSuggestions) {
+                searchSuggestions.style.display = 'block';
+            }
+        });
+        
+        searchInput.addEventListener('blur', function() {
+            // Delay hiding to allow clicking on suggestions
+            setTimeout(() => {
+                if (searchSuggestions) {
+                    searchSuggestions.style.display = 'none';
+                }
+            }, 200);
+        });
+    }
+    
+    // Dropdown toggles
+    function toggleDropdown(triggerId, panelId) {
+        const trigger = document.getElementById(triggerId);
+        const panel = document.getElementById(panelId);
+        
+        if (trigger && panel) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                // Close other dropdowns
+                const allPanels = document.querySelectorAll('.notifications-panel, .quick-actions-panel, .user-menu-panel');
+                allPanels.forEach(p => {
+                    if (p !== panel) {
+                        p.style.display = 'none';
+                    }
+                });
+                
+                // Toggle current panel
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+    }
+    
+    // Initialize dropdowns
+    toggleDropdown('notifications-btn', 'notifications-panel');
+    toggleDropdown('quick-actions-btn', 'quick-actions-panel');
+    toggleDropdown('user-menu-btn', 'user-menu-panel');
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function() {
+        const dropdownPanels = document.querySelectorAll('.notifications-panel, .quick-actions-panel, .user-menu-panel, .search-suggestions');
+        dropdownPanels.forEach(panel => {
+            panel.style.display = 'none';
+        });
+    });
+    
+    // Notification management
+    const markAllRead = document.getElementById('mark-all-read');
+    if (markAllRead) {
+        markAllRead.addEventListener('click', function() {
+            const notifications = document.querySelectorAll('.notification-item');
+            notifications.forEach(notification => {
+                notification.classList.add('read');
+            });
+            
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                badge.style.display = 'none';
+            }
+        });
+    }
+    
+    // Individual notification close buttons
+    const notificationCloses = document.querySelectorAll('.notification-close');
+    notificationCloses.forEach(closeBtn => {
+        closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.closest('.notification-item').remove();
+            
+            // Update notification count
+            updateNotificationCount();
+        });
+    });
+    
+    function updateNotificationCount() {
+        const remainingNotifications = document.querySelectorAll('.notification-item').length;
+        const badge = document.getElementById('notification-badge');
+        
+        if (badge) {
+            if (remainingNotifications === 0) {
+                badge.style.display = 'none';
+            } else {
+                badge.textContent = remainingNotifications;
+                badge.style.display = 'block';
+            }
+        }
+    }
+});
+
+// System status bar functions
+function hideSystemStatus() {
+    const statusBar = document.getElementById('system-status-bar');
+    if (statusBar) {
+        statusBar.style.display = 'none';
+    }
+}
+</script>

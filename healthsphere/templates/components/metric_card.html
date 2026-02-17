@@ -1,0 +1,600 @@
+{% comment %}
+Metric Card Component - HealthSphere AI
+=======================================
+
+Usage Examples:
+{% include 'components/metric_card.html' with icon="fas fa-heart-pulse" label="Heart Rate" value="72" unit="bpm" trend="up" trend_value="+2%" %}
+{% include 'components/metric_card.html' with icon="fas fa-thermometer-half" label="Temperature" value="98.6" unit="°F" trend="stable" %}
+{% include 'components/metric_card.html' with icon="fas fa-weight" label="BMI" value="23.5" trend="down" trend_value="-0.2" alert_level="success" %}
+
+Parameters:
+- icon: Font Awesome icon class (required)
+- label: Metric name/description (required)
+- value: Main metric value (required)
+- unit: Unit of measurement (optional)
+- trend: "up", "down", "stable" (optional)
+- trend_value: Change amount with +/- (optional)
+- alert_level: "success", "warning", "danger", "info" (optional)
+- clickable: Boolean to make card clickable
+- href: Link URL if clickable
+- card_class: Additional CSS classes
+- size: "small", "medium", "large" (default: medium)
+
+{% endcomment %}
+
+<div class="metric-card{% if card_class %} {{ card_class }}{% endif %}{% if clickable %} metric-card-clickable{% endif %}{% if size %} metric-card-{{ size }}{% else %} metric-card-medium{% endif %}{% if alert_level %} metric-card-{{ alert_level }}{% endif %}"
+     {% if clickable and href %}onclick="window.location.href='{{ href }}'"{% endif %}>
+    
+    <div class="metric-card-header">
+        {% if icon %}
+        <div class="metric-icon{% if alert_level %} metric-icon-{{ alert_level }}{% endif %}">
+            <i class="{{ icon }}"></i>
+        </div>
+        {% endif %}
+        
+        {% if trend %}
+        <div class="metric-trend metric-trend-{{ trend }}">
+            {% if trend == 'up' %}
+            <i class="fas fa-arrow-up"></i>
+            {% elif trend == 'down' %}
+            <i class="fas fa-arrow-down"></i>
+            {% else %}
+            <i class="fas fa-minus"></i>
+            {% endif %}
+            {% if trend_value %}
+            <span class="metric-trend-value">{{ trend_value }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="metric-card-body">
+        <div class="metric-value-section">
+            <div class="metric-value">{{ value }}</div>
+            {% if unit %}
+            <div class="metric-unit">{{ unit }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="metric-label">{{ label }}</div>
+    </div>
+    
+    {% if description %}
+    <div class="metric-card-footer">
+        <div class="metric-description">{{ description }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* =============================================
+   Metric Card Component Styles
+   ============================================= */
+
+.metric-card {
+    background: var(--glass-bg, rgba(255, 255, 255, 0.8));
+    backdrop-filter: var(--glass-blur, blur(10px));
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+    border-radius: var(--radius-xl, 16px);
+    padding: var(--spacing-6, 24px);
+    box-shadow: var(--glass-shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.1));
+    transition: all var(--transition-fast, 0.2s ease);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4, 16px);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow-xl, 0 12px 48px rgba(0, 0, 0, 0.15));
+}
+
+.metric-card-clickable {
+    cursor: pointer;
+}
+
+.metric-card-clickable:hover {
+    transform: translateY(-4px);
+    border-color: var(--healthcare-primary, #3b82f6);
+}
+
+/* Size Variants */
+.metric-card-small {
+    padding: var(--spacing-4, 16px);
+    gap: var(--spacing-3, 12px);
+}
+
+.metric-card-small .metric-value {
+    font-size: var(--font-size-2xl, 24px);
+}
+
+.metric-card-small .metric-icon {
+    width: 40px;
+    height: 40px;
+    font-size: var(--font-size-base, 16px);
+}
+
+.metric-card-medium {
+    padding: var(--spacing-6, 24px);
+    gap: var(--spacing-4, 16px);
+}
+
+.metric-card-large {
+    padding: var(--spacing-8, 32px);
+    gap: var(--spacing-6, 24px);
+}
+
+.metric-card-large .metric-value {
+    font-size: var(--font-size-5xl, 48px);
+}
+
+.metric-card-large .metric-icon {
+    width: 64px;
+    height: 64px;
+    font-size: var(--font-size-2xl, 24px);
+}
+
+/* Alert Level Variants */
+.metric-card-success {
+    border-left: 4px solid var(--healthcare-success, #10b981);
+}
+
+.metric-card-warning {
+    border-left: 4px solid var(--healthcare-warning, #f59e0b);
+}
+
+.metric-card-danger {
+    border-left: 4px solid var(--healthcare-danger, #ef4444);
+}
+
+.metric-card-info {
+    border-left: 4px solid var(--healthcare-info, #3b82f6);
+}
+
+/* Card Header */
+.metric-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.metric-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-lg, 12px);
+    background: linear-gradient(135deg, var(--healthcare-primary, #3b82f6), var(--healthcare-primary-light, #60a5fa));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neutral-white, #ffffff);
+    font-size: var(--font-size-lg, 18px);
+    box-shadow: var(--glass-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.1));
+    flex-shrink: 0;
+}
+
+.metric-icon-success {
+    background: linear-gradient(135deg, var(--healthcare-success, #10b981), var(--healthcare-success-light, #34d399));
+}
+
+.metric-icon-warning {
+    background: linear-gradient(135deg, var(--healthcare-warning, #f59e0b), var(--healthcare-warning-light, #fbbf24));
+}
+
+.metric-icon-danger {
+    background: linear-gradient(135deg, var(--healthcare-danger, #ef4444), var(--healthcare-danger-light, #f87171));
+}
+
+.metric-icon-info {
+    background: linear-gradient(135deg, var(--healthcare-info, #3b82f6), var(--healthcare-info-light, #60a5fa));
+}
+
+.metric-trend {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1, 4px);
+    padding: var(--spacing-1, 4px) var(--spacing-2, 8px);
+    border-radius: var(--radius-full, 9999px);
+    font-size: var(--font-size-xs, 12px);
+    font-weight: var(--font-weight-medium, 500);
+    border: 1px solid transparent;
+}
+
+.metric-trend-up {
+    background: var(--healthcare-success-bg, rgba(16, 185, 129, 0.1));
+    color: var(--healthcare-success, #10b981);
+    border-color: var(--healthcare-success, #10b981);
+}
+
+.metric-trend-down {
+    background: var(--healthcare-danger-bg, rgba(239, 68, 68, 0.1));
+    color: var(--healthcare-danger, #ef4444);
+    border-color: var(--healthcare-danger, #ef4444);
+}
+
+.metric-trend-stable {
+    background: var(--neutral-100, #f3f4f6);
+    color: var(--text-secondary, #6b7280);
+    border-color: var(--neutral-300, #d1d5db);
+}
+
+.metric-trend i {
+    font-size: var(--font-size-xs, 10px);
+}
+
+.metric-trend-value {
+    font-weight: var(--font-weight-semibold, 600);
+}
+
+/* Card Body */
+.metric-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2, 8px);
+}
+
+.metric-value-section {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-2, 8px);
+    margin-bottom: var(--spacing-1, 4px);
+}
+
+.metric-value {
+    font-size: var(--font-size-4xl, 36px);
+    font-weight: var(--font-weight-bold, 700);
+    color: var(--text-primary, #1f2937);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-unit {
+    font-size: var(--font-size-lg, 18px);
+    font-weight: var(--font-weight-medium, 500);
+    color: var(--text-secondary, #6b7280);
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: var(--font-size-sm, 14px);
+    font-weight: var(--font-weight-medium, 500);
+    color: var(--text-secondary, #6b7280);
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Card Footer */
+.metric-card-footer {
+    border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+    padding-top: var(--spacing-3, 12px);
+    margin-top: var(--spacing-2, 8px);
+}
+
+.metric-description {
+    font-size: var(--font-size-xs, 12px);
+    color: var(--text-tertiary, #9ca3af);
+    line-height: 1.4;
+}
+
+/* Animation States */
+.metric-card-loading .metric-value {
+    background: linear-gradient(90deg, 
+        var(--neutral-200, #e5e7eb) 25%, 
+        var(--neutral-300, #d1d5db) 50%, 
+        var(--neutral-200, #e5e7eb) 75%);
+    background-size: 200% 100%;
+    animation: metric-loading 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm, 4px);
+    color: transparent;
+}
+
+@keyframes metric-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.metric-card-pulse {
+    animation: metric-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes metric-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .metric-card {
+        padding: var(--spacing-4, 16px);
+        gap: var(--spacing-3, 12px);
+    }
+    
+    .metric-card-header {
+        flex-direction: column-reverse;
+        align-items: flex-end;
+        gap: var(--spacing-2, 8px);
+    }
+    
+    .metric-trend {
+        align-self: flex-start;
+    }
+    
+    .metric-value {
+        font-size: var(--font-size-3xl, 30px);
+    }
+    
+    .metric-card-large .metric-value {
+        font-size: var(--font-size-4xl, 36px);
+    }
+}
+
+@media (max-width: 480px) {
+    .metric-value-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-1, 4px);
+    }
+    
+    .metric-unit {
+        font-size: var(--font-size-base, 16px);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .metric-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        break-inside: avoid;
+    }
+    
+    .metric-trend {
+        border: 1px solid currentColor;
+    }
+}
+
+/* Accessibility */
+.metric-card:focus-within {
+    outline: 2px solid var(--healthcare-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+.metric-card-clickable[tabindex="0"]:focus {
+    outline: 2px solid var(--healthcare-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .metric-card {
+        background: rgba(17, 24, 39, 0.8);
+        border-color: rgba(75, 85, 99, 0.3);
+    }
+    
+    .metric-value {
+        color: var(--neutral-white, #ffffff);
+    }
+    
+    .metric-label {
+        color: var(--neutral-300, #d1d5db);
+    }
+    
+    .metric-unit {
+        color: var(--neutral-400, #9ca3af);
+    }
+}
+
+/* Hover Enhancement */
+.metric-card:hover .metric-icon {
+    transform: scale(1.05);
+    box-shadow: var(--glass-shadow-md, 0 4px 16px rgba(0, 0, 0, 0.15));
+}
+
+.metric-card:hover .metric-value {
+    color: var(--healthcare-primary, #3b82f6);
+}
+</style>
+
+<script>
+// Metric Card Component JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize metric cards
+    initializeMetricCards();
+    
+    // Setup real-time updates if data-refresh attribute is present
+    setupMetricRefresh();
+    
+    // Add keyboard navigation for clickable cards
+    setupKeyboardNavigation();
+});
+
+function initializeMetricCards() {
+    const cards = document.querySelectorAll('.metric-card');
+    
+    cards.forEach((card, index) => {
+        // Add staggered entrance animation
+        setTimeout(() => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.5s ease-out';
+            
+            requestAnimationFrame(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            });
+        }, index * 100);
+        
+        // Animate metric value counting
+        const valueElement = card.querySelector('.metric-value');
+        if (valueElement) {
+            animateMetricValue(valueElement);
+        }
+    });
+}
+
+function animateMetricValue(element) {
+    const targetValue = parseFloat(element.textContent) || 0;
+    const duration = 2000; // 2 seconds
+    const startTime = performance.now();
+    const startValue = 0;
+    
+    function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smooth animation
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        
+        const currentValue = startValue + (targetValue - startValue) * easedProgress;
+        
+        // Format the number appropriately
+        if (targetValue % 1 === 0) {
+            element.textContent = Math.floor(currentValue);
+        } else {
+            element.textContent = currentValue.toFixed(1);
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            element.textContent = targetValue % 1 === 0 ? targetValue : targetValue.toFixed(1);
+        }
+    }
+    
+    requestAnimationFrame(animate);
+}
+
+function setupMetricRefresh() {
+    const refreshableCards = document.querySelectorAll('[data-refresh-url]');
+    
+    refreshableCards.forEach(card => {
+        const refreshUrl = card.dataset.refreshUrl;
+        const interval = parseInt(card.dataset.refreshInterval) || 30000; // Default 30 seconds
+        
+        setInterval(() => {
+            refreshMetricCard(card, refreshUrl);
+        }, interval);
+    });
+}
+
+function refreshMetricCard(card, url) {
+    // Add loading state
+    card.classList.add('metric-card-loading');
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            updateMetricCard(card, data);
+        })
+        .catch(error => {
+            console.error('Error refreshing metric card:', error);
+        })
+        .finally(() => {
+            card.classList.remove('metric-card-loading');
+        });
+}
+
+function updateMetricCard(card, data) {
+    const valueElement = card.querySelector('.metric-value');
+    const trendElement = card.querySelector('.metric-trend');
+    const trendValueElement = card.querySelector('.metric-trend-value');
+    
+    if (valueElement && data.value !== undefined) {
+        const oldValue = parseFloat(valueElement.textContent) || 0;
+        const newValue = parseFloat(data.value) || 0;
+        
+        // Animate the value change
+        animateValueChange(valueElement, oldValue, newValue);
+    }
+    
+    if (trendElement && data.trend) {
+        // Update trend indicator
+        trendElement.className = `metric-trend metric-trend-${data.trend}`;
+        
+        const trendIcon = trendElement.querySelector('i');
+        if (trendIcon) {
+            if (data.trend === 'up') {
+                trendIcon.className = 'fas fa-arrow-up';
+            } else if (data.trend === 'down') {
+                trendIcon.className = 'fas fa-arrow-down';
+            } else {
+                trendIcon.className = 'fas fa-minus';
+            }
+        }
+    }
+    
+    if (trendValueElement && data.trend_value) {
+        trendValueElement.textContent = data.trend_value;
+    }
+}
+
+function animateValueChange(element, fromValue, toValue) {
+    const duration = 1000;
+    const startTime = performance.now();
+    
+    function animate(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const currentValue = fromValue + (toValue - fromValue) * progress;
+        
+        if (toValue % 1 === 0) {
+            element.textContent = Math.floor(currentValue);
+        } else {
+            element.textContent = currentValue.toFixed(1);
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            element.textContent = toValue % 1 === 0 ? toValue : toValue.toFixed(1);
+        }
+    }
+    
+    requestAnimationFrame(animate);
+}
+
+function setupKeyboardNavigation() {
+    document.querySelectorAll('.metric-card-clickable').forEach(card => {
+        card.setAttribute('tabindex', '0');
+        
+        card.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+}
+
+// Utility function to format metric values
+function formatMetricValue(value, unit) {
+    const numValue = parseFloat(value);
+    
+    if (isNaN(numValue)) return value;
+    
+    // Format large numbers
+    if (numValue >= 1000000) {
+        return (numValue / 1000000).toFixed(1) + 'M';
+    } else if (numValue >= 1000) {
+        return (numValue / 1000).toFixed(1) + 'K';
+    }
+    
+    // Format decimal places based on unit
+    if (unit && (unit.includes('%') || unit.includes('°'))) {
+        return numValue.toFixed(1);
+    }
+    
+    return numValue % 1 === 0 ? numValue.toString() : numValue.toFixed(1);
+}
+
+// Export for use in other scripts
+window.MetricCard = {
+    refresh: refreshMetricCard,
+    update: updateMetricCard,
+    format: formatMetricValue
+};
+</script>

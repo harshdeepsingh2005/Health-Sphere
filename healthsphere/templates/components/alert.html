@@ -1,0 +1,796 @@
+{% comment %}
+Alert Component - HealthSphere AI
+=================================
+
+Usage Examples:
+{% include 'components/alert.html' with type="success" title="Success!" message="Patient record has been updated successfully." %}
+{% include 'components/alert.html' with type="error" title="Error" message="Failed to save patient information." dismissible=True %}
+{% include 'components/alert.html' with type="warning" message="Please review the patient's medical history before proceeding." %}
+{% include 'components/alert.html' with type="info" title="Information" message="New lab results are available for review." icon="fas fa-info-circle" %}
+
+Parameters:
+- type: "success", "warning", "info", "error", "danger" (required)
+- title: Alert title (optional)
+- message: Alert message content (required)
+- icon: Custom icon class (optional, defaults based on type)
+- dismissible: Boolean to show dismiss button (default: False)
+- size: "sm", "md", "lg" (default: md)
+- variant: "solid", "soft", "outline" (default: soft)
+- action: {text: "View Details", url: "#", class: "healthcare-btn-sm"}
+- timeout: Auto-dismiss timeout in milliseconds (optional)
+- id: Unique alert identifier (optional, auto-generated)
+
+{% endcomment %}
+
+{% load static %}
+
+<!-- Alert Container -->
+<div class="healthcare-alert healthcare-alert-{{ type|default:'info' }} healthcare-alert-{{ variant|default:'soft' }} healthcare-alert-{{ size|default:'md' }}{% if dismissible %} healthcare-alert-dismissible{% endif %}"
+     role="alert"
+     {% if id %}id="{{ id }}"{% else %}id="alert-{{ type|default:'info' }}-{{ forloop.counter0|default:'0' }}"{% endif %}
+     {% if timeout %}data-timeout="{{ timeout }}"{% endif %}
+     aria-live="polite"
+     aria-atomic="true">
+    
+    <!-- Alert Icon -->
+    <div class="healthcare-alert-icon">
+        {% if icon %}
+            <i class="{{ icon }}"></i>
+        {% elif type == 'success' %}
+            <i class="fas fa-check-circle"></i>
+        {% elif type == 'warning' %}
+            <i class="fas fa-exclamation-triangle"></i>
+        {% elif type == 'error' or type == 'danger' %}
+            <i class="fas fa-exclamation-circle"></i>
+        {% elif type == 'info' %}
+            <i class="fas fa-info-circle"></i>
+        {% else %}
+            <i class="fas fa-bell"></i>
+        {% endif %}
+    </div>
+    
+    <!-- Alert Content -->
+    <div class="healthcare-alert-content">
+        {% if title %}
+        <div class="healthcare-alert-title">{{ title }}</div>
+        {% endif %}
+        
+        <div class="healthcare-alert-message">
+            {{ message|safe }}
+        </div>
+        
+        {% if action %}
+        <div class="healthcare-alert-action">
+            <a href="{{ action.url|default:'#' }}" 
+               class="healthcare-btn healthcare-btn-outline {{ action.class|default:'healthcare-btn-sm' }}"
+               {% if action.onclick %}onclick="{{ action.onclick }}"{% endif %}>
+                {% if action.icon %}
+                <i class="{{ action.icon }}"></i>
+                {% endif %}
+                <span>{{ action.text|default:"Learn More" }}</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Dismiss Button -->
+    {% if dismissible %}
+    <button class="healthcare-alert-dismiss" 
+            type="button" 
+            aria-label="Dismiss alert"
+            onclick="dismissAlert(this)">
+        <i class="fas fa-times"></i>
+    </button>
+    {% endif %}
+    
+    <!-- Progress Bar (for timeout) -->
+    {% if timeout %}
+    <div class="healthcare-alert-progress">
+        <div class="healthcare-alert-progress-bar" style="animation-duration: {{ timeout }}ms;"></div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* =============================================
+   Healthcare Alert Component Styles
+   ============================================= */
+
+/* Base Alert Styles */
+.healthcare-alert {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-3, 12px);
+    padding: var(--spacing-4, 16px);
+    border-radius: var(--radius-xl, 16px);
+    border: 1px solid transparent;
+    backdrop-filter: var(--glass-blur, blur(20px));
+    box-shadow: var(--glass-shadow-lg, 0 10px 32px rgba(0, 0, 0, 0.1));
+    transition: all var(--transition-base, 0.3s ease);
+    overflow: hidden;
+    font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: healthcare-alert-slideIn 0.4s ease forwards;
+}
+
+@keyframes healthcare-alert-slideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.healthcare-alert:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow-xl, 0 20px 48px rgba(0, 0, 0, 0.15));
+}
+
+/* Alert Sizes */
+.healthcare-alert-sm {
+    padding: var(--spacing-3, 12px);
+    gap: var(--spacing-2, 8px);
+}
+
+.healthcare-alert-sm .healthcare-alert-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 12px;
+}
+
+.healthcare-alert-md {
+    padding: var(--spacing-4, 16px);
+    gap: var(--spacing-3, 12px);
+}
+
+.healthcare-alert-lg {
+    padding: var(--spacing-6, 24px);
+    gap: var(--spacing-4, 16px);
+}
+
+.healthcare-alert-lg .healthcare-alert-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 20px;
+}
+
+/* Alert Variants */
+.healthcare-alert-soft {
+    backdrop-filter: var(--glass-blur, blur(20px));
+}
+
+.healthcare-alert-solid {
+    backdrop-filter: none;
+}
+
+.healthcare-alert-outline {
+    background: transparent;
+    backdrop-filter: var(--glass-blur, blur(20px));
+    border-width: 2px;
+}
+
+/* Success Alert */
+.healthcare-alert-success.healthcare-alert-soft {
+    background: linear-gradient(135deg, 
+        rgba(16, 185, 129, 0.1) 0%, 
+        rgba(5, 150, 105, 0.05) 100%);
+    border-color: rgba(16, 185, 129, 0.2);
+    color: var(--healthcare-success-dark, #047857);
+}
+
+.healthcare-alert-success.healthcare-alert-solid {
+    background: linear-gradient(135deg, 
+        var(--healthcare-success, #10b981) 0%, 
+        var(--healthcare-success-dark, #047857) 100%);
+    color: white;
+}
+
+.healthcare-alert-success.healthcare-alert-outline {
+    border-color: var(--healthcare-success, #10b981);
+    color: var(--healthcare-success-dark, #047857);
+}
+
+.healthcare-alert-success .healthcare-alert-icon {
+    color: var(--healthcare-success, #10b981);
+}
+
+.healthcare-alert-success.healthcare-alert-solid .healthcare-alert-icon {
+    color: white;
+}
+
+/* Warning Alert */
+.healthcare-alert-warning.healthcare-alert-soft {
+    background: linear-gradient(135deg, 
+        rgba(245, 158, 11, 0.1) 0%, 
+        rgba(217, 119, 6, 0.05) 100%);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: var(--healthcare-warning-dark, #92400e);
+}
+
+.healthcare-alert-warning.healthcare-alert-solid {
+    background: linear-gradient(135deg, 
+        var(--healthcare-warning, #f59e0b) 0%, 
+        var(--healthcare-warning-dark, #d97706) 100%);
+    color: white;
+}
+
+.healthcare-alert-warning.healthcare-alert-outline {
+    border-color: var(--healthcare-warning, #f59e0b);
+    color: var(--healthcare-warning-dark, #92400e);
+}
+
+.healthcare-alert-warning .healthcare-alert-icon {
+    color: var(--healthcare-warning, #f59e0b);
+}
+
+.healthcare-alert-warning.healthcare-alert-solid .healthcare-alert-icon {
+    color: white;
+}
+
+/* Error/Danger Alert */
+.healthcare-alert-error.healthcare-alert-soft,
+.healthcare-alert-danger.healthcare-alert-soft {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.1) 0%, 
+        rgba(220, 38, 38, 0.05) 100%);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: var(--healthcare-danger-dark, #991b1b);
+}
+
+.healthcare-alert-error.healthcare-alert-solid,
+.healthcare-alert-danger.healthcare-alert-solid {
+    background: linear-gradient(135deg, 
+        var(--healthcare-danger, #ef4444) 0%, 
+        var(--healthcare-danger-dark, #dc2626) 100%);
+    color: white;
+}
+
+.healthcare-alert-error.healthcare-alert-outline,
+.healthcare-alert-danger.healthcare-alert-outline {
+    border-color: var(--healthcare-danger, #ef4444);
+    color: var(--healthcare-danger-dark, #991b1b);
+}
+
+.healthcare-alert-error .healthcare-alert-icon,
+.healthcare-alert-danger .healthcare-alert-icon {
+    color: var(--healthcare-danger, #ef4444);
+}
+
+.healthcare-alert-error.healthcare-alert-solid .healthcare-alert-icon,
+.healthcare-alert-danger.healthcare-alert-solid .healthcare-alert-icon {
+    color: white;
+}
+
+/* Info Alert */
+.healthcare-alert-info.healthcare-alert-soft {
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.1) 0%, 
+        rgba(37, 99, 235, 0.05) 100%);
+    border-color: rgba(59, 130, 246, 0.2);
+    color: var(--healthcare-info-dark, #1e40af);
+}
+
+.healthcare-alert-info.healthcare-alert-solid {
+    background: linear-gradient(135deg, 
+        var(--healthcare-info, #3b82f6) 0%, 
+        var(--healthcare-info-dark, #2563eb) 100%);
+    color: white;
+}
+
+.healthcare-alert-info.healthcare-alert-outline {
+    border-color: var(--healthcare-info, #3b82f6);
+    color: var(--healthcare-info-dark, #1e40af);
+}
+
+.healthcare-alert-info .healthcare-alert-icon {
+    color: var(--healthcare-info, #3b82f6);
+}
+
+.healthcare-alert-info.healthcare-alert-solid .healthcare-alert-icon {
+    color: white;
+}
+
+/* Alert Icon */
+.healthcare-alert-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Alert Content */
+.healthcare-alert-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.healthcare-alert-title {
+    font-weight: var(--font-weight-semibold, 600);
+    font-size: var(--font-size-sm, 14px);
+    margin-bottom: var(--spacing-1, 4px);
+    line-height: 1.4;
+}
+
+.healthcare-alert-lg .healthcare-alert-title {
+    font-size: var(--font-size-base, 16px);
+}
+
+.healthcare-alert-message {
+    font-size: var(--font-size-sm, 14px);
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.healthcare-alert-lg .healthcare-alert-message {
+    font-size: var(--font-size-base, 16px);
+}
+
+.healthcare-alert-message p:first-child {
+    margin-top: 0;
+}
+
+.healthcare-alert-message p:last-child {
+    margin-bottom: 0;
+}
+
+/* Alert Action */
+.healthcare-alert-action {
+    margin-top: var(--spacing-3, 12px);
+}
+
+.healthcare-alert-action .healthcare-btn {
+    font-size: var(--font-size-xs, 12px);
+    padding: var(--spacing-2, 8px) var(--spacing-3, 12px);
+}
+
+/* Dismiss Button */
+.healthcare-alert-dismiss {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-lg, 12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast, 0.2s ease);
+    flex-shrink: 0;
+    font-size: 12px;
+    opacity: 0.6;
+    margin-top: 2px;
+}
+
+.healthcare-alert-dismiss:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+}
+
+.healthcare-alert-dismiss:active {
+    transform: scale(0.95);
+}
+
+.healthcare-alert-solid .healthcare-alert-dismiss {
+    color: white;
+}
+
+.healthcare-alert-solid .healthcare-alert-dismiss:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Progress Bar (for timeout) */
+.healthcare-alert-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.healthcare-alert-progress-bar {
+    height: 100%;
+    width: 100%;
+    background: currentColor;
+    opacity: 0.5;
+    transform-origin: left;
+    animation: healthcare-alert-progress linear forwards;
+}
+
+@keyframes healthcare-alert-progress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
+/* =============================================
+   Alert Dismissal Animation
+   ============================================= */
+
+.healthcare-alert-dismissing {
+    animation: healthcare-alert-slideOut 0.3s ease forwards;
+}
+
+@keyframes healthcare-alert-slideOut {
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+        margin-bottom: calc(var(--spacing-4, 16px) * -1);
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+}
+
+/* =============================================
+   Alert Collections
+   ============================================= */
+
+.healthcare-alert-collection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3, 12px);
+    max-width: 500px;
+}
+
+.healthcare-alert-collection.healthcare-alert-fixed {
+    position: fixed;
+    top: var(--spacing-6, 24px);
+    right: var(--spacing-6, 24px);
+    z-index: 1060;
+}
+
+.healthcare-alert-collection.healthcare-alert-fixed-bottom {
+    position: fixed;
+    bottom: var(--spacing-6, 24px);
+    right: var(--spacing-6, 24px);
+    z-index: 1060;
+}
+
+/* =============================================
+   Responsive Design
+   ============================================= */
+
+@media (max-width: 768px) {
+    .healthcare-alert {
+        padding: var(--spacing-3, 12px);
+        gap: var(--spacing-2, 8px);
+        margin: var(--spacing-2, 8px);
+    }
+    
+    .healthcare-alert-lg {
+        padding: var(--spacing-4, 16px);
+        gap: var(--spacing-3, 12px);
+    }
+    
+    .healthcare-alert-collection.healthcare-alert-fixed,
+    .healthcare-alert-collection.healthcare-alert-fixed-bottom {
+        left: var(--spacing-4, 16px);
+        right: var(--spacing-4, 16px);
+        max-width: none;
+    }
+    
+    .healthcare-alert-action .healthcare-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .healthcare-alert-title {
+        font-size: var(--font-size-xs, 12px);
+    }
+    
+    .healthcare-alert-message {
+        font-size: var(--font-size-xs, 12px);
+    }
+    
+    .healthcare-alert-collection.healthcare-alert-fixed,
+    .healthcare-alert-collection.healthcare-alert-fixed-bottom {
+        left: var(--spacing-2, 8px);
+        right: var(--spacing-2, 8px);
+    }
+}
+
+/* =============================================
+   Dark Mode Support
+   ============================================= */
+
+@media (prefers-color-scheme: dark) {
+    .healthcare-alert-soft {
+        background: rgba(17, 24, 39, 0.8);
+        border-color: rgba(75, 85, 99, 0.3);
+        color: var(--neutral-200, #e5e7eb);
+    }
+    
+    .healthcare-alert-outline {
+        background: rgba(17, 24, 39, 0.6);
+    }
+    
+    .healthcare-alert-dismiss:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* =============================================
+   Accessibility Enhancements
+   ============================================= */
+
+.healthcare-alert:focus-within {
+    outline: 2px solid var(--healthcare-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+.healthcare-alert-dismiss:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .healthcare-alert {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+    
+    .healthcare-alert-dismissing {
+        animation: none;
+    }
+    
+    .healthcare-alert-progress-bar {
+        animation: none;
+    }
+    
+    .healthcare-alert:hover {
+        transform: none;
+    }
+    
+    .healthcare-alert-dismiss:hover {
+        transform: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .healthcare-alert {
+        border-width: 2px;
+    }
+    
+    .healthcare-alert-icon {
+        font-weight: bold;
+    }
+}
+</style>
+
+<script>
+// Healthcare Alert Component JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeHealthcareAlerts();
+});
+
+function initializeHealthcareAlerts() {
+    // Auto-dismiss alerts with timeout
+    document.querySelectorAll('.healthcare-alert[data-timeout]').forEach(alert => {
+        const timeout = parseInt(alert.getAttribute('data-timeout'));
+        if (timeout > 0) {
+            setTimeout(() => {
+                dismissAlert(alert);
+            }, timeout);
+        }
+    });
+    
+    // Initialize dismiss buttons
+    document.querySelectorAll('.healthcare-alert-dismiss').forEach(dismissBtn => {
+        dismissBtn.addEventListener('click', function() {
+            dismissAlert(this);
+        });
+    });
+}
+
+function dismissAlert(element) {
+    const alert = element.classList && element.classList.contains('healthcare-alert') 
+        ? element 
+        : element.closest('.healthcare-alert');
+    
+    if (!alert) return;
+    
+    // Add dismissing animation
+    alert.classList.add('healthcare-alert-dismissing');
+    
+    // Dispatch custom event
+    const event = new CustomEvent('alertDismiss', {
+        detail: { alertId: alert.id, alertType: getAlertType(alert) }
+    });
+    alert.dispatchEvent(event);
+    
+    // Remove alert after animation
+    setTimeout(() => {
+        alert.remove();
+    }, 300);
+}
+
+function showAlert(options = {}) {
+    const {
+        type = 'info',
+        title = '',
+        message = '',
+        dismissible = true,
+        timeout = 0,
+        variant = 'soft',
+        size = 'md',
+        container = document.body,
+        action = null
+    } = options;
+    
+    // Create alert element
+    const alertId = `alert-${type}-${Date.now()}`;
+    const alert = document.createElement('div');
+    alert.className = `healthcare-alert healthcare-alert-${type} healthcare-alert-${variant} healthcare-alert-${size}${dismissible ? ' healthcare-alert-dismissible' : ''}`;
+    alert.id = alertId;
+    alert.role = 'alert';
+    alert.setAttribute('aria-live', 'polite');
+    alert.setAttribute('aria-atomic', 'true');
+    
+    if (timeout > 0) {
+        alert.setAttribute('data-timeout', timeout);
+    }
+    
+    // Build alert content
+    const icon = getAlertIcon(type);
+    const dismissButton = dismissible 
+        ? '<button class="healthcare-alert-dismiss" type="button" aria-label="Dismiss alert" onclick="dismissAlert(this)"><i class="fas fa-times"></i></button>'
+        : '';
+    
+    const actionButton = action 
+        ? `<div class="healthcare-alert-action">
+             <a href="${action.url || '#'}" 
+                class="healthcare-btn healthcare-btn-outline ${action.class || 'healthcare-btn-sm'}"
+                ${action.onclick ? `onclick="${action.onclick}"` : ''}>
+                ${action.icon ? `<i class="${action.icon}"></i>` : ''}
+                <span>${action.text || 'Learn More'}</span>
+             </a>
+           </div>`
+        : '';
+    
+    const progressBar = timeout > 0 
+        ? `<div class="healthcare-alert-progress">
+             <div class="healthcare-alert-progress-bar" style="animation-duration: ${timeout}ms;"></div>
+           </div>`
+        : '';
+    
+    alert.innerHTML = `
+        <div class="healthcare-alert-icon">
+            <i class="${icon}"></i>
+        </div>
+        <div class="healthcare-alert-content">
+            ${title ? `<div class="healthcare-alert-title">${title}</div>` : ''}
+            <div class="healthcare-alert-message">${message}</div>
+            ${actionButton}
+        </div>
+        ${dismissButton}
+        ${progressBar}
+    `;
+    
+    // Add to container
+    if (container.classList.contains('healthcare-alert-collection')) {
+        container.appendChild(alert);
+    } else {
+        container.appendChild(alert);
+    }
+    
+    // Auto-dismiss if timeout is set
+    if (timeout > 0) {
+        setTimeout(() => {
+            dismissAlert(alert);
+        }, timeout);
+    }
+    
+    // Dispatch custom event
+    const event = new CustomEvent('alertShow', {
+        detail: { alertId: alertId, alertType: type }
+    });
+    alert.dispatchEvent(event);
+    
+    return alert;
+}
+
+function getAlertIcon(type) {
+    const icons = {
+        success: 'fas fa-check-circle',
+        warning: 'fas fa-exclamation-triangle',
+        error: 'fas fa-exclamation-circle',
+        danger: 'fas fa-exclamation-circle',
+        info: 'fas fa-info-circle'
+    };
+    return icons[type] || 'fas fa-bell';
+}
+
+function getAlertType(alert) {
+    const classes = alert.className.split(' ');
+    for (let className of classes) {
+        if (className.startsWith('healthcare-alert-') && 
+            !className.includes('dismissible') && 
+            !className.includes('soft') && 
+            !className.includes('solid') && 
+            !className.includes('outline') &&
+            !className.includes('sm') && 
+            !className.includes('md') && 
+            !className.includes('lg')) {
+            return className.replace('healthcare-alert-', '');
+        }
+    }
+    return 'info';
+}
+
+// Export utility functions
+window.HealthcareAlert = {
+    show: showAlert,
+    dismiss: dismissAlert
+};
+
+// Shorthand functions
+window.showSuccessAlert = (message, title = 'Success!') => 
+    showAlert({ type: 'success', title, message, dismissible: true, timeout: 5000 });
+
+window.showWarningAlert = (message, title = 'Warning') => 
+    showAlert({ type: 'warning', title, message, dismissible: true });
+
+window.showErrorAlert = (message, title = 'Error') => 
+    showAlert({ type: 'error', title, message, dismissible: true });
+
+window.showInfoAlert = (message, title = 'Information') => 
+    showAlert({ type: 'info', title, message, dismissible: true, timeout: 4000 });
+</script>
+
+<!-- Usage Examples (hidden) -->
+<div style="display: none;">
+    <!-- Static Alerts -->
+    {% include 'components/alert.html' with type="success" title="Success!" message="Patient record has been updated successfully." dismissible=True %}
+    
+    {% include 'components/alert.html' with type="warning" message="Please review the patient's medical history before proceeding." %}
+    
+    {% include 'components/alert.html' with type="error" title="Validation Error" message="Please fill in all required fields before submitting." dismissible=True %}
+    
+    {% include 'components/alert.html' with type="info" title="New Features Available" message="Check out the new AI-powered health insights dashboard." action="{text: 'Learn More', url: '/features/', icon: 'fas fa-arrow-right'}" dismissible=True %}
+    
+    <!-- Alert Collection Container -->
+    <div class="healthcare-alert-collection healthcare-alert-fixed" id="alert-container">
+        <!-- Dynamic alerts will be added here -->
+    </div>
+    
+    <!-- JavaScript Usage Examples -->
+    <script>
+        // Show dynamic alerts
+        // showSuccessAlert('Operation completed successfully!');
+        // showWarningAlert('Your session will expire in 5 minutes.');
+        // showErrorAlert('Failed to connect to the server.');
+        // showInfoAlert('New lab results are available.');
+        
+        // Advanced alert with custom options
+        // HealthcareAlert.show({
+        //     type: 'success',
+        //     title: 'Data Exported',
+        //     message: 'Patient data has been exported to CSV file.',
+        //     dismissible: true,
+        //     timeout: 8000,
+        //     size: 'lg',
+        //     variant: 'solid',
+        //     action: {
+        //         text: 'Download',
+        //         url: '/download/patient-data.csv',
+        //         icon: 'fas fa-download'
+        //     }
+        // });
+    </script>
+</div>

@@ -1,0 +1,32 @@
+# HealthSphere AI - Python Dependencies
+# College-level healthcare platform built with Django
+
+# Core Framework
+Django>=4.2,<5.0
+
+# Database (SQLite is built-in, these are optional)
+# psycopg2-binary>=2.9.9  # Uncomment for PostgreSQL
+# mysqlclient>=2.2.0      # Uncomment for MySQL
+
+# Forms and Validation
+django-crispy-forms>=2.1   # Better form rendering (optional)
+crispy-bootstrap5>=2024.2  # Bootstrap 5 template pack (optional)
+
+# Security
+# django-cors-headers>=4.3.1  # Uncomment if adding API
+
+# Development Tools
+# django-debug-toolbar>=4.2.0  # Uncomment for debugging
+
+# Production (uncomment for deployment)
+# gunicorn>=21.2.0
+# whitenoise>=6.6.0
+
+# Image Processing (if handling uploaded images)
+Pillow>=10.2.0
+
+# Time Zone Support
+pytz>=2024.1
+
+# Environment Variables (optional)
+# python-dotenv>=1.0.0

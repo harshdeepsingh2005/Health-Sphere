@@ -1,0 +1,814 @@
+{% comment %}
+Form Input Components - HealthSphere AI
+=======================================
+
+Usage Examples:
+{% include 'components/form_input.html' with type="text" name="patient_name" label="Patient Name" placeholder="Enter patient name" required=True %}
+{% include 'components/form_input.html' with type="email" name="email" label="Email Address" helper="We'll use this for appointment reminders" %}
+{% include 'components/form_input.html' with type="password" name="password" label="Password" helper="Must be at least 8 characters" show_toggle=True %}
+{% include 'components/form_input.html' with type="textarea" name="notes" label="Medical Notes" rows=4 %}
+{% include 'components/form_input.html' with type="select" name="status" label="Status" options=status_options %}
+
+Parameters:
+- type: "text", "email", "password", "tel", "url", "number", "date", "time", "textarea", "select" (required)
+- name: Input name attribute (required)
+- label: Input label text (required)
+- placeholder: Placeholder text (optional)
+- value: Default value (optional)
+- helper: Helper text below input (optional)
+- error: Error message (optional)
+- required: Boolean for required field (optional)
+- disabled: Boolean for disabled state (optional)
+- readonly: Boolean for readonly state (optional)
+- autocomplete: Autocomplete attribute (optional)
+- size: "sm", "md", "lg" (default: md)
+- variant: "default", "floating", "filled" (default: default)
+- icon: Icon class for input prefix (optional)
+- suffix: Text or icon for input suffix (optional)
+- show_toggle: Boolean for password visibility toggle (optional)
+- rows: Number of rows for textarea (optional, default: 3)
+- options: List of options for select (optional)
+- validation: "success", "warning", "error" (optional)
+
+{% endcomment %}
+
+<div class="healthcare-form-field healthcare-form-field-{{ size|default:'md' }} healthcare-form-field-{{ variant|default:'default' }}{% if error or validation == 'error' %} healthcare-form-field-error{% elif validation == 'success' %} healthcare-form-field-success{% elif validation == 'warning' %} healthcare-form-field-warning{% endif %}{% if disabled %} healthcare-form-field-disabled{% endif %}{% if required %} healthcare-form-field-required{% endif %}">
+    
+    {% if label and variant != 'floating' %}
+    <label for="{{ name }}" class="healthcare-form-label">
+        {{ label }}
+        {% if required %}
+        <span class="healthcare-form-required-asterisk">*</span>
+        {% endif %}
+    </label>
+    {% endif %}
+    
+    <div class="healthcare-form-input-wrapper{% if icon %} healthcare-form-input-with-icon{% endif %}{% if suffix %} healthcare-form-input-with-suffix{% endif %}">
+        {% if icon %}
+        <div class="healthcare-form-input-icon">
+            <i class="{{ icon }}"></i>
+        </div>
+        {% endif %}
+        
+        {% if type == 'textarea' %}
+        <textarea 
+            id="{{ name }}"
+            name="{{ name }}"
+            class="healthcare-form-input healthcare-form-textarea"
+            rows="{{ rows|default:3 }}"
+            {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% if readonly %}readonly{% endif %}
+            {% if required %}required{% endif %}
+            {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+        >{{ value|default:'' }}</textarea>
+        
+        {% elif type == 'select' %}
+        <select 
+            id="{{ name }}"
+            name="{{ name }}"
+            class="healthcare-form-input healthcare-form-select"
+            {% if disabled %}disabled{% endif %}
+            {% if required %}required{% endif %}
+        >
+            {% if placeholder %}
+            <option value="" disabled {% if not value %}selected{% endif %}>{{ placeholder }}</option>
+            {% endif %}
+            {% for option in options %}
+            <option value="{{ option.value }}" {% if option.value == value %}selected{% endif %}>
+                {{ option.label }}
+            </option>
+            {% endfor %}
+        </select>
+        <div class="healthcare-form-select-icon">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        
+        {% else %}
+        <input 
+            type="{{ type }}"
+            id="{{ name }}"
+            name="{{ name }}"
+            class="healthcare-form-input"
+            {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+            {% if value %}value="{{ value }}"{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% if readonly %}readonly{% endif %}
+            {% if required %}required{% endif %}
+            {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+        />
+        {% endif %}
+        
+        {% if variant == 'floating' and label %}
+        <label for="{{ name }}" class="healthcare-form-floating-label">
+            {{ label }}
+            {% if required %}
+            <span class="healthcare-form-required-asterisk">*</span>
+            {% endif %}
+        </label>
+        {% endif %}
+        
+        {% if type == 'password' and show_toggle %}
+        <button type="button" class="healthcare-form-password-toggle" data-toggle-password>
+            <i class="fas fa-eye" data-show-icon></i>
+            <i class="fas fa-eye-slash" data-hide-icon style="display: none;"></i>
+        </button>
+        {% endif %}
+        
+        {% if suffix %}
+        <div class="healthcare-form-input-suffix">
+            {% if suffix|first == 'fas' or suffix|first == 'far' or suffix|first == 'fab' %}
+            <i class="{{ suffix }}"></i>
+            {% else %}
+            <span>{{ suffix }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if helper or error %}
+    <div class="healthcare-form-help">
+        {% if error %}
+        <div class="healthcare-form-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ error }}</span>
+        </div>
+        {% elif helper %}
+        <div class="healthcare-form-helper">
+            <span>{{ helper }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* =============================================
+   Healthcare Form Components Styles
+   ============================================= */
+
+/* Form Field Container */
+.healthcare-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2, 8px);
+    position: relative;
+}
+
+.healthcare-form-field + .healthcare-form-field {
+    margin-top: var(--spacing-4, 16px);
+}
+
+/* Form Label */
+.healthcare-form-label {
+    font-size: var(--font-size-sm, 14px);
+    font-weight: var(--font-weight-medium, 500);
+    color: var(--text-primary, #1f2937);
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1, 4px);
+}
+
+.healthcare-form-required-asterisk {
+    color: var(--healthcare-danger, #ef4444);
+    font-weight: var(--font-weight-bold, 700);
+}
+
+/* Input Wrapper */
+.healthcare-form-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Base Input Styles */
+.healthcare-form-input {
+    width: 100%;
+    padding: var(--spacing-3, 12px) var(--spacing-4, 16px);
+    font-size: var(--font-size-sm, 14px);
+    font-family: inherit;
+    line-height: 1.4;
+    color: var(--text-primary, #1f2937);
+    background: var(--glass-bg, rgba(255, 255, 255, 0.8));
+    backdrop-filter: var(--glass-blur, blur(10px));
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+    border-radius: var(--radius-lg, 12px);
+    box-shadow: var(--glass-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.1));
+    transition: all var(--transition-fast, 0.2s ease);
+    outline: none;
+}
+
+.healthcare-form-input::placeholder {
+    color: var(--text-tertiary, #9ca3af);
+    opacity: 1;
+}
+
+/* Input Focus State */
+.healthcare-form-input:focus {
+    border-color: var(--healthcare-primary, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), var(--glass-shadow-md, 0 4px 16px rgba(0, 0, 0, 0.15));
+    transform: translateY(-1px);
+}
+
+/* Input Hover State */
+.healthcare-form-input:hover:not(:focus):not(:disabled) {
+    border-color: var(--healthcare-primary-light, #60a5fa);
+    box-shadow: var(--glass-shadow-md, 0 4px 16px rgba(0, 0, 0, 0.15));
+}
+
+/* Input Disabled State */
+.healthcare-form-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--neutral-100, #f3f4f6);
+    color: var(--text-tertiary, #9ca3af);
+}
+
+/* Input Readonly State */
+.healthcare-form-input:read-only {
+    background: var(--neutral-50, #f9fafb);
+    cursor: default;
+}
+
+/* =============================================
+   Input Sizes
+   ============================================= */
+
+.healthcare-form-field-sm .healthcare-form-input {
+    padding: var(--spacing-2, 8px) var(--spacing-3, 12px);
+    font-size: var(--font-size-sm, 14px);
+    border-radius: var(--radius-md, 8px);
+}
+
+.healthcare-form-field-sm .healthcare-form-label {
+    font-size: var(--font-size-sm, 14px);
+}
+
+.healthcare-form-field-lg .healthcare-form-input {
+    padding: var(--spacing-4, 16px) var(--spacing-5, 20px);
+    font-size: var(--font-size-base, 16px);
+    border-radius: var(--radius-xl, 16px);
+}
+
+.healthcare-form-field-lg .healthcare-form-label {
+    font-size: var(--font-size-base, 16px);
+}
+
+/* =============================================
+   Input Variants
+   ============================================= */
+
+/* Floating Label Variant */
+.healthcare-form-field-floating .healthcare-form-input-wrapper {
+    position: relative;
+}
+
+.healthcare-form-floating-label {
+    position: absolute;
+    left: var(--spacing-4, 16px);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--font-size-sm, 14px);
+    color: var(--text-tertiary, #9ca3af);
+    transition: all var(--transition-fast, 0.2s ease);
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent 40%, var(--glass-bg, rgba(255, 255, 255, 0.8)) 40%);
+    padding: 0 var(--spacing-1, 4px);
+}
+
+.healthcare-form-input:focus + .healthcare-form-floating-label,
+.healthcare-form-input:not(:placeholder-shown) + .healthcare-form-floating-label {
+    top: 0;
+    transform: translateY(-50%);
+    font-size: var(--font-size-xs, 12px);
+    color: var(--healthcare-primary, #3b82f6);
+    font-weight: var(--font-weight-medium, 500);
+}
+
+/* Filled Variant */
+.healthcare-form-field-filled .healthcare-form-input {
+    background: var(--neutral-100, #f3f4f6);
+    border: 1px solid transparent;
+    border-radius: var(--radius-lg, 12px) var(--radius-lg, 12px) 0 0;
+    border-bottom: 2px solid var(--neutral-300, #d1d5db);
+    box-shadow: none;
+}
+
+.healthcare-form-field-filled .healthcare-form-input:focus {
+    background: var(--glass-bg, rgba(255, 255, 255, 0.8));
+    border-bottom-color: var(--healthcare-primary, #3b82f6);
+    box-shadow: var(--glass-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.1));
+}
+
+/* =============================================
+   Input with Icons and Suffixes
+   ============================================= */
+
+.healthcare-form-input-with-icon .healthcare-form-input {
+    padding-left: var(--spacing-12, 48px);
+}
+
+.healthcare-form-input-icon {
+    position: absolute;
+    left: var(--spacing-4, 16px);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary, #9ca3af);
+    font-size: var(--font-size-base, 16px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.healthcare-form-input:focus ~ .healthcare-form-input-icon {
+    color: var(--healthcare-primary, #3b82f6);
+}
+
+.healthcare-form-input-with-suffix .healthcare-form-input {
+    padding-right: var(--spacing-12, 48px);
+}
+
+.healthcare-form-input-suffix {
+    position: absolute;
+    right: var(--spacing-4, 16px);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary, #9ca3af);
+    font-size: var(--font-size-sm, 14px);
+    pointer-events: none;
+}
+
+/* =============================================
+   Textarea Styles
+   ============================================= */
+
+.healthcare-form-textarea {
+    resize: vertical;
+    min-height: 80px;
+    padding-top: var(--spacing-3, 12px);
+    padding-bottom: var(--spacing-3, 12px);
+    line-height: 1.5;
+}
+
+/* =============================================
+   Select Styles
+   ============================================= */
+
+.healthcare-form-select {
+    appearance: none;
+    background-image: none;
+    cursor: pointer;
+    padding-right: var(--spacing-12, 48px);
+}
+
+.healthcare-form-select-icon {
+    position: absolute;
+    right: var(--spacing-4, 16px);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary, #9ca3af);
+    pointer-events: none;
+    transition: transform var(--transition-fast, 0.2s ease);
+}
+
+.healthcare-form-select:focus ~ .healthcare-form-select-icon {
+    color: var(--healthcare-primary, #3b82f6);
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* =============================================
+   Password Toggle
+   ============================================= */
+
+.healthcare-form-password-toggle {
+    position: absolute;
+    right: var(--spacing-3, 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-tertiary, #9ca3af);
+    cursor: pointer;
+    padding: var(--spacing-1, 4px);
+    border-radius: var(--radius-sm, 4px);
+    transition: all var(--transition-fast, 0.2s ease);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.healthcare-form-password-toggle:hover {
+    color: var(--healthcare-primary, #3b82f6);
+    background: var(--healthcare-primary-bg, rgba(59, 130, 246, 0.04));
+}
+
+/* =============================================
+   Validation States
+   ============================================= */
+
+/* Success State */
+.healthcare-form-field-success .healthcare-form-input {
+    border-color: var(--healthcare-success, #10b981);
+}
+
+.healthcare-form-field-success .healthcare-form-input:focus {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), var(--glass-shadow-md, 0 4px 16px rgba(0, 0, 0, 0.15));
+}
+
+.healthcare-form-field-success .healthcare-form-input-icon {
+    color: var(--healthcare-success, #10b981);
+}
+
+/* Warning State */
+.healthcare-form-field-warning .healthcare-form-input {
+    border-color: var(--healthcare-warning, #f59e0b);
+}
+
+.healthcare-form-field-warning .healthcare-form-input:focus {
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1), var(--glass-shadow-md, 0 4px 16px rgba(0, 0, 0, 0.15));
+}
+
+.healthcare-form-field-warning .healthcare-form-input-icon {
+    color: var(--healthcare-warning, #f59e0b);
+}
+
+/* Error State */
+.healthcare-form-field-error .healthcare-form-input {
+    border-color: var(--healthcare-danger, #ef4444);
+}
+
+.healthcare-form-field-error .healthcare-form-input:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1), var(--glass-shadow-md, 0 4px 16px rgba(0, 0, 0, 0.15));
+}
+
+.healthcare-form-field-error .healthcare-form-input-icon {
+    color: var(--healthcare-danger, #ef4444);
+}
+
+/* =============================================
+   Helper Text and Error Messages
+   ============================================= */
+
+.healthcare-form-help {
+    margin-top: var(--spacing-1, 4px);
+}
+
+.healthcare-form-helper {
+    font-size: var(--font-size-xs, 12px);
+    color: var(--text-secondary, #6b7280);
+    line-height: 1.4;
+}
+
+.healthcare-form-error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2, 8px);
+    font-size: var(--font-size-xs, 12px);
+    color: var(--healthcare-danger, #ef4444);
+    font-weight: var(--font-weight-medium, 500);
+    line-height: 1.4;
+}
+
+.healthcare-form-error i {
+    font-size: var(--font-size-xs, 12px);
+    flex-shrink: 0;
+}
+
+/* =============================================
+   Form Groups and Layout
+   ============================================= */
+
+.healthcare-form-group {
+    display: flex;
+    gap: var(--spacing-4, 16px);
+    align-items: flex-end;
+}
+
+.healthcare-form-group .healthcare-form-field {
+    flex: 1;
+    margin-top: 0;
+}
+
+.healthcare-form-inline .healthcare-form-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-3, 12px);
+}
+
+.healthcare-form-inline .healthcare-form-label {
+    white-space: nowrap;
+    margin-bottom: 0;
+    min-width: fit-content;
+}
+
+/* =============================================
+   Responsive Design
+   ============================================= */
+
+@media (max-width: 768px) {
+    .healthcare-form-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .healthcare-form-inline {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-2, 8px);
+    }
+    
+    .healthcare-form-input {
+        font-size: var(--font-size-base, 16px); /* Prevent zoom on iOS */
+    }
+}
+
+/* =============================================
+   Dark Mode Support
+   ============================================= */
+
+@media (prefers-color-scheme: dark) {
+    .healthcare-form-input {
+        background: rgba(17, 24, 39, 0.8);
+        border-color: rgba(75, 85, 99, 0.3);
+        color: var(--neutral-white, #ffffff);
+    }
+    
+    .healthcare-form-input::placeholder {
+        color: var(--neutral-400, #9ca3af);
+    }
+    
+    .healthcare-form-input:disabled {
+        background: rgba(31, 41, 55, 0.8);
+        color: var(--neutral-500, #6b7280);
+    }
+    
+    .healthcare-form-label {
+        color: var(--neutral-200, #e5e7eb);
+    }
+    
+    .healthcare-form-helper {
+        color: var(--neutral-400, #9ca3af);
+    }
+}
+
+/* =============================================
+   Print Styles
+   ============================================= */
+
+@media print {
+    .healthcare-form-input {
+        background: white !important;
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .healthcare-form-password-toggle {
+        display: none !important;
+    }
+}
+
+/* =============================================
+   Accessibility Enhancements
+   ============================================= */
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .healthcare-form-input {
+        border-width: 2px;
+    }
+    
+    .healthcare-form-input:focus {
+        border-width: 3px;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .healthcare-form-input,
+    .healthcare-form-floating-label,
+    .healthcare-form-select-icon,
+    .healthcare-form-password-toggle {
+        transition: none;
+    }
+    
+    .healthcare-form-input:hover,
+    .healthcare-form-input:focus {
+        transform: none;
+    }
+}
+
+/* Focus visible for keyboard navigation */
+.healthcare-form-input:focus-visible {
+    outline: 2px solid var(--healthcare-primary, #3b82f6);
+    outline-offset: 2px;
+}
+</style>
+
+<script>
+// Healthcare Form Components JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFormComponents();
+});
+
+function initializeFormComponents() {
+    // Initialize password toggle functionality
+    initializePasswordToggles();
+    
+    // Initialize floating labels
+    initializeFloatingLabels();
+    
+    // Initialize input validation
+    initializeInputValidation();
+    
+    // Initialize character counters
+    initializeCharacterCounters();
+}
+
+function initializePasswordToggles() {
+    document.querySelectorAll('[data-toggle-password]').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
+            const showIcon = this.querySelector('[data-show-icon]');
+            const hideIcon = this.querySelector('[data-hide-icon]');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                showIcon.style.display = 'none';
+                hideIcon.style.display = 'block';
+                this.setAttribute('aria-label', 'Hide password');
+            } else {
+                input.type = 'password';
+                showIcon.style.display = 'block';
+                hideIcon.style.display = 'none';
+                this.setAttribute('aria-label', 'Show password');
+            }
+        });
+    });
+}
+
+function initializeFloatingLabels() {
+    document.querySelectorAll('.healthcare-form-field-floating .healthcare-form-input').forEach(input => {
+        // Check if input has value on load
+        checkFloatingLabel(input);
+        
+        // Check on input change
+        input.addEventListener('input', function() {
+            checkFloatingLabel(this);
+        });
+        
+        // Check on focus/blur for better UX
+        input.addEventListener('focus', function() {
+            checkFloatingLabel(this);
+        });
+        
+        input.addEventListener('blur', function() {
+            checkFloatingLabel(this);
+        });
+    });
+}
+
+function checkFloatingLabel(input) {
+    const label = input.parentElement.querySelector('.healthcare-form-floating-label');
+    if (label) {
+        if (input.value || input === document.activeElement) {
+            label.classList.add('floating');
+        } else {
+            label.classList.remove('floating');
+        }
+    }
+}
+
+function initializeInputValidation() {
+    document.querySelectorAll('.healthcare-form-input').forEach(input => {
+        input.addEventListener('blur', function() {
+            validateInput(this);
+        });
+        
+        input.addEventListener('input', function() {
+            // Clear validation state on input to allow real-time feedback
+            clearValidationState(this);
+        });
+    });
+}
+
+function validateInput(input) {
+    const field = input.closest('.healthcare-form-field');
+    const value = input.value.trim();
+    const type = input.type;
+    let isValid = true;
+    let errorMessage = '';
+    
+    // Required field validation
+    if (input.hasAttribute('required') && !value) {
+        isValid = false;
+        errorMessage = 'This field is required';
+    }
+    
+    // Email validation
+    else if (type === 'email' && value && !isValidEmail(value)) {
+        isValid = false;
+        errorMessage = 'Please enter a valid email address';
+    }
+    
+    // Password validation
+    else if (type === 'password' && value && value.length < 8) {
+        isValid = false;
+        errorMessage = 'Password must be at least 8 characters long';
+    }
+    
+    updateValidationState(field, isValid, errorMessage);
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function updateValidationState(field, isValid, errorMessage) {
+    // Clear existing states
+    field.classList.remove('healthcare-form-field-error', 'healthcare-form-field-success');
+    
+    // Remove existing error message
+    const existingError = field.querySelector('.healthcare-form-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    if (!isValid && errorMessage) {
+        field.classList.add('healthcare-form-field-error');
+        
+        // Add error message
+        const helpContainer = field.querySelector('.healthcare-form-help') || createHelpContainer(field);
+        const errorElement = document.createElement('div');
+        errorElement.className = 'healthcare-form-error';
+        errorElement.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${errorMessage}</span>
+        `;
+        helpContainer.appendChild(errorElement);
+    } else if (isValid && field.querySelector('.healthcare-form-input').value.trim()) {
+        field.classList.add('healthcare-form-field-success');
+    }
+}
+
+function clearValidationState(input) {
+    const field = input.closest('.healthcare-form-field');
+    field.classList.remove('healthcare-form-field-error', 'healthcare-form-field-success');
+    
+    // Remove error message but keep helper text
+    const errorElement = field.querySelector('.healthcare-form-error');
+    if (errorElement) {
+        errorElement.remove();
+    }
+}
+
+function createHelpContainer(field) {
+    const helpContainer = document.createElement('div');
+    helpContainer.className = 'healthcare-form-help';
+    field.appendChild(helpContainer);
+    return helpContainer;
+}
+
+function initializeCharacterCounters() {
+    document.querySelectorAll('[data-maxlength]').forEach(input => {
+        const maxLength = parseInt(input.dataset.maxlength);
+        const field = input.closest('.healthcare-form-field');
+        
+        // Create counter element
+        const counter = document.createElement('div');
+        counter.className = 'healthcare-form-character-counter';
+        counter.style.cssText = `
+            font-size: var(--font-size-xs, 12px);
+            color: var(--text-tertiary, #9ca3af);
+            text-align: right;
+            margin-top: var(--spacing-1, 4px);
+        `;
+        
+        updateCounter(input, counter, maxLength);
+        field.appendChild(counter);
+        
+        input.addEventListener('input', function() {
+            updateCounter(this, counter, maxLength);
+        });
+    });
+}
+
+function updateCounter(input, counter, maxLength) {
+    const currentLength = input.value.length;
+    counter.textContent = `${currentLength}/${maxLength}`;
+    
+    if (currentLength > maxLength * 0.9) {
+        counter.style.color = 'var(--healthcare-warning, #f59e0b)';
+    } else {
+        counter.style.color = 'var(--text-tertiary, #9ca3af)';
+    }
+}
+
+// Export utility functions
+window.HealthcareForm = {
+    validate: validateInput,
+    clearValidation: clearValidationState,
+    updateValidation: updateValidationState
+};
+</script>

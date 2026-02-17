@@ -1,0 +1,482 @@
+{% comment %}
+Reusable Card Component - HealthSphere AI
+=========================================
+
+Usage Examples:
+{% include 'components/card.html' with title="Health Metrics" subtitle="Latest vitals" icon="fas fa-heart-pulse" %}
+{% include 'components/card.html' with title="Appointments" content_class="appointment-list" %}
+{% include 'components/card.html' with title="Reports" footer_actions="view_all,download" %}
+
+Parameters:
+- title: Card title (required)
+- subtitle: Optional subtitle text
+- icon: Optional icon class (e.g., "fas fa-heart")
+- content_class: Optional CSS class for content area
+- footer_actions: Optional comma-separated list of action types
+- card_class: Optional additional CSS classes for the card
+- clickable: Boolean to make entire card clickable
+- href: Link URL if clickable is true
+- data_attributes: Optional data attributes as string
+
+{% endcomment %}
+
+<div class="healthcare-card{% if card_class %} {{ card_class }}{% endif %}{% if clickable %} healthcare-card-clickable{% endif %}"
+     {% if clickable and href %}onclick="window.location.href='{{ href }}'"{% endif %}
+     {% if data_attributes %}{{ data_attributes|safe }}{% endif %}>
+    
+    {% if title or subtitle or icon %}
+    <div class="healthcare-card-header">
+        {% if icon or title %}
+        <div class="healthcare-card-title-section">
+            {% if icon %}
+            <div class="healthcare-card-icon">
+                <i class="{{ icon }}"></i>
+            </div>
+            {% endif %}
+            {% if title %}
+            <div class="healthcare-card-titles">
+                <h3 class="healthcare-card-title">{{ title }}</h3>
+                {% if subtitle %}
+                <p class="healthcare-card-subtitle">{{ subtitle }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if header_actions %}
+        <div class="healthcare-card-header-actions">
+            {{ header_actions|safe }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <div class="healthcare-card-content{% if content_class %} {{ content_class }}{% endif %}">
+        {% if content %}
+            {{ content|safe }}
+        {% else %}
+            {% block card_content %}
+            <!-- Default content slot -->
+            {% endblock %}
+        {% endif %}
+    </div>
+    
+    {% if footer_actions or footer_content %}
+    <div class="healthcare-card-footer">
+        {% if footer_content %}
+            {{ footer_content|safe }}
+        {% endif %}
+        
+        {% if footer_actions %}
+        <div class="healthcare-card-actions">
+            {% for action in footer_actions %}
+                {% if action == 'view_all' %}
+                <a href="#" class="healthcare-card-action">
+                    <span>View All</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                {% elif action == 'download' %}
+                <button class="healthcare-card-action secondary">
+                    <i class="fas fa-download"></i>
+                    <span>Download</span>
+                </button>
+                {% elif action == 'edit' %}
+                <button class="healthcare-card-action secondary">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit</span>
+                </button>
+                {% elif action == 'delete' %}
+                <button class="healthcare-card-action danger">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                </button>
+                {% elif action == 'share' %}
+                <button class="healthcare-card-action secondary">
+                    <i class="fas fa-share"></i>
+                    <span>Share</span>
+                </button>
+                {% elif action == 'refresh' %}
+                <button class="healthcare-card-action secondary" onclick="refreshCard(this)">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Refresh</span>
+                </button>
+                {% else %}
+                {{ action|safe }}
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* =============================================
+   Healthcare Card Component Styles
+   ============================================= */
+
+.healthcare-card {
+    background: var(--glass-bg, rgba(255, 255, 255, 0.8));
+    backdrop-filter: var(--glass-blur, blur(10px));
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+    border-radius: var(--radius-xl, 16px);
+    padding: var(--spacing-6, 24px);
+    box-shadow: var(--glass-shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.1));
+    transition: all var(--transition-fast, 0.2s ease);
+    position: relative;
+    overflow: hidden;
+}
+
+.healthcare-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow-xl, 0 12px 48px rgba(0, 0, 0, 0.15));
+}
+
+.healthcare-card-clickable {
+    cursor: pointer;
+}
+
+.healthcare-card-clickable:hover {
+    transform: translateY(-4px);
+    border-color: var(--healthcare-primary, #3b82f6);
+}
+
+/* Card Header */
+.healthcare-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-4, 16px);
+    padding-bottom: var(--spacing-3, 12px);
+    border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+}
+
+.healthcare-card-title-section {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-3, 12px);
+    flex: 1;
+}
+
+.healthcare-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg, 12px);
+    background: linear-gradient(135deg, var(--healthcare-primary, #3b82f6), var(--healthcare-primary-light, #60a5fa));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neutral-white, #ffffff);
+    font-size: var(--font-size-lg, 18px);
+    box-shadow: var(--glass-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.1));
+    flex-shrink: 0;
+}
+
+.healthcare-card-titles {
+    flex: 1;
+    min-width: 0; /* Allows text truncation */
+}
+
+.healthcare-card-title {
+    font-size: var(--font-size-lg, 18px);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--text-primary, #1f2937);
+    margin: 0 0 var(--spacing-1, 4px) 0;
+    line-height: 1.3;
+}
+
+.healthcare-card-subtitle {
+    font-size: var(--font-size-sm, 14px);
+    color: var(--text-secondary, #6b7280);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.healthcare-card-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2, 8px);
+    flex-shrink: 0;
+}
+
+/* Card Content */
+.healthcare-card-content {
+    color: var(--text-primary, #1f2937);
+    line-height: 1.6;
+}
+
+.healthcare-card-content:empty {
+    min-height: var(--spacing-12, 48px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary, #9ca3af);
+    font-size: var(--font-size-sm, 14px);
+}
+
+.healthcare-card-content:empty::before {
+    content: 'No content available';
+}
+
+/* Card Footer */
+.healthcare-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--spacing-6, 24px);
+    padding-top: var(--spacing-4, 16px);
+    border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+    gap: var(--spacing-4, 16px);
+    flex-wrap: wrap;
+}
+
+.healthcare-card-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3, 12px);
+    flex-wrap: wrap;
+}
+
+.healthcare-card-action {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2, 8px);
+    padding: var(--spacing-2, 8px) var(--spacing-3, 12px);
+    background: var(--healthcare-primary, #3b82f6);
+    color: var(--neutral-white, #ffffff);
+    border: none;
+    border-radius: var(--radius-lg, 12px);
+    font-size: var(--font-size-sm, 14px);
+    font-weight: var(--font-weight-medium, 500);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--transition-fast, 0.2s ease);
+    box-shadow: var(--glass-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.1));
+    white-space: nowrap;
+}
+
+.healthcare-card-action:hover {
+    background: var(--healthcare-primary-dark, #2563eb);
+    transform: translateY(-1px);
+    box-shadow: var(--glass-shadow-md, 0 4px 16px rgba(0, 0, 0, 0.15));
+}
+
+.healthcare-card-action.secondary {
+    background: var(--glass-bg, rgba(255, 255, 255, 0.8));
+    color: var(--text-primary, #1f2937);
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+}
+
+.healthcare-card-action.secondary:hover {
+    background: var(--neutral-100, #f3f4f6);
+    color: var(--healthcare-primary, #3b82f6);
+    border-color: var(--healthcare-primary, #3b82f6);
+}
+
+.healthcare-card-action.danger {
+    background: var(--healthcare-danger, #ef4444);
+    color: var(--neutral-white, #ffffff);
+}
+
+.healthcare-card-action.danger:hover {
+    background: var(--healthcare-danger-dark, #dc2626);
+}
+
+/* Card Variants */
+.healthcare-card.elevated {
+    box-shadow: var(--glass-shadow-xl, 0 12px 48px rgba(0, 0, 0, 0.15));
+    transform: translateY(-4px);
+}
+
+.healthcare-card.compact {
+    padding: var(--spacing-4, 16px);
+}
+
+.healthcare-card.compact .healthcare-card-header {
+    margin-bottom: var(--spacing-3, 12px);
+    padding-bottom: var(--spacing-2, 8px);
+}
+
+.healthcare-card.compact .healthcare-card-footer {
+    margin-top: var(--spacing-4, 16px);
+    padding-top: var(--spacing-3, 12px);
+}
+
+.healthcare-card.bordered {
+    border: 2px solid var(--healthcare-primary, #3b82f6);
+}
+
+.healthcare-card.success {
+    border-left: 4px solid var(--healthcare-success, #10b981);
+}
+
+.healthcare-card.warning {
+    border-left: 4px solid var(--healthcare-warning, #f59e0b);
+}
+
+.healthcare-card.danger {
+    border-left: 4px solid var(--healthcare-danger, #ef4444);
+}
+
+.healthcare-card.info {
+    border-left: 4px solid var(--healthcare-info, #3b82f6);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .healthcare-card {
+        padding: var(--spacing-4, 16px);
+    }
+    
+    .healthcare-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-3, 12px);
+    }
+    
+    .healthcare-card-header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .healthcare-card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-3, 12px);
+    }
+    
+    .healthcare-card-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .healthcare-card-action {
+        flex: 1;
+        justify-content: center;
+        min-width: 0;
+    }
+}
+
+/* Loading State */
+.healthcare-card.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.healthcare-card.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid var(--healthcare-primary, #3b82f6);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: healthcare-card-spin 1s linear infinite;
+}
+
+@keyframes healthcare-card-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Animation Enhancements */
+.healthcare-card-enter {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: healthcare-card-enter 0.3s ease-out forwards;
+}
+
+@keyframes healthcare-card-enter {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Accessibility */
+.healthcare-card:focus-within {
+    outline: 2px solid var(--healthcare-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+.healthcare-card-action:focus {
+    outline: 2px solid var(--healthcare-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .healthcare-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        break-inside: avoid;
+    }
+    
+    .healthcare-card-actions {
+        display: none;
+    }
+}
+</style>
+
+<script>
+// Healthcare Card Component JavaScript
+function refreshCard(button) {
+    const card = button.closest('.healthcare-card');
+    if (card) {
+        card.classList.add('loading');
+        
+        // Simulate refresh operation
+        setTimeout(() => {
+            card.classList.remove('loading');
+            
+            // Trigger custom refresh event
+            const event = new CustomEvent('cardRefresh', {
+                detail: { card: card }
+            });
+            card.dispatchEvent(event);
+        }, 1000);
+    }
+}
+
+// Initialize cards with entrance animation
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.healthcare-card');
+    
+    cards.forEach((card, index) => {
+        // Add staggered entrance animation
+        setTimeout(() => {
+            card.classList.add('healthcare-card-enter');
+        }, index * 100);
+    });
+});
+
+// Card interaction enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced hover effects for clickable cards
+    document.querySelectorAll('.healthcare-card-clickable').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Keyboard navigation support
+    document.querySelectorAll('.healthcare-card-clickable').forEach(card => {
+        card.setAttribute('tabindex', '0');
+        
+        card.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+});
+</script>

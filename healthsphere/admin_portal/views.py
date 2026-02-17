@@ -1,0 +1,366 @@
+"""
+HealthSphere AI - Admin Portal Views
+====================================
+
+Views for the hospital administration portal.
+Provides dashboards for resource management, patient tracking, and analytics.
+"""
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.views.generic import View, ListView, DetailView
+from django.utils.decorators import method_decorator
+from django.db.models import Count, Q
+from django.utils import timezone
+
+from .models import HospitalResource, AdmissionRecord, StaffSchedule
+from users.models import User, Role
+
+
+def admin_required(view_func):
+    """
+    Decorator to restrict access to admin users only.
+    """
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('users:login')
+        if not request.user.is_admin:
+            messages.error(request, 'You do not have permission to access this page.')
+            return redirect('users:redirect_after_login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class DashboardView(View):
+    """
+    Admin Dashboard View
+    ====================
+    
+    Main dashboard for hospital administrators.
+    Shows overview of resources, admissions, and key metrics.
+    """
+    
+    template_name = 'admin_portal/dashboard.html'
+    
+    def get(self, request):
+        """Render the admin dashboard."""
+        
+        # Dashboard statistics
+        today = timezone.now().date()
+        this_month = timezone.now().replace(day=1).date()
+        
+        # Get counts for dashboard cards
+        total_patients = User.objects.filter(role__name='patient').count()
+        total_staff = User.objects.filter(role__name__in=['doctor', 'nurse']).count()
+        total_admissions = AdmissionRecord.objects.count()
+        
+        # Today's metrics
+        today_admissions = AdmissionRecord.objects.filter(
+            admitted_date=today
+        ).count()
+        
+        # Monthly metrics
+        monthly_admissions = AdmissionRecord.objects.filter(
+            admitted_date__gte=this_month
+        ).count()
+        
+        # Active admissions (not discharged)
+        active_admissions = AdmissionRecord.objects.filter(
+            discharge_date__isnull=True
+        ).count()
+        
+        # Resource availability
+        total_beds = HospitalResource.objects.filter(
+            resource_type='bed'
+        ).count()
+        
+        available_beds = HospitalResource.objects.filter(
+            resource_type='bed',
+            is_available=True
+        ).count()
+        
+        bed_occupancy_rate = ((total_beds - available_beds) / total_beds * 100) if total_beds > 0 else 0
+        
+        # Recent admissions
+        recent_admissions = AdmissionRecord.objects.select_related(
+            'patient', 'attending_doctor'
+        ).order_by('-admitted_date')[:8]
+        
+        # Staff schedule for today
+        today_staff = StaffSchedule.objects.filter(
+            date=today
+        ).select_related('staff_member').order_by('shift_start')[:10]
+        
+        # Department breakdown
+        department_stats = User.objects.filter(
+            role__name__in=['doctor', 'nurse']
+        ).values('department').annotate(
+            count=Count('id')
+        ).order_by('-count')[:5]
+        
+        # Weekly admission trend
+        weekly_admissions = []
+        for i in range(7):
+            date = today - timezone.timedelta(days=i)
+            count = AdmissionRecord.objects.filter(
+                admitted_date=date
+            ).count()
+            weekly_admissions.append({
+                'date': date.strftime('%m/%d'),
+                'count': count
+            })
+        weekly_admissions.reverse()
+        
+        context = {
+            'total_patients': total_patients,
+            'total_staff': total_staff,
+            'total_admissions': total_admissions,
+            'today_admissions': today_admissions,
+            'monthly_admissions': monthly_admissions,
+            'active_admissions': active_admissions,
+            'available_beds': available_beds,
+            'total_beds': total_beds,
+            'bed_occupancy_rate': round(bed_occupancy_rate, 1),
+            'recent_admissions': recent_admissions,
+            'today_staff': today_staff,
+            'department_stats': department_stats,
+            'weekly_admissions': weekly_admissions,
+        }
+        
+        return render(request, self.template_name, context)
+        total_doctors = User.objects.filter(role__name=Role.DOCTOR).count()
+        total_nurses = User.objects.filter(role__name=Role.NURSE).count()
+        active_admissions = AdmissionRecord.objects.filter(status='admitted').count()
+        
+        # Resource statistics
+        total_beds = HospitalResource.objects.filter(
+            resource_type__in=['bed', 'icu_bed']
+        ).aggregate(total=Count('id'))['total'] or 0
+        
+        available_beds = HospitalResource.objects.filter(
+            resource_type__in=['bed', 'icu_bed'],
+            status='available'
+        ).count()
+        
+        # Recent admissions
+        recent_admissions = AdmissionRecord.objects.select_related(
+            'patient', 'attending_doctor'
+        ).order_by('-admission_date')[:5]
+        
+        # Today's schedules
+        today = timezone.now().date()
+        todays_schedules = StaffSchedule.objects.filter(
+            date=today
+        ).select_related('staff_member')[:10]
+        
+        # Resources needing attention (maintenance due)
+        maintenance_due = HospitalResource.objects.filter(
+            next_maintenance__lte=today
+        ).count()
+        
+        context = {
+            'total_patients': total_patients,
+            'total_doctors': total_doctors,
+            'total_nurses': total_nurses,
+            'active_admissions': active_admissions,
+            'total_beds': total_beds,
+            'available_beds': available_beds,
+            'bed_occupancy_rate': round((total_beds - available_beds) / total_beds * 100, 1) if total_beds > 0 else 0,
+            'recent_admissions': recent_admissions,
+            'todays_schedules': todays_schedules,
+            'maintenance_due': maintenance_due,
+        }
+        
+        return render(request, self.template_name, context)
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class PatientManagementView(View):
+    """
+    Patient Management View
+    =======================
+    
+    View and manage all registered patients.
+    """
+    
+    template_name = 'admin_portal/patients.html'
+    
+    def get(self, request):
+        """Display patient list."""
+        # Get all patients with their admission status
+        patients = User.objects.filter(
+            role__name=Role.PATIENT
+        ).select_related('role').order_by('-created_at')
+        
+        # Search functionality
+        search_query = request.GET.get('search', '')
+        if search_query:
+            patients = patients.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(phone__icontains=search_query)
+            )
+        
+        # Get admission counts
+        total_patients = patients.count()
+        currently_admitted = AdmissionRecord.objects.filter(
+            status='admitted'
+        ).values('patient').distinct().count()
+        
+        context = {
+            'patients': patients,
+            'search_query': search_query,
+            'total_patients': total_patients,
+            'currently_admitted': currently_admitted,
+        }
+        
+        return render(request, self.template_name, context)
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class ResourceMonitoringView(View):
+    """
+    Resource Monitoring View
+    ========================
+    
+    Monitor and manage hospital resources.
+    """
+    
+    template_name = 'admin_portal/resources.html'
+    
+    def get(self, request):
+        """Display resource overview."""
+        # Get all resources grouped by type
+        resources = HospitalResource.objects.all().order_by('resource_type', 'name')
+        
+        # Filter by type if specified
+        resource_type = request.GET.get('type', '')
+        if resource_type:
+            resources = resources.filter(resource_type=resource_type)
+        
+        # Filter by status if specified
+        status_filter = request.GET.get('status', '')
+        if status_filter:
+            resources = resources.filter(status=status_filter)
+        
+        # Calculate statistics
+        stats = {
+            'total': HospitalResource.objects.count(),
+            'available': HospitalResource.objects.filter(status='available').count(),
+            'in_use': HospitalResource.objects.filter(status='in_use').count(),
+            'maintenance': HospitalResource.objects.filter(status='maintenance').count(),
+        }
+        
+        # Resource type choices for filter dropdown
+        resource_types = HospitalResource.RESOURCE_TYPES
+        status_choices = HospitalResource.STATUS_CHOICES
+        
+        context = {
+            'resources': resources,
+            'stats': stats,
+            'resource_types': resource_types,
+            'status_choices': status_choices,
+            'selected_type': resource_type,
+            'selected_status': status_filter,
+        }
+        
+        return render(request, self.template_name, context)
+
+
+@method_decorator([login_required, admin_required], name='dispatch')
+class AnalyticsView(View):
+    """
+    Analytics View
+    ==============
+    
+    Display hospital analytics and statistics.
+    Uses placeholder data for demonstration.
+    """
+    
+    template_name = 'admin_portal/analytics.html'
+    
+    def get(self, request):
+        """Display analytics dashboard."""
+        # Time period filter
+        period = request.GET.get('period', 'month')
+        
+        # Calculate date range
+        today = timezone.now().date()
+        if period == 'week':
+            start_date = today - timezone.timedelta(days=7)
+        elif period == 'month':
+            start_date = today - timezone.timedelta(days=30)
+        elif period == 'year':
+            start_date = today - timezone.timedelta(days=365)
+        else:
+            start_date = today - timezone.timedelta(days=30)
+        
+        # Admission statistics
+        total_admissions = AdmissionRecord.objects.filter(
+            admission_date__date__gte=start_date
+        ).count()
+        
+        total_discharges = AdmissionRecord.objects.filter(
+            discharge_date__date__gte=start_date
+        ).count()
+        
+        # Calculate average length of stay
+        completed_stays = AdmissionRecord.objects.filter(
+            status='discharged',
+            discharge_date__isnull=False
+        )
+        
+        if completed_stays.exists():
+            total_days = sum(
+                (a.discharge_date - a.admission_date).days 
+                for a in completed_stays[:100]  # Limit for performance
+            )
+            avg_length_of_stay = round(total_days / min(completed_stays.count(), 100), 1)
+        else:
+            avg_length_of_stay = 0
+        
+        # Admission by type
+        admission_by_type = AdmissionRecord.objects.filter(
+            admission_date__date__gte=start_date
+        ).values('admission_type').annotate(count=Count('id'))
+        
+        # Staff statistics
+        staff_on_duty = StaffSchedule.objects.filter(
+            date=today,
+            status='scheduled'
+        ).count()
+        
+        # Placeholder data for charts
+        # In a real application, this would come from actual data
+        monthly_admissions = [
+            {'month': 'Jan', 'count': 45},
+            {'month': 'Feb', 'count': 52},
+            {'month': 'Mar', 'count': 48},
+            {'month': 'Apr', 'count': 61},
+            {'month': 'May', 'count': 55},
+            {'month': 'Jun', 'count': 67},
+        ]
+        
+        department_stats = [
+            {'department': 'Emergency', 'patients': 120},
+            {'department': 'Cardiology', 'patients': 85},
+            {'department': 'Orthopedics', 'patients': 65},
+            {'department': 'Pediatrics', 'patients': 95},
+            {'department': 'General', 'patients': 150},
+        ]
+        
+        context = {
+            'period': period,
+            'total_admissions': total_admissions,
+            'total_discharges': total_discharges,
+            'avg_length_of_stay': avg_length_of_stay,
+            'admission_by_type': admission_by_type,
+            'staff_on_duty': staff_on_duty,
+            'monthly_admissions': monthly_admissions,
+            'department_stats': department_stats,
+        }
+        
+        return render(request, self.template_name, context)
