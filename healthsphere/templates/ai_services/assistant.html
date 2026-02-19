@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bento-grid">
+    <div class="bento-featured">
+        <h2>AI Assistant</h2>
+        <p>Interactive assistant: symptom checks, triage help, and guidance.</p>
+    </div>
+    <div class="bento-tall">
+        <h3>Features</h3>
+        <ul>
+            {% for f in assistant_features %}
+                <li>{{ f }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

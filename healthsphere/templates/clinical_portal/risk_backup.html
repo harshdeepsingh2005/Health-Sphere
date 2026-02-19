@@ -1,0 +1,415 @@
+{% extends "base_simple.html" %}
+{% load static %}
+
+{% block title %}Risk Assessment - Clinical Portal - HealthSphere AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="fas fa-shield-virus me-2 text-primary"></i>
+                            Risk Assessment
+                        </h1>
+                        <p class="page-subtitle mb-0">AI-powered patient risk analysis and insights</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'clinical_portal:dashboard' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Analysis
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Score Overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="risk-card high-risk">
+                <div class="risk-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="risk-content">
+                    <h3 class="risk-count">12</h3>
+                    <p class="risk-label">High Risk Patients</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="risk-card medium-risk">
+                <div class="risk-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="risk-content">
+                    <h3 class="risk-count">28</h3>
+                    <p class="risk-label">Medium Risk Patients</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="risk-card low-risk">
+                <div class="risk-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="risk-content">
+                    <h3 class="risk-count">85</h3>
+                    <p class="risk-label">Low Risk Patients</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="risk-card monitored">
+                <div class="risk-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="risk-content">
+                    <h3 class="risk-count">15</h3>
+                    <p class="risk-label">Under Monitoring</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- High Risk Patients -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users-medical me-2 text-danger"></i>
+                        High Risk Patients Requiring Immediate Attention
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Risk Factors</th>
+                                    <th>Risk Score</th>
+                                    <th>Last Assessment</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-danger-subtle">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar me-3">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <span class="fw-medium">John Smith</span>
+                                                <br>
+                                                <small class="text-muted">ID: P001234</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="risk-factors">
+                                            <span class="badge bg-danger me-1">Diabetes</span>
+                                            <span class="badge bg-warning me-1">Hypertension</span>
+                                            <span class="badge bg-secondary me-1">Age 65+</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="risk-score-badge high">
+                                            <span class="score">92</span>
+                                            <small>High</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">2 hours ago</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger me-2">
+                                            <i class="fas fa-phone"></i> Call
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="table-danger-subtle">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar me-3">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <span class="fw-medium">Maria Garcia</span>
+                                                <br>
+                                                <small class="text-muted">ID: P001235</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="risk-factors">
+                                            <span class="badge bg-danger me-1">Heart Disease</span>
+                                            <span class="badge bg-warning me-1">High Cholesterol</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="risk-score-badge high">
+                                            <span class="score">89</span>
+                                            <small>High</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">4 hours ago</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger me-2">
+                                            <i class="fas fa-phone"></i> Call
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Analytics -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Risk Trend Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="riskTrendChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-pie-chart me-2"></i>
+                        Risk Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="risk-distribution">
+                        <div class="distribution-item">
+                            <div class="distribution-color high"></div>
+                            <span class="distribution-label">High Risk</span>
+                            <span class="distribution-value">9.6%</span>
+                        </div>
+                        <div class="distribution-item">
+                            <div class="distribution-color medium"></div>
+                            <span class="distribution-label">Medium Risk</span>
+                            <span class="distribution-value">22.4%</span>
+                        </div>
+                        <div class="distribution-item">
+                            <div class="distribution-color low"></div>
+                            <span class="distribution-label">Low Risk</span>
+                            <span class="distribution-value">68.0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.risk-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-xl, 16px);
+    padding: var(--spacing-6, 24px);
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s ease;
+}
+
+.risk-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.risk-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: var(--spacing-4, 16px);
+    font-size: 24px;
+}
+
+.high-risk .risk-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-600);
+}
+
+.medium-risk .risk-icon {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning-600);
+}
+
+.low-risk .risk-icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--success-600);
+}
+
+.monitored .risk-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-600);
+}
+
+.risk-count {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-1, 4px);
+}
+
+.risk-label {
+    color: var(--text-muted);
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.risk-factors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.risk-score-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    min-width: 60px;
+}
+
+.risk-score-badge.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-600);
+}
+
+.risk-score-badge .score {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.risk-score-badge small {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.chart-container {
+    height: 300px;
+    position: relative;
+}
+
+.risk-distribution {
+    space-y: var(--spacing-3, 12px);
+}
+
+.distribution-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-3, 12px) 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.distribution-item:last-child {
+    border-bottom: none;
+}
+
+.distribution-color {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-full);
+    margin-right: var(--spacing-3, 12px);
+}
+
+.distribution-color.high {
+    background: var(--danger-500);
+}
+
+.distribution-color.medium {
+    background: var(--warning-500);
+}
+
+.distribution-color.low {
+    background: var(--success-500);
+}
+
+.distribution-label {
+    flex: 1;
+    font-weight: 500;
+}
+
+.distribution-value {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mock chart - in real implementation, you'd use Chart.js or similar
+    console.log('Risk Assessment dashboard loaded');
+    
+    // Risk trend chart placeholder
+    const canvas = document.getElementById('riskTrendChart');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '16px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('Risk Trend Chart', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('(Chart.js integration needed)', canvas.width / 2, canvas.height / 2 + 25);
+    }
+});
+</script>
+{% endblock %}

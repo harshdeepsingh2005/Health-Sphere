@@ -3,8 +3,21 @@
 
 {% block title %}Login - HealthSphere AI{% endblock %}
 
+{% block hide_sidebar %}true{% endblock %}
+
 {% block extra_css %}
 <style>
+/* Hide sidebar and header on login page */
+.sidebar,
+.header {
+    display: none !important;
+}
+
+.main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
 /* =============================================
    Login Page Styles - Healthcare Theme
    ============================================= */

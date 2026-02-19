@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bento-grid">
+    <div class="bento-featured">
+        <h2>AI Insights Dashboard</h2>
+        <p>Explore AI-powered clinical recommendations and analytics.</p>
+    </div>
+    <div class="bento-tall">
+        <h3>Insights</h3>
+        <ul>
+            {% for insight in insights %}
+                <li>{{ insight }}</li>
+            {% empty %}
+                <li>No insights available.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

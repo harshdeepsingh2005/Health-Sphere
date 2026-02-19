@@ -1,0 +1,410 @@
+{% extends "base_simple.html" %}
+{% load static %}
+
+{% block title %}Analytics Dashboard - HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+<style>
+.gradient-chart { background: linear-gradient(135deg, #A8C5E8, #b8d4f0); }
+.gradient-stats { background: linear-gradient(135deg, #A8C5A8, #b8d4b8); }
+.gradient-time { background: linear-gradient(135deg, #E89B87, #f0b097); }
+.gradient-revenue { background: linear-gradient(135deg, #F0C3A0, #f8d3b0); }
+
+.chart-placeholder {
+    height: 280px;
+    background: linear-gradient(135deg, #E2E8F0 0%, #CBD5E0 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4A5568;
+    font-weight: 500;
+    margin-top: 16px;
+}
+
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.filter-select {
+    padding: 8px 16px;
+    border: 2px solid #E2E8F0;
+    border-radius: 12px;
+    background: white;
+    color: #2D3748;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--color-blue);
+}
+
+.mini-metric {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(168, 197, 232, 0.05);
+    border-radius: 12px;
+    margin-top: 8px;
+}
+
+.mini-metric-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+}
+
+.mini-metric-content h4 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2D3748;
+    margin: 0;
+}
+
+.mini-metric-content p {
+    font-size: 13px;
+    color: #718096;
+    margin: 0;
+}
+
+.time-range-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.time-tab {
+    padding: 8px 16px;
+    border: 2px solid #E2E8F0;
+    background: white;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #718096;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.time-tab.active {
+    background: var(--color-blue);
+    border-color: var(--color-blue);
+    color: white;
+}
+
+.time-tab:hover:not(.active) {
+    border-color: var(--color-blue);
+    background: rgba(168, 197, 232, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bento-grid">
+    <!-- Page Header Wide Card -->
+    <div class="bento-card bento-wide" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <div class="metric-icon gradient-chart">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                Analytics Dashboard
+            </div>
+            <div class="filter-bar">
+                <select class="filter-select">
+                    <option>Last 7 Days</option>
+                    <option>Last 30 Days</option>
+                    <option>Last 90 Days</option>
+                    <option>This Year</option>
+                </select>
+                <button class="bento-btn bento-btn-primary">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+        <p style="color: #718096; margin: 0;">Comprehensive hospital performance metrics and insights</p>
+    </div>
+
+    <!-- Quick Time Range Selector -->
+    <div class="bento-card bento-wide" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-clock"></i>
+            Time Range
+        </div>
+        <div class="time-range-tabs">
+            <button class="time-tab">24 Hours</button>
+            <button class="time-tab active">7 Days</button>
+            <button class="time-tab">30 Days</button>
+            <button class="time-tab">90 Days</button>
+        </div>
+    </div>
+
+    <!-- Total Patients -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-chart">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="metric-value" data-target="2847">0</div>
+        <div class="metric-label">Total Patients</div>
+        <div class="metric-trend">
+            <i class="fas fa-arrow-up"></i>
+            <span>+12%</span>
+        </div>
+    </div>
+
+    <!-- Appointments Today -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-stats">
+            <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="metric-value" data-target="143">0</div>
+        <div class="metric-label">Appointments Today</div>
+        <div class="metric-trend">
+            <i class="fas fa-arrow-up"></i>
+            <span>+8%</span>
+        </div>
+    </div>
+
+    <!-- Bed Occupancy -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-time">
+            <i class="fas fa-bed"></i>
+        </div>
+        <div class="metric-value">78%</div>
+        <div class="metric-label">Bed Occupancy</div>
+        <div class="metric-trend">
+            <i class="fas fa-arrow-up"></i>
+            <span>+5%</span>
+        </div>
+    </div>
+
+    <!-- Revenue Today -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-revenue">
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="metric-value">$12.5K</div>
+        <div class="metric-label">Revenue Today</div>
+        <div class="metric-trend">
+            <i class="fas fa-arrow-up"></i>
+            <span>+15%</span>
+        </div>
+    </div>
+
+    <!-- Patient Visits Chart -->
+    <div class="bento-card bento-featured" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-chart-area"></i>
+                Patient Visits Trend
+            </div>
+            <span class="card-badge">Weekly</span>
+        </div>
+        <div class="chart-placeholder">
+            <i class="fas fa-chart-line" style="font-size: 48px; opacity: 0.3;"></i>
+        </div>
+    </div>
+
+    <!-- Department Performance -->
+    <div class="bento-card bento-tall" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-building"></i>
+            Department Performance
+        </div>
+        <div class="bento-list">
+            <div class="bento-list-item">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #2D3748;">Cardiology</div>
+                        <div style="font-size: 13px; color: #718096;">285 patients</div>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: #48bb78;">92%</div>
+                </div>
+            </div>
+            <div class="bento-list-item">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #2D3748;">Emergency</div>
+                        <div style="font-size: 13px; color: #718096;">412 patients</div>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: #48bb78;">88%</div>
+                </div>
+            </div>
+            <div class="bento-list-item">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #2D3748;">Pediatrics</div>
+                        <div style="font-size: 13px; color: #718096;">198 patients</div>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: #f0ad4e;">85%</div>
+                </div>
+            </div>
+            <div class="bento-list-item">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 600; color: #2D3748;">Orthopedics</div>
+                        <div style="font-size: 13px; color: #718096;">156 patients</div>
+                    </div>
+                    <div style="font-size: 18px; font-weight: 700; color: #48bb78;">90%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="bento-card bento-wide" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-money-bill-wave"></i>
+                Revenue Analysis
+            </div>
+            <span class="card-badge">Monthly</span>
+        </div>
+        <div class="chart-placeholder" style="height: 200px;">
+            <i class="fas fa-chart-bar" style="font-size: 48px; opacity: 0.3;"></i>
+        </div>
+    </div>
+
+    <!-- AI Model Performance -->
+    <div class="bento-card bento-wide" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-brain"></i>
+            AI Model Performance
+        </div>
+        <div class="mini-metric">
+            <div class="mini-metric-icon gradient-chart">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="mini-metric-content">
+                <h4>94.2%</h4>
+                <p>Diagnostic Accuracy</p>
+            </div>
+        </div>
+        <div class="mini-metric">
+            <div class="mini-metric-icon gradient-stats">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <div class="mini-metric-content">
+                <h4>1,245</h4>
+                <p>Risk Assessments</p>
+            </div>
+        </div>
+        <div class="mini-metric">
+            <div class="mini-metric-icon gradient-time">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="mini-metric-content">
+                <h4>856</h4>
+                <p>AI Consultations</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Performance -->
+    <div class="bento-card bento-wide" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-tachometer-alt"></i>
+                System Performance
+            </div>
+            <span class="card-badge" style="background: rgba(72, 187, 120, 0.15); color: #48bb78;">Healthy</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+            <div style="padding: 12px; background: rgba(168, 197, 232, 0.05); border-radius: 12px;">
+                <div style="font-size: 24px; font-weight: 700; color: #2D3748;">99.8%</div>
+                <div style="font-size: 13px; color: #718096;">Uptime</div>
+            </div>
+            <div style="padding: 12px; background: rgba(168, 197, 232, 0.05); border-radius: 12px;">
+                <div style="font-size: 24px; font-weight: 700; color: #2D3748;">45ms</div>
+                <div style="font-size: 13px; color: #718096;">Avg Response</div>
+            </div>
+            <div style="padding: 12px; background: rgba(168, 197, 232, 0.05); border-radius: 12px;">
+                <div style="font-size: 24px; font-weight: 700; color: #2D3748;">2.4K</div>
+                <div style="font-size: 13px; color: #718096;">Active Users</div>
+            </div>
+            <div style="padding: 12px; background: rgba(168, 197, 232, 0.05); border-radius: 12px;">
+                <div style="font-size: 24px; font-weight: 700; color: #2D3748;">34GB</div>
+                <div style="font-size: 13px; color: #718096;">Data Processed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Outcomes -->
+    <div class="bento-card bento-wide" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-heartbeat"></i>
+            Clinical Outcomes
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px;">
+            <div style="text-align: center; padding: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: #48bb78;">96%</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Success Rate</div>
+            </div>
+            <div style="text-align: center; padding: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: #4299e1;">4.2</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Avg Stay (days)</div>
+            </div>
+            <div style="text-align: center; padding: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: #ed8936;">2.1%</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Readmission</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Animate counters on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const counters = document.querySelectorAll('.metric-value[data-target]');
+    counters.forEach(counter => {
+        const target = parseInt(counter.dataset.target);
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                counter.textContent = target.toLocaleString();
+                clearInterval(timer);
+            } else {
+                counter.textContent = Math.floor(current).toLocaleString();
+            }
+        }, 16);
+    });
+
+    // Time range tabs
+    document.querySelectorAll('.time-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.time-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+});
+</script>
+{% endblock %}

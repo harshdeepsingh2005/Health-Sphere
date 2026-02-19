@@ -3,291 +3,228 @@
 
 {% block title %}Health Details - HealthSphere AI{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+<style>
+.gradient-weight { background: linear-gradient(135deg, #A8C5E8, #b8d4f0); }
+.gradient-heart { background: linear-gradient(135deg, #E89B87, #f0b097); }
+.gradient-temp { background: linear-gradient(135deg, #F0C3A0, #f8d3b0); }
+.gradient-bp { background: linear-gradient(135deg, #A8C5A8, #b8d4b8); }
+
+.health-record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(168, 197, 232, 0.03);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.health-record-item:hover {
+    background: rgba(168, 197, 232, 0.08);
+    transform: translateX(4px);
+}
+
+.status-normal { background: rgba(72, 187, 120, 0.15); color: #48bb78; }
+.status-optimal { background: rgba(66, 153, 225, 0.15); color: #4299e1; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
+<div class="bento-grid">
     <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="page-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="page-title">
-                            <i class="fas fa-heart-pulse me-2 text-primary"></i>
-                            Health Details
-                        </h1>
-                        <p class="page-subtitle mb-0">View and manage your health information</p>
-                    </div>
-                    <div>
-                        <a href="{% url 'patient_portal:dashboard' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                        </a>
-                    </div>
+    <div class="bento-card bento-wide" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <div class="metric-icon gradient-heart">
+                    <i class="fas fa-heart-pulse"></i>
                 </div>
+                Health Details
+            </div>
+            <a href="{% url 'patient_portal:dashboard' %}" class="bento-btn bento-btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </div>
+        <p style="color: #718096; margin: 0;">View and manage your health information</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bento-card bento-wide" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-bolt"></i>
+            Quick Actions
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px;">
+            <button class="bento-btn bento-btn-primary">
+                <i class="fas fa-plus"></i>
+                Add Record
+            </button>
+            <button class="bento-btn bento-btn-secondary">
+                <i class="fas fa-download"></i>
+                Export Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Weight -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-weight">
+            <i class="fas fa-weight"></i>
+        </div>
+        <div class="metric-value">72.5</div>
+        <div class="metric-label">Weight (kg)</div>
+        <div class="metric-trend down">
+            <i class="fas fa-arrow-down"></i>
+            <span>-0.5 kg</span>
+        </div>
+    </div>
+
+    <!-- Heart Rate -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-heart">
+            <i class="fas fa-heartbeat"></i>
+        </div>
+        <div class="metric-value">72</div>
+        <div class="metric-label">Heart Rate (bpm)</div>
+        <div class="metric-trend">
+            <i class="fas fa-check"></i>
+            <span>Normal</span>
+        </div>
+    </div>
+
+    <!-- Temperature -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-temp">
+            <i class="fas fa-thermometer-half"></i>
+        </div>
+        <div class="metric-value">36.8</div>
+        <div class="metric-label">Temperature (°C)</div>
+        <div class="metric-trend">
+            <i class="fas fa-check"></i>
+            <span>Normal</span>
+        </div>
+    </div>
+
+    <!-- Blood Pressure -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-bp">
+            <i class="fas fa-tint"></i>
+        </div>
+        <div class="metric-value">120/80</div>
+        <div class="metric-label">Blood Pressure</div>
+        <div class="metric-trend">
+            <i class="fas fa-check"></i>
+            <span>Optimal</span>
+        </div>
+    </div>
+
+    <!-- Recent Health Records -->
+    <div class="bento-card bento-featured" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-file-medical"></i>
+                Recent Health Records
+            </div>
+            <span class="card-badge">Last 7 Days</span>
+        </div>
+        
+        <div class="health-record-item">
+            <div>
+                <div style="font-weight: 600; color: #2D3748; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-weight" style="color: var(--color-blue);"></i>
+                    Weight
+                </div>
+                <div style="font-size: 13px; color: #718096; margin-top: 4px;">Feb 17, 2026 • 09:30 AM</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-weight: 700; font-size: 18px; color: #2D3748;">72.5 kg</div>
+                <span class="card-badge status-normal">Normal</span>
+            </div>
+        </div>
+
+        <div class="health-record-item">
+            <div>
+                <div style="font-weight: 600; color: #2D3748; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-tint" style="color: var(--color-green);"></i>
+                    Blood Pressure
+                </div>
+                <div style="font-size: 13px; color: #718096; margin-top: 4px;">Feb 16, 2026 • 02:15 PM</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-weight: 700; font-size: 18px; color: #2D3748;">120/80 mmHg</div>
+                <span class="card-badge status-optimal">Optimal</span>
+            </div>
+        </div>
+
+        <div class="health-record-item">
+            <div>
+                <div style="font-weight: 600; color: #2D3748; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-heartbeat" style="color: var(--color-coral);"></i>
+                    Heart Rate
+                </div>
+                <div style="font-size: 13px; color: #718096; margin-top: 4px;">Feb 15, 2026 • 08:45 AM</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-weight: 700; font-size: 18px; color: #2D3748;">75 bpm</div>
+                <span class="card-badge status-normal">Normal</span>
+            </div>
+        </div>
+
+        <div class="health-record-item">
+            <div>
+                <div style="font-weight: 600; color: #2D3748; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-thermometer-half" style="color: var(--color-peach);"></i>
+                    Temperature
+                </div>
+                <div style="font-size: 13px; color: #718096; margin-top: 4px;">Feb 14, 2026 • 11:20 AM</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-weight: 700; font-size: 18px; color: #2D3748;">36.8 °C</div>
+                <span class="card-badge status-normal">Normal</span>
             </div>
         </div>
     </div>
 
-    <!-- Health Metrics Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card">
-                <div class="metric-icon">
-                    <i class="fas fa-weight text-primary"></i>
-                </div>
-                <div class="metric-content">
-                    <h3 class="metric-value">72.5</h3>
-                    <p class="metric-label">Weight (kg)</p>
-                    <span class="metric-trend trend-down">
-                        <i class="fas fa-arrow-down"></i> -0.5 kg
-                    </span>
+    <!-- Health Trends Chart -->
+    <div class="bento-card bento-tall" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-chart-line"></i>
+            Health Trends
+        </div>
+        <div style="margin-top: 16px;">
+            <div style="padding: 16px; background: rgba(168, 197, 232, 0.05); border-radius: 12px; margin-bottom: 12px;">
+                <div style="font-size: 13px; color: #718096;">Weight Trend</div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+                    <span style="font-size: 24px; font-weight: 700; color: #2D3748;">↓</span>
+                    <span style="font-size: 16px; font-weight: 600; color: #48bb78;">Decreasing</span>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card">
-                <div class="metric-icon">
-                    <i class="fas fa-heartbeat text-danger"></i>
-                </div>
-                <div class="metric-content">
-                    <h3 class="metric-value">72</h3>
-                    <p class="metric-label">Heart Rate (bpm)</p>
-                    <span class="metric-trend trend-stable">
-                        <i class="fas fa-minus"></i> Normal
-                    </span>
+            <div style="padding: 16px; background: rgba(168, 197, 232, 0.05); border-radius: 12px; margin-bottom: 12px;">
+                <div style="font-size: 13px; color: #718096;">Heart Rate</div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+                    <span style="font-size: 24px; font-weight: 700; color: #2D3748;">→</span>
+                    <span style="font-size: 16px; font-weight: 600; color: #4299e1;">Stable</span>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card">
-                <div class="metric-icon">
-                    <i class="fas fa-thermometer-half text-warning"></i>
-                </div>
-                <div class="metric-content">
-                    <h3 class="metric-value">36.8</h3>
-                    <p class="metric-label">Temperature (°C)</p>
-                    <span class="metric-trend trend-stable">
-                        <i class="fas fa-check"></i> Normal
-                    </span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card">
-                <div class="metric-icon">
-                    <i class="fas fa-tint text-info"></i>
-                </div>
-                <div class="metric-content">
-                    <h3 class="metric-value">120/80</h3>
-                    <p class="metric-label">Blood Pressure</p>
-                    <span class="metric-trend trend-stable">
-                        <i class="fas fa-check"></i> Optimal
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Health Records -->
-    <div class="row">
-        <div class="col-12">
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-file-medical me-2"></i>
-                        Recent Health Records
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Value</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <span class="fw-medium">Feb 17, 2026</span>
-                                        <br>
-                                        <small class="text-muted">09:30 AM</small>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-weight text-primary me-2"></i>
-                                            Weight
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="fw-medium">72.5 kg</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-success">Normal</span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <span class="fw-medium">Feb 16, 2026</span>
-                                        <br>
-                                        <small class="text-muted">02:15 PM</small>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-tint text-info me-2"></i>
-                                            Blood Pressure
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="fw-medium">120/80 mmHg</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-success">Optimal</span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <span class="fw-medium">Feb 15, 2026</span>
-                                        <br>
-                                        <small class="text-muted">08:45 AM</small>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="fas fa-heartbeat text-danger me-2"></i>
-                                            Heart Rate
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="fw-medium">75 bpm</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-success">Normal</span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <div style="padding: 16px; background: rgba(168, 197, 232, 0.05); border-radius: 12px;">
+                <div style="font-size: 13px; color: #718096;">Blood Pressure</div>
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+                    <span style="font-size: 24px; font-weight: 700; color: #2D3748;">→</span>
+                    <span style="font-size: 16px; font-weight: 600; color: #48bb78;">Optimal</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.metric-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--radius-xl, 16px);
-    padding: var(--spacing-6, 24px);
-    box-shadow: var(--shadow-soft);
-    transition: all 0.3s ease;
-    height: 100%;
-}
-
-.metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
-}
-
-.metric-icon {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: var(--spacing-4, 16px);
-}
-
-.metric-icon i {
-    font-size: 24px;
-}
-
-.metric-value {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: var(--spacing-1, 4px);
-    background: linear-gradient(135deg, var(--primary-600), var(--primary-400));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.metric-label {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    margin-bottom: var(--spacing-2, 8px);
-}
-
-.metric-trend {
-    font-size: 0.75rem;
-    padding: 4px 8px;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-}
-
-.trend-up {
-    background: rgba(34, 197, 94, 0.1);
-    color: var(--success-600);
-}
-
-.trend-down {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger-600);
-}
-
-.trend-stable {
-    background: rgba(107, 114, 128, 0.1);
-    color: var(--text-muted);
-}
-
-.table th {
-    border-bottom: 2px solid rgba(59, 130, 246, 0.1);
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    padding: var(--spacing-3, 12px);
-}
-
-.table td {
-    padding: var(--spacing-3, 12px);
-    vertical-align: middle;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.badge {
-    font-size: 0.75rem;
-    padding: 4px 8px;
-}
-
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 0.875rem;
-}
-</style>
 {% endblock %}

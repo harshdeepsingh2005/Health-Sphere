@@ -155,14 +155,14 @@ class Appointment(models.Model):
     patient = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='appointments',
+        related_name='patient_portal_appointments',
         limit_choices_to={'role__name': 'patient'},
         help_text='Patient booking the appointment'
     )
     doctor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='doctor_appointments',
+        related_name='doctor_portal_appointments',
         limit_choices_to={'role__name': 'doctor'},
         help_text='Doctor for the appointment'
     )

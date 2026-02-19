@@ -1,873 +1,682 @@
 {% extends "base_simple.html" %}
 {% load static %}
 
-{% block title %}{{ page_title|default:"My Health Dashboard" }} - HealthSphere AI{% endblock %}
+{% block title %}Patient Dashboard - HealthSphere AI{% endblock %}
+
+{% block sidebar_nav %}
+<!-- Patient Navigation -->
+<div class="nav-section">
+    <div class="nav-section-title">Dashboard</div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:dashboard' %}" class="nav-link active">
+            <i class="fas fa-home"></i>
+            <span class="nav-link-text">Overview</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:book_appointment' %}" class="nav-link">
+            <i class="fas fa-calendar-plus"></i>
+            <span class="nav-link-text">Book Appointment</span>
+        </a>
+    </div>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Health</div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:health_details' %}" class="nav-link">
+            <i class="fas fa-heartbeat"></i>
+            <span class="nav-link-text">Vitals & Health</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:lab_results' %}" class="nav-link">
+            <i class="fas fa-flask"></i>
+            <span class="nav-link-text">Lab Results</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:assistant' %}" class="nav-link">
+            <i class="fas fa-robot"></i>
+            <span class="nav-link-text">AI Assistant</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
 
 {% block extra_css %}
 <style>
-/* =============================================
-   Patient Dashboard Styles - Soft Glass Healthcare
-   ============================================= */
-
-.dashboard-main {
-    padding: var(--spacing-6, 24px);
-    background: var(--neutral-25, #fefefe);
-    min-height: 100vh;
-}
-
-.dashboard-container {
-    max-width: 1400px;
+/* ===== BENTO GRID LAYOUT ===== */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 24px;
+    max-width: 1600px;
     margin: 0 auto;
 }
 
-.dashboard-header {
-    margin-bottom: var(--spacing-8, 32px);
+.bento-small { grid-column: span 1; grid-row: span 1; }
+.bento-wide { grid-column: span 2; grid-row: span 1; }
+.bento-tall { grid-column: span 1; grid-row: span 2; }
+.bento-large { grid-column: span 2; grid-row: span 1; }
+.bento-featured { grid-column: span 2; grid-row: span 2; }
+
+/* ===== INTERACTIVE CARDS ===== */
+.bento-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    cursor: pointer;
 }
 
-.welcome-card {
-    background: linear-gradient(135deg, 
-        rgba(240, 253, 244, 0.95) 0%, 
-        rgba(255, 255, 255, 0.94) 100%);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(34, 197, 94, 0.08);
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
-    border-radius: var(--radius-2xl, 20px);
-    padding: var(--spacing-8, 32px);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.bento-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.15);
 }
 
-.welcome-content h1 {
-    font-size: 2.5rem;
+[data-hover-lift]:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+[data-tilt]:hover {
+    transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) scale(1.01);
+}
+
+.card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(168, 197, 232, 0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.bento-card:hover .card-glow {
+    opacity: 1;
+}
+
+/* ===== GREETING CARD ===== */
+.greeting-content {
+    position: relative;
+    z-index: 2;
+}
+
+.greeting-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.greeting-content h1 {
+    font-size: 32px;
     font-weight: 700;
-    color: var(--neutral-900, #111827);
-    margin-bottom: var(--spacing-2, 8px);
+    color: #2D3748;
+    margin-bottom: 8px;
 }
 
-.welcome-content p {
-    font-size: 1.125rem;
-    color: var(--neutral-600, #6b7280);
-    margin-bottom: var(--spacing-4, 16px);
+.greeting-subtitle {
+    font-size: 16px;
+    color: #718096;
+    margin-bottom: 20px;
 }
 
-.wellness-streak {
+.health-status-badge {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-2, 8px);
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    gap: 8px;
+    background: rgba(72, 187, 120, 0.1);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #48bb78;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #48bb78;
+    animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+/* ===== METRIC CARDS ===== */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.metric-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+.bento-card:hover .metric-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.metric-value {
+    font-size: 48px;
     font-weight: 700;
-    font-size: 1.125rem;
+    color: #2D3748;
+    line-height: 1;
+    margin-bottom: 8px;
 }
 
-.streak-icon {
-    font-size: 1.5rem;
-    filter: none;
-    -webkit-text-fill-color: initial;
+.metric-label {
+    font-size: 14px;
+    color: #718096;
+    font-weight: 500;
+    margin-bottom: 16px;
 }
 
-.health-score-circle {
-    position: relative;
-    width: 120px;
-    height: 120px;
+.metric-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #48bb78;
+}
+
+.trend-down {
+    color: #f56565;
+}
+
+/* ===== APPOINTMENT CARD ===== */
+.appointment-item {
+    padding: 16px;
+    background: rgba(168, 197, 232, 0.05);
+    border-radius: 12px;
+    border-left: 4px solid var(--color-blue);
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.appointment-item:hover {
+    background: rgba(168, 197, 232, 0.1);
+    transform: translateX(4px);
+}
+
+.apt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.apt-time {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-blue);
+}
+
+.apt-status {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(72, 187, 120, 0.1);
+    color: #48bb78;
+}
+
+.apt-doctor {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2D3748;
+    margin-bottom: 4px;
+}
+
+.apt-department {
+    font-size: 13px;
+    color: #718096;
+}
+
+/* ===== VITALS GRID ===== */
+.vitals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.vital-item {
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(168, 197, 232, 0.05) 0%, rgba(168, 197, 232, 0.02) 100%);
+    border-radius: 10px;
+}
+
+.vital-label {
+    font-size: 11px;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.vital-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2D3748;
+}
+
+.vital-unit {
+    font-size: 12px;
+    color: #A0AEC0;
+    font-weight: 400;
+}
+
+/* ===== MEDICATION CARD ===== */
+.medication-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.med-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(240, 195, 160, 0.05);
+    border-radius: 10px;
+}
+
+.med-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #F0C3A0, #f5d4b8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.med-info {
+    flex: 1;
+}
+
+.med-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2D3748;
+    margin-bottom: 2px;
+}
+
+.med-dosage {
+    font-size: 12px;
+    color: #718096;
+}
+
+.med-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(232, 155, 135, 0.1);
+    color: var(--color-coral);
+}
+
+/* ===== QUICK ACTIONS ===== */
+.actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.action-btn {
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(168, 197, 232, 0.1) 0%, rgba(168, 197, 232, 0.05) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.health-score-circle:hover {
+.action-btn:hover {
+    background: linear-gradient(135deg, var(--color-blue), #b8d4f0);
+    color: white;
     transform: scale(1.05);
 }
 
-.score-inner {
+.action-btn i {
+    font-size: 24px;
+    color: var(--color-blue);
+    transition: color 0.3s ease;
+}
+
+.action-btn:hover i {
+    color: white;
+}
+
+.action-btn span {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4A5568;
+    transition: color 0.3s ease;
+}
+
+.action-btn:hover span {
+    color: white;
+}
+
+/* ===== HEALTH SCORE RING ===== */
+.score-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.circular-score {
+    position: relative;
+    width: 140px;
+    height: 140px;
+}
+
+.score-label {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    z-index: 2;
 }
 
 .score-number {
-    display: block;
-    font-size: 1.875rem;
-    font-weight: 800;
-    color: var(--healthcare-primary, #3b82f6);
-    line-height: 1;
+    font-size: 36px;
+    font-weight: 700;
+    color: #2D3748;
 }
 
-.score-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--neutral-600, #6b7280);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 2px;
+.score-text {
+    font-size: 12px;
+    color: #718096;
 }
 
-.progress-ring {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: rotate(-90deg);
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1400px) {
+    .bento-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .bento-featured {
+        grid-column: span 3;
+    }
 }
 
-.progress-ring__circle {
-    stroke: var(--healthcare-primary, #3b82f6);
-    fill: transparent;
-    stroke-width: 8;
-    stroke-linecap: round;
-    transition: stroke-dasharray 1s ease-in-out;
-}
-
-.dashboard-grid {
-    display: grid;
-    gap: var(--spacing-6, 24px);
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+@media (max-width: 1024px) {
+    .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .bento-wide, .bento-large, .bento-featured {
+        grid-column: span 2;
+    }
 }
 
 @media (max-width: 768px) {
-    .dashboard-grid {
+    .bento-grid {
         grid-template-columns: 1fr;
     }
-    
-    .welcome-card {
-        flex-direction: column;
-        gap: var(--spacing-6, 24px);
-        text-align: center;
+    .bento-small, .bento-wide, .bento-large, .bento-tall, .bento-featured {
+        grid-column: span 1;
+        grid-row: span 1;
     }
-}
-
-.dashboard-section {
-    min-height: 300px;
-}
-
-.card-content {
-    padding: var(--spacing-4, 16px);
-}
-
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: var(--spacing-3, 12px);
-    margin-bottom: var(--spacing-4, 16px);
-}
-
-.trend-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-2, 8px);
-    padding: var(--spacing-3, 12px);
-    border-radius: var(--radius-lg, 12px);
-    background: var(--neutral-50, #f9fafb);
-}
-
-.trend-improving .trend-text { color: var(--healthcare-success, #10b981); }
-.trend-stable .trend-text { color: var(--healthcare-primary, #3b82f6); }
-.trend-declining .trend-text { color: var(--healthcare-danger, #ef4444); }
-
-.appointments-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-3, 12px);
-}
-
-.appointment-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-4, 16px);
-    padding: var(--spacing-4, 16px);
-    background: var(--neutral-50, #f9fafb);
-    border-radius: var(--radius-lg, 12px);
-    border: 1px solid var(--neutral-200, #e5e7eb);
-    transition: all 0.3s ease;
-}
-
-.appointment-item:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.appointment-time {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 60px;
-}
-
-.appointment-time .date {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--healthcare-primary, #3b82f6);
-}
-
-.appointment-time .time {
-    font-size: 0.75rem;
-    color: var(--neutral-600, #6b7280);
-}
-
-.appointment-details {
-    flex: 1;
-}
-
-.appointment-details h4 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--neutral-900, #111827);
-    margin-bottom: 2px;
-}
-
-.appointment-details p {
-    font-size: 0.75rem;
-    color: var(--neutral-600, #6b7280);
-    margin: 0;
-}
-
-.appointment-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2, 8px);
-}
-
-.medications-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-3, 12px);
-}
-
-.medication-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-4, 16px);
-    background: var(--neutral-50, #f9fafb);
-    border-radius: var(--radius-lg, 12px);
-    border: 1px solid var(--neutral-200, #e5e7eb);
-    transition: all 0.3s ease;
-}
-
-.medication-item:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.medication-info h4 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--neutral-900, #111827);
-    margin-bottom: 2px;
-}
-
-.medication-info p {
-    font-size: 0.75rem;
-    color: var(--neutral-600, #6b7280);
-    margin: 0;
-}
-
-.medication-actions {
-    display: flex;
-    gap: var(--spacing-2, 8px);
-}
-
-.ai-insights {
-    margin-bottom: var(--spacing-4, 16px);
-}
-
-.insight-item {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-3, 12px);
-    padding: var(--spacing-4, 16px);
-    background: var(--neutral-50, #f9fafb);
-    border-radius: var(--radius-lg, 12px);
-    border-left: 4px solid var(--healthcare-primary, #3b82f6);
-    margin-bottom: var(--spacing-3, 12px);
-}
-
-.insight-item.high {
-    border-left-color: var(--healthcare-danger, #ef4444);
-    background: rgba(239, 68, 68, 0.05);
-}
-
-.insight-item.medium {
-    border-left-color: var(--healthcare-warning, #f59e0b);
-    background: rgba(245, 158, 11, 0.05);
-}
-
-.insight-item.low {
-    border-left-color: var(--healthcare-success, #10b981);
-    background: rgba(16, 185, 129, 0.05);
-}
-
-.insight-icon {
-    font-size: 1.25rem;
-    line-height: 1;
-}
-
-.insight-content h4 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--neutral-900, #111827);
-    margin-bottom: var(--spacing-1, 4px);
-}
-
-.insight-content p {
-    font-size: 0.8125rem;
-    color: var(--neutral-600, #6b7280);
-    margin-bottom: var(--spacing-2, 8px);
-}
-
-.insight-action {
-    font-size: 0.75rem;
-    color: var(--healthcare-primary, #3b82f6);
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.insight-action:hover {
-    text-decoration: underline;
-}
-
-.ai-chat-prompt {
-    display: flex;
-    gap: var(--spacing-2, 8px);
-}
-
-.chat-input {
-    flex: 1;
-    padding: var(--spacing-3, 12px);
-    border: 1px solid var(--neutral-200, #e5e7eb);
-    border-radius: var(--radius-lg, 12px);
-    font-size: 0.875rem;
-    background: white;
-    transition: border-color 0.3s ease;
-}
-
-.chat-input:focus {
-    outline: none;
-    border-color: var(--healthcare-primary, #3b82f6);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.actions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: var(--spacing-3, 12px);
-}
-
-.action-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-2, 8px);
-    padding: var(--spacing-4, 16px);
-    background: var(--neutral-50, #f9fafb);
-    border-radius: var(--radius-lg, 12px);
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.3s ease;
-}
-
-.action-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    background: white;
-}
-
-.action-icon {
-    font-size: 1.5rem;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--healthcare-primary-bg, rgba(59, 130, 246, 0.1));
-    color: var(--healthcare-primary, #3b82f6);
-    border-radius: var(--radius-lg, 12px);
-    transition: all 0.3s ease;
-}
-
-.action-item:hover .action-icon {
-    transform: scale(1.1);
-}
-
-.action-text {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--neutral-700, #374151);
-    text-align: center;
-}
-
-.activity-timeline {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-3, 12px);
-}
-
-.activity-item {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-3, 12px);
-    padding: var(--spacing-3, 12px);
-}
-
-.activity-time {
-    font-size: 0.75rem;
-    color: var(--neutral-500, #6b7280);
-    white-space: nowrap;
-    min-width: 80px;
-}
-
-.activity-content {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2, 8px);
-    flex: 1;
-}
-
-.activity-icon {
-    font-size: 1rem;
-}
-
-.activity-text {
-    font-size: 0.875rem;
-    color: var(--neutral-700, #374151);
-}
-
-.empty-state {
-    text-align: center;
-    padding: var(--spacing-8, 32px);
-    color: var(--neutral-500, #6b7280);
-}
-
-.empty-icon {
-    font-size: 3rem;
-    margin-bottom: var(--spacing-4, 16px);
-    opacity: 0.6;
-}
-
-.empty-text {
-    font-size: 0.875rem;
-    margin-bottom: var(--spacing-4, 16px);
-}
-
-.ai-placeholder {
-    text-align: center;
-    padding: var(--spacing-6, 24px);
-}
-
-.ai-icon {
-    font-size: 2.5rem;
-    margin-bottom: var(--spacing-3, 12px);
-}
-
-.ai-message {
-    font-size: 0.875rem;
-    color: var(--neutral-600, #6b7280);
-    margin-bottom: var(--spacing-4, 16px);
-}
-
-.btn-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-lg, 12px);
-    border: 1px solid var(--neutral-200, #e5e7eb);
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--neutral-600, #6b7280);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-icon:hover {
-    background: var(--neutral-50, #f9fafb);
-    border-color: var(--neutral-300, #d1d5db);
-}
-
-/* Animation for health score circle */
-@keyframes fillScore {
-    from { stroke-dasharray: 0 100; }
-}
-
-.progress-ring__circle {
-    animation: fillScore 2s ease-out 0.5s both;
-}
-
-/* Hover animations for dashboard sections */
-.dashboard-section {
-    transition: transform 0.3s ease;
-}
-
-.dashboard-section:hover {
-    transform: translateY(-2px);
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<main class="dashboard-main">
-    <div class="dashboard-container">
-        <!-- Dashboard Header with Welcome Card -->
-        <div class="dashboard-header">
-            <div class="welcome-card">
-                <div class="welcome-content">
-                    <h1 class="welcome-title">{{ greeting }}, {{ user.first_name }}!</h1>
-                    <p class="welcome-subtitle">Here's your health overview for today</p>
-                    <div class="wellness-streak">
-                        <span class="streak-icon">🔥</span>
-                        <span class="streak-text">{{ wellness_streak }} day streak</span>
-                    </div>
-                </div>
-                <div class="welcome-visual">
-                    <div class="health-score-circle" data-score="{{ health_score }}">
-                        <div class="score-inner">
-                            <span class="score-number">{{ health_score }}</span>
-                            <span class="score-label">Health Score</span>
-                        </div>
-                        <svg class="progress-ring" width="120" height="120">
-                            <circle class="progress-ring__circle" 
-                                   stroke-dasharray="{{ health_score|floatformat:0 }} 100" 
-                                   stroke-dashoffset="0" 
-                                   r="52" cx="60" cy="60"/>
-                        </svg>
-                    </div>
+<div class="bento-grid">
+    <!-- Welcome Card (2x1) -->
+    <div class="bento-card bento-large" data-tilt>
+        <div class="card-glow"></div>
+        <div class="greeting-content">
+            <div class="greeting-icon">👋</div>
+            <h1>Welcome back, {{ user.get_full_name|default:user.username }}!</h1>
+            <p class="greeting-subtitle">Your health journey at a glance</p>
+            <div class="health-status-badge">
+                <span class="status-dot"></span>
+                All Systems Healthy
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Score (1x1) -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #48bb78, #68d391);">
+                <i class="fas fa-heart-pulse"></i>
+            </div>
+        </div>
+        <div class="score-container">
+            <div class="circular-score">
+                <svg viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="#E8E4DB" stroke-width="10"/>
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="#48bb78" 
+                            stroke-width="10" stroke-dasharray="330, 377" 
+                            stroke-linecap="round" transform="rotate(-90 70 70)"/>
+                </svg>
+                <div class="score-label">
+                    <div class="score-number">87</div>
+                    <div class="score-text">Health Score</div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Main Dashboard Grid -->
-        <div class="dashboard-grid">
-            <!-- Health Overview Section -->
-            <section class="dashboard-section health-overview">
-                {% include 'components/card.html' with title="Health Overview" class="health-overview-card" %}
-                <div class="card-content">
-                    <div class="metrics-grid">
-                        {% if weight_metrics %}
-                            {% include 'components/metric_card.html' with 
-                                label="Weight" 
-                                value=weight_metrics.0.value
-                                unit="kg"
-                                trend="stable"
-                                status="normal"
-                            %}
-                        {% endif %}
-                        {% if blood_pressure_metrics %}
-                            {% include 'components/metric_card.html' with 
-                                label="Blood Pressure" 
-                                value=blood_pressure_metrics.0.value
-                                unit="mmHg"
-                                trend="stable"
-                                status="normal"
-                            %}
-                        {% endif %}
-                        {% for metric in recent_records %}
-                            {% include 'components/metric_card.html' with 
-                                label=metric.record_type 
-                                value="Recent"
-                                unit=""
-                                trend="stable"
-                                status="normal"
-                            %}
-                        {% endfor %}
-                    </div>
-                    <div class="trend-indicator">
-                        <span class="trend-text">{{ health_trend|title }} trend</span>
-                        <span class="trend-icon trend-{{ health_trend }}">
-                            {% if health_trend == 'improving' %}📈{% elif health_trend == 'declining' %}📉{% else %}➡️{% endif %}
-                        </span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Upcoming Appointments -->
-            <section class="dashboard-section appointments">
-                {% include 'components/card.html' with title="Upcoming Appointments" class="appointments-card" %}
-                <div class="card-content">
-                    {% if upcoming_appointments %}
-                    <div class="appointments-list">
-                        {% for appointment in upcoming_appointments %}
-                        <div class="appointment-item">
-                            <div class="appointment-time">
-                                <span class="date">{{ appointment.date|date:"M d" }}</span>
-                                <span class="time">{{ appointment.time|time:"g:i A" }}</span>
-                            </div>
-                            <div class="appointment-details">
-                                <h4 class="doctor-name">{{ appointment.doctor.user.get_full_name }}</h4>
-                                <p class="appointment-type">{{ appointment.appointment_type }}</p>
-                                {% if appointment.location %}
-                                <p class="appointment-location">📍 {{ appointment.location }}</p>
-                                {% endif %}
-                            </div>
-                            <div class="appointment-actions">
-                                {% include 'components/badge.html' with text=appointment.status type=appointment.status|lower %}
-                                <button class="btn-icon" title="Join Call">
-                                    <i class="icon-video"></i>
-                                </button>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="empty-state">
-                        <div class="empty-icon">📅</div>
-                        <p class="empty-text">No upcoming appointments</p>
-                        <a href="{% url 'patient_portal:book_appointment' %}" class="btn btn-secondary btn-sm">
-                            Book Appointment
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </section>
-
-            <!-- Current Medications -->
-            <section class="dashboard-section medications">
-                {% include 'components/card.html' with title="Current Medications" class="medications-card" %}
-                <div class="card-content">
-                    {% if recent_medications %}
-                    <div class="medications-list">
-                        {% for medication in recent_medications %}
-                        <div class="medication-item">
-                            <div class="medication-info">
-                                <h4 class="medication-name">{{ medication.medication_name|default:"Treatment Plan" }}</h4>
-                                <p class="medication-dosage">{{ medication.description }}</p>
-                                <p class="medication-time">Active treatment</p>
-                            </div>
-                            <div class="medication-actions">
-                                <button class="btn btn-success btn-sm" onclick="markTaken('{{ medication.id }}')">
-                                    ✓ Update
-                                </button>
-                                <button class="btn btn-outline btn-sm" onclick="viewDetails('{{ medication.id }}')">
-                                    👁️ View
-                                </button>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="empty-state">
-                        <div class="empty-icon">💊</div>
-                        <p class="empty-text">No current medications</p>
-                        <a href="{% url 'patient_portal:medications' %}" class="btn btn-secondary btn-sm">
-                            Manage Medications
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </section>
-
-            <!-- AI Health Assistant -->
-            <section class="dashboard-section ai-assistant">
-                {% include 'components/card.html' with title="AI Health Assistant" class="ai-assistant-card" %}
-                <div class="card-content">
-                    <div class="ai-insights">
-                        {% if ai_insights %}
-                        {% for insight in ai_insights %}
-                        <div class="insight-item {{ insight.priority|lower }}">
-                            <div class="insight-icon">
-                                {% if insight.type == 'alert' %}🚨
-                                {% elif insight.type == 'recommendation' %}💡
-                                {% elif insight.type == 'achievement' %}🏆
-                                {% else %}ℹ️{% endif %}
-                            </div>
-                            <div class="insight-content">
-                                <h4 class="insight-title">{{ insight.title }}</h4>
-                                <p class="insight-message">{{ insight.message }}</p>
-                                {% if insight.action_url %}
-                                <a href="{{ insight.action_url }}" class="insight-action">{{ insight.action_text }}</a>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                        {% else %}
-                        <div class="ai-placeholder">
-                            <div class="ai-icon">🤖</div>
-                            <p class="ai-message">Your AI assistant is analyzing your health data...</p>
-                            <button class="btn btn-primary btn-sm" onclick="refreshInsights()">
-                                Get Insights
-                            </button>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="ai-chat-prompt">
-                        <input type="text" placeholder="Ask your health assistant..." class="chat-input">
-                        <button class="btn btn-primary" onclick="sendChatMessage()">
-                            <i class="icon-send"></i>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Quick Actions -->
-            <section class="dashboard-section quick-actions">
-                {% include 'components/card.html' with title="Quick Actions" class="quick-actions-card" %}
-                <div class="card-content">
-                    <div class="actions-grid">
-                        <a href="{% url 'patient_portal:book_appointment' %}" class="action-item">
-                            <div class="action-icon">📅</div>
-                            <span class="action-text">Book Appointment</span>
-                        </a>
-                        <a href="{% url 'patient_portal:medications' %}" class="action-item">
-                            <div class="action-icon">💊</div>
-                            <span class="action-text">Medications</span>
-                        </a>
-                        <a href="{% url 'patient_portal:health_records' %}" class="action-item">
-                            <div class="action-icon">📋</div>
-                            <span class="action-text">Health Records</span>
-                        </a>
-                        <a href="{% url 'patient_portal:lab_results' %}" class="action-item">
-                            <div class="action-icon">🧪</div>
-                            <span class="action-text">Lab Results</span>
-                        </a>
-                        <a href="{% url 'patient_portal:chat_doctor' %}" class="action-item">
-                            <div class="action-icon">💬</div>
-                            <span class="action-text">Message Doctor</span>
-                        </a>
-                        <a href="{% url 'patient_portal:emergency_contacts' %}" class="action-item">
-                            <div class="action-icon">🚨</div>
-                            <span class="action-text">Emergency</span>
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Recent Activity -->
-            <section class="dashboard-section recent-activity">
-                {% include 'components/card.html' with title="Recent Activity" class="activity-card" %}
-                <div class="card-content">
-                    {% if recent_records %}
-                    <div class="activity-timeline">
-                        {% for record in recent_records %}
-                        <div class="activity-item">
-                            <div class="activity-time">{{ record.created_date|timesince }} ago</div>
-                            <div class="activity-content">
-                                <span class="activity-icon">📋</span>
-                                <span class="activity-text">{{ record.record_type|title }} record added</span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="empty-state">
-                        <div class="empty-icon">📈</div>
-                        <p class="empty-text">No recent activity</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </section>
+    <!-- Next Appointment (1x1) -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5E8, #b8d4f0);">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+        <div class="metric-label">Next Appointment</div>
+        <div class="metric-value" style="font-size: 24px;">Tomorrow</div>
+        <div style="margin-top: 12px;">
+            <div style="font-size: 14px; font-weight: 600; color: #2D3748; margin-bottom: 4px;">Dr. Sarah Wilson</div>
+            <div style="font-size: 13px; color: #718096;">10:30 AM • Cardiology</div>
         </div>
     </div>
-</main>
-{% endblock %}
 
-{% block extra_js %}
+    <!-- Upcoming Appointments (1x2 tall) -->
+    <div class="bento-card bento-tall" data-hover-lift>
+        <h3 style="font-size: 18px; font-weight: 700; color: #2D3748; margin-bottom: 20px;">
+            <i class="fas fa-calendar-alt" style="color: var(--color-blue); margin-right: 8px;"></i>
+            Upcoming Appointments
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="appointment-item">
+                <div class="apt-header">
+                    <span class="apt-time">Tomorrow, 10:30 AM</span>
+                    <span class="apt-status">Confirmed</span>
+                </div>
+                <div class="apt-doctor">Dr. Sarah Wilson</div>
+                <div class="apt-department">Cardiology - Regular Checkup</div>
+            </div>
+            <div class="appointment-item">
+                <div class="apt-header">
+                    <span class="apt-time">Feb 25, 2:00 PM</span>
+                    <span class="apt-status">Confirmed</span>
+                </div>
+                <div class="apt-doctor">Dr. Michael Chen</div>
+                <div class="apt-department">Lab Work - Blood Test</div>
+            </div>
+            <div class="appointment-item">
+                <div class="apt-header">
+                    <span class="apt-time">Mar 2, 11:00 AM</span>
+                    <span class="apt-status" style="background: rgba(168, 197, 232, 0.1); color: var(--color-blue);">Pending</span>
+                </div>
+                <div class="apt-doctor">Dr. Emily Davis</div>
+                <div class="apt-department">Ophthalmology - Eye Exam</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vital Signs (2x1) -->
+    <div class="bento-card bento-wide" data-tilt>
+        <h3 style="font-size: 18px; font-weight: 700; color: #2D3748; margin-bottom: 20px;">
+            <i class="fas fa-heartbeat" style="color: var(--color-coral); margin-right: 8px;"></i>
+            Latest Vitals
+        </h3>
+        <div class="vitals-grid">
+            <div class="vital-item">
+                <div class="vital-label">Blood Pressure</div>
+                <div class="vital-value">120<span class="vital-unit">/80 mmHg</span></div>
+            </div>
+            <div class="vital-item">
+                <div class="vital-label">Heart Rate</div>
+                <div class="vital-value">72<span class="vital-unit"> bpm</span></div>
+            </div>
+            <div class="vital-item">
+                <div class="vital-label">Temperature</div>
+                <div class="vital-value">98.6<span class="vital-unit">°F</span></div>
+            </div>
+            <div class="vital-item">
+                <div class="vital-label">Blood Sugar</div>
+                <div class="vital-value">95<span class="vital-unit"> mg/dL</span></div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; text-align: center;">
+            <span class="metric-trend"><i class="fas fa-check-circle"></i> All vitals normal</span>
+        </div>
+    </div>
+
+    <!-- Medications (2x1) -->
+    <div class="bento-card bento-wide" data-hover-lift>
+        <h3 style="font-size: 18px; font-weight: 700; color: #2D3748; margin-bottom: 20px;">
+            <i class="fas fa-pills" style="color: var(--color-peach); margin-right: 8px;"></i>
+            Current Medications
+        </h3>
+        <div class="medication-list">
+            <div class="med-item">
+                <div class="med-icon">
+                    <i class="fas fa-capsules"></i>
+                </div>
+                <div class="med-info">
+                    <div class="med-name">Lisinopril</div>
+                    <div class="med-dosage">10mg • Once daily</div>
+                </div>
+                <div class="med-badge">Due Today</div>
+            </div>
+            <div class="med-item">
+                <div class="med-icon">
+                    <i class="fas fa-tablets"></i>
+                </div>
+                <div class="med-info">
+                    <div class="med-name">Metformin</div>
+                    <div class="med-dosage">500mg • Twice daily</div>
+                </div>
+                <div class="med-badge" style="background: rgba(72, 187, 120, 0.1); color: #48bb78;">Taken</div>
+            </div>
+            <div class="med-item">
+                <div class="med-icon">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <div class="med-info">
+                    <div class="med-name">Atorvastatin</div>
+                    <div class="med-dosage">20mg • At bedtime</div>
+                </div>
+                <div class="med-badge" style="background: rgba(168, 197, 232, 0.1); color: var(--color-blue);">Pending</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions (1x1) -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <h3 style="font-size: 16px; font-weight: 700; color: #2D3748; margin-bottom: 16px;">Quick Actions</h3>
+        <div class="actions-grid">
+            <a href="{% url 'patient_portal:book_appointment' %}" class="action-btn">
+                <i class="fas fa-calendar-plus"></i>
+                <span>Book</span>
+            </a>
+            <a href="{% url 'patient_portal:lab_results' %}" class="action-btn">
+                <i class="fas fa-flask"></i>
+                <span>Results</span>
+            </a>
+            <a href="{% url 'patient_portal:health_details' %}" class="action-btn">
+                <i class="fas fa-heartbeat"></i>
+                <span>Vitals</span>
+            </a>
+            <a href="{% url 'patient_portal:assistant' %}" class="action-btn">
+                <i class="fas fa-robot"></i>
+                <span>AI Chat</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Lab Results (1x1) -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5A8, #b8d4b8);">
+                <i class="fas fa-flask"></i>
+            </div>
+        </div>
+        <div class="metric-value" style="font-size: 32px;">3</div>
+        <div class="metric-label">New Lab Results</div>
+        <div class="metric-trend">
+            <i class="fas fa-arrow-up"></i>
+            Available to view
+        </div>
+        <button style="width: 100%; margin-top: 16px; padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg, #A8C5A8, #b8d4b8); color: white; font-weight: 600; cursor: pointer;" onclick="window.location.href='{% url 'patient_portal:lab_results' %}'">
+            View Results
+        </button>
+    </div>
+</div>
+
 <script>
-// Dashboard interactivity
 document.addEventListener('DOMContentLoaded', function() {
-    // Animate health score circle on load
-    const scoreCircle = document.querySelector('.progress-ring__circle');
-    if (scoreCircle) {
-        const score = document.querySelector('.health-score-circle').dataset.score || 75;
-        const circumference = 2 * Math.PI * 52; // r=52
-        const offset = circumference - (score / 100) * circumference;
-        
-        setTimeout(() => {
-            scoreCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-            scoreCircle.style.strokeDashoffset = offset;
-        }, 500);
-    }
-
-    // Add hover effects to dashboard sections
-    document.querySelectorAll('.dashboard-section').forEach(section => {
-        section.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
+    // Add tilt effect
+    document.querySelectorAll('[data-tilt]').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / 20;
+            const rotateY = (centerX - x) / 20;
+            
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
         });
         
-        section.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
         });
-    });
-
-    // Health score circle click for detailed view
-    document.querySelector('.health-score-circle')?.addEventListener('click', function() {
-        window.location.href = '{% url "patient_portal:health_details" %}';
     });
 });
-
-// Medication management functions
-function markTaken(medicationId) {
-    fetch(`/api/medications/${medicationId}/mark-taken/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    });
-}
-
-function snoozeReminder(medicationId) {
-    fetch(`/api/medications/${medicationId}/snooze/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    });
-}
-
-// AI assistant functions
-function refreshInsights() {
-    fetch('/api/ai/refresh-insights/', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    });
-}
-
-function sendChatMessage() {
-    const input = document.querySelector('.chat-input');
-    const message = input.value.trim();
-    
-    if (message) {
-        fetch('/api/ai/chat/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: message })
-        })
-        .then(response => response.json())
-        .then(data => {
-            input.value = '';
-            // Handle chat response
-            window.location.href = '/patient/ai-assistant/';
-        });
-    }
-}
 </script>
 {% endblock %}

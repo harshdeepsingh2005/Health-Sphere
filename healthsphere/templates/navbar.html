@@ -258,6 +258,18 @@ Sticky Healthcare Dashboard Navbar with Glass Design
                             <span>My Profile</span>
                         </a>
                         
+                        <a href="{% url 'users:2fa_setup' %}" class="user-menu-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Two-Factor Authentication</span>
+                        </a>
+                        
+                        {% if user.is_admin %}
+                        <a href="{% url 'users:audit_log' %}" class="user-menu-item">
+                            <i class="fas fa-list-alt"></i>
+                            <span>Audit Log</span>
+                        </a>
+                        {% endif %}
+                        
                         <a href="{% url 'settings' %}" class="user-menu-item">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>

@@ -1,1355 +1,657 @@
 {% extends "base_simple.html" %}
 {% load static %}
 
-{% block title %}Doctor Dashboard - HealthSphere AI{% endblock %}
+{% block title %}Clinical Dashboard - HealthSphere AI{% endblock %}
+
+{% block sidebar_nav %}
+<!-- Clinical Navigation -->
+<div class="nav-section">
+    <div class="nav-section-title">Clinical</div>
+    <div class="nav-item">
+        <a href="{% url 'clinical_portal:dashboard' %}" class="nav-link active">
+            <i class="fas fa-th-large"></i>
+            <span class="nav-link-text">Dashboard</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'clinical_portal:triage' %}" class="nav-link">
+            <i class="fas fa-stethoscope"></i>
+            <span class="nav-link-text">AI Triage</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'clinical_portal:risk' %}" class="nav-link">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span class="nav-link-text">Risk Assessment</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'clinical_portal:journey' %}" class="nav-link">
+            <i class="fas fa-route"></i>
+            <span class="nav-link-text">Patient Journey</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
 
 {% block extra_css %}
 <style>
-/* =============================================
-   Doctor Dashboard Styles
-   ============================================= */
-
-.dashboard-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-8);
-    flex-wrap: wrap;
-    gap: var(--spacing-4);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-6);
-    box-shadow: var(--glass-shadow-lg);
-}
-
-.dashboard-title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
-}
-
-.dashboard-title i {
-    color: var(--healthcare-primary);
-    font-size: var(--font-size-2xl);
-}
-
-.dashboard-subtitle {
-    font-size: var(--font-size-base);
-    color: var(--text-secondary);
-    margin: var(--spacing-1) 0 0 0;
-}
-
-.doctor-info {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-4);
-}
-
-.doctor-avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-full);
-    background: linear-gradient(135deg, var(--healthcare-primary), var(--healthcare-primary-light));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--neutral-white);
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
-    box-shadow: var(--glass-shadow-md);
-}
-
-.doctor-details h3 {
-    margin: 0;
-    font-size: var(--font-size-lg);
-    color: var(--text-primary);
-}
-
-.doctor-details p {
-    margin: var(--spacing-1) 0 0 0;
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-
-.dashboard-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
-}
-
-.quick-action-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2);
-    padding: var(--spacing-3) var(--spacing-4);
-    background: var(--healthcare-primary);
-    color: var(--neutral-white);
-    border: none;
-    border-radius: var(--radius-lg);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    text-decoration: none;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: var(--glass-shadow-sm);
-}
-
-.quick-action-btn:hover {
-    background: var(--healthcare-primary-dark);
-    transform: translateY(-1px);
-    box-shadow: var(--glass-shadow-md);
-}
-
-.quick-action-btn.secondary {
-    background: var(--glass-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--glass-border);
-}
-
-.quick-action-btn.secondary:hover {
-    background: var(--neutral-100);
-    color: var(--healthcare-primary);
-}
-
-/* =============================================
-   Patient Metrics Grid
-   ============================================= */
-.patient-metrics-grid {
+/* ===== BENTO GRID LAYOUT ===== */
+.bento-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--spacing-6);
-    margin-bottom: var(--spacing-8);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
-.patient-metric-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-6);
+.bento-small { grid-column: span 1; grid-row: span 1; }
+.bento-wide { grid-column: span 2; grid-row: span 1; }
+.bento-tall { grid-column: span 1; grid-row: span 2; }
+.bento-large { grid-column: span 2; grid-row: span 1; }
+.bento-featured { grid-column: span 2; grid-row: span 2; }
+
+/* ===== INTERACTIVE CARDS ===== */
+.bento-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
     position: relative;
     overflow: hidden;
-    transition: all var(--transition-fast);
-    box-shadow: var(--glass-shadow-lg);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    cursor: pointer;
 }
 
-.patient-metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--glass-shadow-xl);
-    border-color: var(--healthcare-primary);
+.bento-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.15);
 }
 
-.patient-metric-card::before {
-    content: '';
+[data-hover-lift]:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+[data-tilt]:hover {
+    transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) scale(1.01);
+}
+
+.card-glow {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--healthcare-primary), var(--healthcare-accent));
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(232, 155, 135, 0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
 }
 
-.patient-metric-card.critical::before {
-    background: linear-gradient(90deg, var(--healthcare-danger), var(--healthcare-danger-light));
+.bento-card:hover .card-glow {
+    opacity: 1;
 }
 
-.patient-metric-card.warning::before {
-    background: linear-gradient(90deg, var(--healthcare-warning), var(--healthcare-warning-light));
+/* ===== GREETING ===== */
+.greeting-content h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2D3748;
+    margin-bottom: 8px;
 }
 
-.patient-metric-card.success::before {
-    background: linear-gradient(90deg, var(--healthcare-success), var(--healthcare-success-light));
+.greeting-subtitle {
+    font-size: 16px;
+    color: #718096;
+    margin-bottom: 20px;
 }
 
-.metric-header {
-    display: flex;
+.doctor-badge {
+    display: inline-flex;
     align-items: center;
+    gap: 8px;
+    background: rgba(168, 197, 232, 0.1);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--color-blue);
+    font-weight: 600;
+}
+
+/* ===== METRICS ===== */
+.card-header {
+    display: flex;
     justify-content: space-between;
-    margin-bottom: var(--spacing-4);
+    align-items: flex-start;
+    margin-bottom: 20px;
 }
 
 .metric-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-lg);
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--font-size-xl);
-    color: var(--neutral-white);
-    background: linear-gradient(135deg, var(--healthcare-primary), var(--healthcare-primary-dark));
-    box-shadow: var(--glass-shadow-sm);
+    font-size: 24px;
+    color: white;
+    transition: transform 0.3s ease;
 }
 
-.metric-icon.critical {
-    background: linear-gradient(135deg, var(--healthcare-danger), var(--healthcare-danger-light));
+.bento-card:hover .metric-icon {
+    transform: scale(1.1) rotate(5deg);
 }
 
-.metric-icon.warning {
-    background: linear-gradient(135deg, var(--healthcare-warning), var(--healthcare-warning-light));
+.pulse-icon {
+    animation: pulse 2s ease-in-out infinite;
 }
 
-.metric-icon.success {
-    background: linear-gradient(135deg, var(--healthcare-success), var(--healthcare-success-light));
-}
-
-.metric-badge {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    padding: var(--spacing-1) var(--spacing-2);
-    border-radius: var(--radius-full);
-    background: var(--healthcare-info-bg);
-    color: var(--healthcare-info);
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
 }
 
 .metric-value {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-    margin: var(--spacing-2) 0;
+    font-size: 48px;
+    font-weight: 700;
+    color: #2D3748;
     line-height: 1;
+    margin-bottom: 8px;
 }
 
 .metric-label {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    font-weight: var(--font-weight-medium);
+    font-size: 14px;
+    color: #718096;
+    font-weight: 500;
+    margin-bottom: 16px;
 }
 
-.metric-description {
-    font-size: var(--font-size-xs);
-    color: var(--text-tertiary);
-    margin-top: var(--spacing-2);
-}
-
-/* =============================================
-   Dashboard Sections
-   ============================================= */
-.dashboard-section {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-6);
-    margin-bottom: var(--spacing-8);
-    box-shadow: var(--glass-shadow-lg);
-}
-
-.section-header {
-    display: flex;
+.metric-trend {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-6);
-    padding-bottom: var(--spacing-4);
-    border-bottom: 1px solid var(--glass-border);
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #48bb78;
 }
 
-.section-title {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-    margin: 0;
+.card-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(232, 155, 135, 0.15);
+    color: var(--color-coral);
+}
+
+.card-badge.urgent {
+    animation: pulseAlert 2s ease-in-out infinite;
+}
+
+@keyframes pulseAlert {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ===== PATIENT LIST ===== */
+.patient-list {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-2);
-}
-
-.section-title i {
-    color: var(--healthcare-primary);
-}
-
-.section-action {
-    color: var(--healthcare-primary);
-    text-decoration: none;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-1);
-    transition: all var(--transition-fast);
-    padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--radius-lg);
-    border: 1px solid transparent;
-}
-
-.section-action:hover {
-    color: var(--healthcare-primary-dark);
-    background: var(--healthcare-primary-bg);
-    border-color: var(--healthcare-primary);
-}
-
-/* =============================================
-   Alert Cards
-   ============================================= */
-.alert-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: var(--spacing-6);
-    margin-bottom: var(--spacing-8);
-}
-
-.alert-card {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-6);
-    box-shadow: var(--glass-shadow-lg);
-    transition: all var(--transition-fast);
-}
-
-.alert-card.critical {
-    border-left: 4px solid var(--healthcare-danger);
-    background: linear-gradient(135deg, var(--healthcare-danger-bg), var(--glass-bg));
-}
-
-.alert-card.warning {
-    border-left: 4px solid var(--healthcare-warning);
-    background: linear-gradient(135deg, var(--healthcare-warning-bg), var(--glass-bg));
-}
-
-.alert-card.info {
-    border-left: 4px solid var(--healthcare-info);
-    background: linear-gradient(135deg, var(--healthcare-info-bg), var(--glass-bg));
-}
-
-.alert-card:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--glass-shadow-xl);
-}
-
-.alert-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
-    margin-bottom: var(--spacing-4);
-}
-
-.alert-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--font-size-lg);
-    color: var(--neutral-white);
-}
-
-.alert-icon.critical {
-    background: linear-gradient(135deg, var(--healthcare-danger), var(--healthcare-danger-light));
-}
-
-.alert-icon.warning {
-    background: linear-gradient(135deg, var(--healthcare-warning), var(--healthcare-warning-light));
-}
-
-.alert-icon.info {
-    background: linear-gradient(135deg, var(--healthcare-info), var(--healthcare-info-light));
-}
-
-.alert-title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.alert-time {
-    font-size: var(--font-size-xs);
-    color: var(--text-tertiary);
-    margin-left: auto;
-}
-
-.alert-message {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-3);
-    line-height: var(--line-height-relaxed);
-}
-
-.alert-actions {
-    display: flex;
-    gap: var(--spacing-2);
-}
-
-.alert-action {
-    padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--radius-lg);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    border: 1px solid transparent;
-}
-
-.alert-action.primary {
-    background: var(--healthcare-primary);
-    color: var(--neutral-white);
-}
-
-.alert-action.primary:hover {
-    background: var(--healthcare-primary-dark);
-}
-
-.alert-action.secondary {
-    background: var(--glass-bg);
-    color: var(--text-secondary);
-    border-color: var(--glass-border);
-}
-
-.alert-action.secondary:hover {
-    background: var(--neutral-100);
-    color: var(--text-primary);
-}
-
-/* =============================================
-   Patient & Appointment Lists
-   ============================================= */
-.patient-list, .appointment-list {
+    flex-direction: column;
+    gap: 12px;
     max-height: 400px;
     overflow-y: auto;
 }
 
-.patient-item, .appointment-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-4);
-    padding: var(--spacing-4);
-    border-radius: var(--radius-lg);
-    transition: all var(--transition-fast);
-    border: 1px solid transparent;
-    margin-bottom: var(--spacing-2);
+.patient-item {
+    padding: 14px;
+    background: rgba(168, 197, 232, 0.03);
+    border-radius: 12px;
+    border-left: 4px solid var(--color-blue);
+    transition: all 0.3s ease;
 }
 
-.patient-item:hover, .appointment-item:hover {
-    background: var(--neutral-50);
-    border-color: var(--glass-border);
+.patient-item:hover {
+    background: rgba(168, 197, 232, 0.08);
     transform: translateX(4px);
 }
 
-.patient-avatar, .appointment-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    color: var(--neutral-white);
-    background: linear-gradient(135deg, var(--healthcare-primary), var(--healthcare-primary-light));
-    flex-shrink: 0;
-    box-shadow: var(--glass-shadow-sm);
+.patient-item.critical {
+    border-left-color: var(--color-coral);
+    background: rgba(232, 155, 135, 0.05);
 }
 
-.patient-info, .appointment-info {
+.patient-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.patient-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2D3748;
+}
+
+.patient-status {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(72, 187, 120, 0.1);
+    color: #48bb78;
+}
+
+.patient-status.critical {
+    background: rgba(232, 155, 135, 0.15);
+    color: var(--color-coral);
+}
+
+.patient-details {
+    font-size: 13px;
+    color: #718096;
+}
+
+/* ===== APPOINTMENTS ===== */
+.appointment-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 16px;
+}
+
+.timeline-time {
+    min-width: 80px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-blue);
+}
+
+.timeline-content {
     flex: 1;
+    padding: 14px;
+    background: rgba(168, 197, 232, 0.05);
+    border-radius: 10px;
+    border-left: 3px solid var(--color-blue);
 }
 
-.patient-name, .appointment-patient {
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
-    color: var(--text-primary);
-    margin: 0 0 var(--spacing-1) 0;
+.timeline-patient {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2D3748;
+    margin-bottom: 4px;
 }
 
-.patient-details, .appointment-details {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    margin: 0;
+.timeline-type {
+    font-size: 13px;
+    color: #718096;
 }
 
-.patient-status, .appointment-status {
+/* ===== ALERTS ===== */
+.alert-list {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: var(--spacing-1);
+    gap: 12px;
 }
 
-.status-badge {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    padding: var(--spacing-1) var(--spacing-2);
-    border-radius: var(--radius-full);
-    border: 1px solid transparent;
+.alert-item {
+    padding: 16px;
+    background: rgba(232, 155, 135, 0.05);
+    border-radius: 12px;
+    border-left: 4px solid var(--color-coral);
 }
 
-.status-badge.critical {
-    background: var(--healthcare-danger-bg);
-    color: var(--healthcare-danger);
-    border-color: var(--healthcare-danger);
-}
-
-.status-badge.warning {
-    background: var(--healthcare-warning-bg);
-    color: var(--healthcare-warning);
-    border-color: var(--healthcare-warning);
-}
-
-.status-badge.stable {
-    background: var(--healthcare-success-bg);
-    color: var(--healthcare-success);
-    border-color: var(--healthcare-success);
-}
-
-.status-badge.scheduled {
-    background: var(--healthcare-info-bg);
-    color: var(--healthcare-info);
-    border-color: var(--healthcare-info);
-}
-
-.appointment-time {
-    font-size: var(--font-size-xs);
-    color: var(--text-tertiary);
-}
-
-/* =============================================
-   Empty States
-   ============================================= */
-.empty-state {
+.alert-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 8px;
+}
+
+.alert-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2D3748;
+}
+
+.alert-priority {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(232, 155, 135, 0.15);
+    color: var(--color-coral);
+}
+
+.alert-message {
+    font-size: 13px;
+    color: #718096;
+    margin-bottom: 8px;
+}
+
+.alert-time {
+    font-size: 12px;
+    color: #A0AEC0;
+}
+
+/* ===== QUICK STATS ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(168, 197, 232, 0.05) 0%, rgba(168, 197, 232, 0.02) 100%);
+    border-radius: 12px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2D3748;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #718096;
+}
+
+/* ===== ACTION BUTTON ===== */
+.card-action-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--color-blue), #b8d4f0);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-8);
-    text-align: center;
-    color: var(--text-secondary);
+    gap: 8px;
+    margin-top: 16px;
 }
 
-.empty-state i {
-    font-size: var(--font-size-4xl);
-    margin-bottom: var(--spacing-4);
-    color: var(--text-tertiary);
+.card-action-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(168, 197, 232, 0.4);
 }
 
-.empty-state h3 {
-    font-size: var(--font-size-lg);
-    margin: 0 0 var(--spacing-2) 0;
-    color: var(--text-primary);
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1400px) {
+    .bento-grid { grid-template-columns: repeat(3, 1fr); }
+    .bento-featured { grid-column: span 3; }
 }
 
-.empty-state p {
-    font-size: var(--font-size-sm);
-    margin: 0;
-    color: var(--text-secondary);
-}
-
-/* =============================================
-   Responsive Design
-   ============================================= */
 @media (max-width: 1024px) {
-    .alert-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .doctor-info {
-        order: -1;
-    }
+    .bento-grid { grid-template-columns: repeat(2, 1fr); }
+    .bento-wide, .bento-large, .bento-featured { grid-column: span 2; }
 }
 
 @media (max-width: 768px) {
-    .patient-metrics-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .dashboard-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .quick-action-btn {
-        justify-content: center;
-        width: 100%;
-    }
-    
-    .patient-item, .appointment-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-3);
-    }
-    
-    .patient-status, .appointment-status {
-        align-self: flex-end;
-        flex-direction: row;
+    .bento-grid { grid-template-columns: 1fr; }
+    .bento-small, .bento-wide, .bento-large, .bento-tall, .bento-featured {
+        grid-column: span 1;
+        grid-row: span 1;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <!-- Dashboard Header -->
-    <div class="dashboard-header">
-        <div>
-            <h1 class="dashboard-title">
-                <i class="fas fa-stethoscope"></i>
-                Doctor Dashboard
-            </h1>
-            <p class="dashboard-subtitle">Patient care overview and clinical management</p>
-        </div>
-        
-        <div class="doctor-info">
-            <div class="doctor-avatar">
-                {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
-            </div>
-            <div class="doctor-details">
-                <h3>Dr. {{ user.get_full_name|default:"John Smith" }}</h3>
-                <p>{{ user.profile.specialty|default:"Internal Medicine" }} • {{ user.profile.department|default:"General Medicine" }}</p>
-            </div>
-        </div>
-        
-        <div class="dashboard-actions">
-            <a href="{% url 'clinical_portal:triage' %}" class="quick-action-btn secondary">
-                <i class="fas fa-user-injured"></i>
-                <span>Triage</span>
-            </a>
-            <a href="{% url 'clinical_portal:journey' %}" class="quick-action-btn">
-                <i class="fas fa-plus"></i>
-                <span>New Patient</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- Patient Metrics -->
-    <div class="patient-metrics-grid">
-        <!-- My Patients -->
-        <div class="patient-metric-card">
-            <div class="metric-header">
-                <div class="metric-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="metric-badge">Active</div>
-            </div>
-            <div class="metric-value">{{ my_patients_count|default:"24" }}</div>
-            <div class="metric-label">My Patients</div>
-            <div class="metric-description">{{ new_patients_today|default:"3" }} new admissions today</div>
-        </div>
-
-        <!-- Critical Patients -->
-        <div class="patient-metric-card critical">
-            <div class="metric-header">
-                <div class="metric-icon critical">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="metric-badge">Urgent</div>
-            </div>
-            <div class="metric-value">{{ critical_patients|default:"5" }}</div>
-            <div class="metric-label">Critical Patients</div>
-            <div class="metric-description">Require immediate attention</div>
-        </div>
-
-        <!-- Pending Reviews -->
-        <div class="patient-metric-card warning">
-            <div class="metric-header">
-                <div class="metric-icon warning">
-                    <i class="fas fa-clipboard-check"></i>
-                </div>
-                <div class="metric-badge">Review</div>
-            </div>
-            <div class="metric-value">{{ pending_reviews|default:"12" }}</div>
-            <div class="metric-label">Pending Reviews</div>
-            <div class="metric-description">{{ overdue_reviews|default:"2" }} overdue reviews</div>
-        </div>
-
-        <!-- Today's Appointments -->
-        <div class="patient-metric-card success">
-            <div class="metric-header">
-                <div class="metric-icon success">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div class="metric-badge">Scheduled</div>
-            </div>
-            <div class="metric-value">{{ todays_appointments|default:"18" }}</div>
-            <div class="metric-label">Today's Appointments</div>
-            <div class="metric-description">{{ completed_appointments|default:"12" }}/{{ todays_appointments|default:"18" }} completed</div>
-        </div>
-    </div>
-
-    <!-- Critical Alerts -->
-    {% if critical_alerts %}
-    <div class="alert-grid">
-        {% for alert in critical_alerts %}
-        <div class="alert-card {{ alert.severity }}">
-            <div class="alert-header">
-                <div class="alert-icon {{ alert.severity }}">
-                    <i class="fas fa-{% if alert.severity == 'critical' %}exclamation-triangle{% elif alert.severity == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
-                </div>
-                <h4 class="alert-title">{{ alert.title }}</h4>
-                <span class="alert-time">{{ alert.created_at|timesince }} ago</span>
-            </div>
-            <p class="alert-message">{{ alert.message }}</p>
-            <div class="alert-actions">
-                <a href="{% url 'clinical_portal:alert_detail' alert.id %}" class="alert-action primary">View Details</a>
-                <button class="alert-action secondary" onclick="dismissAlert('{{ alert.id }}')">Dismiss</button>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <!-- Sample Alerts for Demo -->
-    <div class="alert-grid">
-        <div class="alert-card critical">
-            <div class="alert-header">
-                <div class="alert-icon critical">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <h4 class="alert-title">Patient Vitals Critical</h4>
-                <span class="alert-time">2 min ago</span>
-            </div>
-            <p class="alert-message">John Doe (Room 204) - Blood pressure critically low: 80/45 mmHg. Heart rate elevated at 125 BPM.</p>
-            <div class="alert-actions">
-                <a href="#" class="alert-action primary">View Patient</a>
-                <button class="alert-action secondary">Acknowledge</button>
-            </div>
-        </div>
-
-        <div class="alert-card warning">
-            <div class="alert-header">
-                <div class="alert-icon warning">
-                    <i class="fas fa-exclamation-circle"></i>
-                </div>
-                <h4 class="alert-title">Medication Due</h4>
-                <span class="alert-time">15 min ago</span>
-            </div>
-            <p class="alert-message">5 patients have medications due within the next hour. Review and approve pending prescriptions.</p>
-            <div class="alert-actions">
-                <a href="#" class="alert-action primary">Review Medications</a>
-                <button class="alert-action secondary">Remind Later</button>
-            </div>
-        </div>
-
-        <div class="alert-card info">
-            <div class="alert-header">
-                <div class="alert-icon info">
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                <h4 class="alert-title">Lab Results Available</h4>
-                <span class="alert-time">1 hour ago</span>
-            </div>
-            <p class="alert-message">New lab results are available for 8 patients. Review results and update treatment plans.</p>
-            <div class="alert-actions">
-                <a href="#" class="alert-action primary">Review Results</a>
-                <button class="alert-action secondary">Mark as Seen</button>
+<div class="bento-grid">
+    <!-- Greeting Card (2x1) -->
+    <div class="bento-card bento-large" data-tilt>
+        <div class="card-glow"></div>
+        <div class="greeting-content">
+            <h1>Welcome, Dr. {{ user.last_name|default:user.username }}</h1>
+            <p class="greeting-subtitle">Here's your clinical overview for today</p>
+            <div class="doctor-badge">
+                <i class="fas fa-user-md"></i>
+                <span>{{ active_plans|length }} active care plans</span>
             </div>
         </div>
     </div>
-    {% endif %}
 
-    <!-- My Patients & Appointments -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-8); margin-bottom: var(--spacing-8);">
-        <!-- My Patients -->
-        <div class="dashboard-section">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-users"></i>
-                    My Patients
-                </h3>
-                <a href="{% url 'clinical_portal:journey' %}" class="section-action">
-                    View All <i class="fas fa-arrow-right"></i>
-                </a>
+    <!-- Active Patients (1x1) -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5E8, #b8d4f0);">
+                <i class="fas fa-users"></i>
             </div>
-            
-            {% if my_patients %}
-            <div class="patient-list">
-                {% for patient in my_patients %}
-                <div class="patient-item">
-                    <div class="patient-avatar">
-                        {{ patient.patient.first_name|slice:":1" }}{{ patient.patient.last_name|slice:":1" }}
-                    </div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">{{ patient.patient.get_full_name }}</h4>
-                        <p class="patient-details">
-                            {{ patient.ward|default:"Ward TBD" }} • Bed {{ patient.bed_number|default:"TBD" }} • 
-                            Age {{ patient.patient.age|default:"--" }}
-                        </p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="status-badge {{ patient.condition_status|default:'stable' }}">
-                            {{ patient.get_condition_status_display|default:'Stable' }}
-                        </span>
-                        <span class="appointment-time">{{ patient.last_visit|date:"M d, H:i"|default:"No recent visit" }}</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <!-- Sample Patient Data -->
-            <div class="patient-list">
-                <div class="patient-item">
-                    <div class="patient-avatar">JD</div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">John Doe</h4>
-                        <p class="patient-details">ICU Ward A • Bed 12 • Age 45</p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="status-badge critical">Critical</span>
-                        <span class="appointment-time">Feb 17, 14:30</span>
-                    </div>
-                </div>
-
-                <div class="patient-item">
-                    <div class="patient-avatar">SM</div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">Sarah Miller</h4>
-                        <p class="patient-details">General Ward B • Bed 23 • Age 32</p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="status-badge stable">Stable</span>
-                        <span class="appointment-time">Feb 17, 13:15</span>
-                    </div>
-                </div>
-
-                <div class="patient-item">
-                    <div class="patient-avatar">RA</div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">Robert Anderson</h4>
-                        <p class="patient-details">Surgery Ward C • Bed 8 • Age 67</p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="status-badge warning">Monitoring</span>
-                        <span class="appointment-time">Feb 17, 11:45</span>
-                    </div>
-                </div>
-
-                <div class="patient-item">
-                    <div class="patient-avatar">EW</div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">Emily Watson</h4>
-                        <p class="patient-details">Maternity Ward • Room 15 • Age 28</p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="status-badge stable">Stable</span>
-                        <span class="appointment-time">Feb 17, 10:20</span>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
-
-        <!-- Today's Appointments -->
-        <div class="dashboard-section">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-calendar-check"></i>
-                    Today's Appointments
-                </h3>
-                <a href="{% url 'clinical_portal:appointments' %}" class="section-action">
-                    View Schedule <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            
-            {% if todays_appointments_list %}
-            <div class="appointment-list">
-                {% for appointment in todays_appointments_list %}
-                <div class="appointment-item">
-                    <div class="appointment-avatar">
-                        {{ appointment.patient.first_name|slice:":1" }}{{ appointment.patient.last_name|slice:":1" }}
-                    </div>
-                    <div class="appointment-info">
-                        <h4 class="appointment-patient">{{ appointment.patient.get_full_name }}</h4>
-                        <p class="appointment-details">{{ appointment.appointment_type }} • {{ appointment.duration }}min</p>
-                    </div>
-                    <div class="appointment-status">
-                        <span class="status-badge {{ appointment.status }}">
-                            {{ appointment.get_status_display }}
-                        </span>
-                        <span class="appointment-time">{{ appointment.scheduled_time|time:"H:i" }}</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <!-- Sample Appointment Data -->
-            <div class="appointment-list">
-                <div class="appointment-item">
-                    <div class="appointment-avatar">MJ</div>
-                    <div class="appointment-info">
-                        <h4 class="appointment-patient">Michael Johnson</h4>
-                        <p class="appointment-details">Follow-up Consultation • 30min</p>
-                    </div>
-                    <div class="appointment-status">
-                        <span class="status-badge scheduled">Scheduled</span>
-                        <span class="appointment-time">15:30</span>
-                    </div>
-                </div>
-
-                <div class="appointment-item">
-                    <div class="appointment-avatar">LB</div>
-                    <div class="appointment-info">
-                        <h4 class="appointment-patient">Lisa Brown</h4>
-                        <p class="appointment-details">Initial Consultation • 45min</p>
-                    </div>
-                    <div class="appointment-status">
-                        <span class="status-badge scheduled">Scheduled</span>
-                        <span class="appointment-time">16:15</span>
-                    </div>
-                </div>
-
-                <div class="appointment-item">
-                    <div class="appointment-avatar">DW</div>
-                    <div class="appointment-info">
-                        <h4 class="appointment-patient">David Wilson</h4>
-                        <p class="appointment-details">Test Results Review • 20min</p>
-                    </div>
-                    <div class="appointment-status">
-                        <span class="status-badge scheduled">Scheduled</span>
-                        <span class="appointment-time">17:00</span>
-                    </div>
-                </div>
-
-                <div class="appointment-item">
-                    <div class="appointment-avatar">AG</div>
-                    <div class="appointment-info">
-                        <h4 class="appointment-patient">Anna Garcia</h4>
-                        <p class="appointment-details">Routine Check-up • 30min</p>
-                    </div>
-                    <div class="appointment-status">
-                        <span class="status-badge scheduled">Scheduled</span>
-                        <span class="appointment-time">17:45</span>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
+        <div class="metric-value">{{ my_patients|length|default:"24" }}</div>
+        <div class="metric-label">My Patients</div>
+        <div class="metric-trend">
+            <i class="fas fa-arrow-up"></i>
+            2 new this week
         </div>
     </div>
 
-    <!-- Recent Activity & Quick Stats -->
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-8);">
-        <!-- Recent Medical Activity -->
-        <div class="dashboard-section">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-file-medical"></i>
-                    Recent Medical Activity
-                </h3>
-                <a href="{% url 'clinical_portal:activity' %}" class="section-action">
-                    View All <i class="fas fa-arrow-right"></i>
-                </a>
+    <!-- Critical Alerts (1x1) -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon pulse-icon" style="background: linear-gradient(135deg, #E89B87, #f4a690);">
+                <i class="fas fa-bell"></i>
             </div>
-            
-            <div class="activity-list">
-                <!-- Sample Activity Items -->
-                <div class="patient-item">
-                    <div class="patient-avatar">JS</div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">Prescribed Medication</h4>
-                        <p class="patient-details">John Smith • Amoxicillin 500mg • Duration: 7 days</p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="appointment-time">30 minutes ago</span>
-                    </div>
-                </div>
+            <span class="card-badge urgent">Urgent</span>
+        </div>
+        <div class="metric-value">{{ critical_alerts|length|default:"5" }}</div>
+        <div class="metric-label">Critical Alerts</div>
+        <div class="metric-trend" style="color: var(--color-coral);">
+            <i class="fas fa-exclamation-circle"></i>
+            Requires attention
+        </div>
+    </div>
 
-                <div class="patient-item">
-                    <div class="patient-avatar">MM</div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">Lab Results Reviewed</h4>
-                        <p class="patient-details">Mary Mitchell • Blood work completed • All values normal</p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="appointment-time">1 hour ago</span>
-                    </div>
+    <!-- Today's Appointments (2x1) -->
+    <div class="bento-card bento-wide" data-tilt>
+        <h3 style="font-size: 18px; font-weight: 700; color: #2D3748; margin-bottom: 20px;">
+            <i class="fas fa-calendar-day" style="color: var(--color-peach); margin-right: 8px;"></i>
+            Today's Schedule
+        </h3>
+        <div class="appointment-timeline">
+            <div class="timeline-item">
+                <div class="timeline-time">9:00 AM</div>
+                <div class="timeline-content">
+                    <div class="timeline-patient">Sarah Johnson</div>
+                    <div class="timeline-type">Annual Checkup</div>
                 </div>
-
-                <div class="patient-item">
-                    <div class="patient-avatar">RD</div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">Discharge Approved</h4>
-                        <p class="patient-details">Robert Davis • Recovery complete • Follow-up in 2 weeks</p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="appointment-time">2 hours ago</span>
-                    </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-time">10:30 AM</div>
+                <div class="timeline-content">
+                    <div class="timeline-patient">Michael Brown</div>
+                    <div class="timeline-type">Follow-up - Hypertension</div>
                 </div>
-
-                <div class="patient-item">
-                    <div class="patient-avatar">TC</div>
-                    <div class="patient-info">
-                        <h4 class="patient-name">Consultation Completed</h4>
-                        <p class="patient-details">Thomas Clark • Initial assessment • Treatment plan created</p>
-                    </div>
-                    <div class="patient-status">
-                        <span class="appointment-time">3 hours ago</span>
-                    </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-time">2:00 PM</div>
+                <div class="timeline-content">
+                    <div class="timeline-patient">Emily Davis</div>
+                    <div class="timeline-type">Lab Review</div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Quick Statistics -->
-        <div class="dashboard-section">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-chart-bar"></i>
-                    Quick Stats
-                </h3>
+    <!-- Critical Patients (1x2 tall) -->
+    <div class="bento-card bento-tall" data-hover-lift>
+        <h3 style="font-size: 18px; font-weight: 700; color: #2D3748; margin-bottom: 20px;">
+            <i class="fas fa-exclamation-triangle" style="color: var(--color-coral); margin-right: 8px;"></i>
+            Critical Patients
+        </h3>
+        <div class="patient-list">
+            {% for patient in high_risk_patients %}
+            <div class="patient-item critical">
+                <div class="patient-header">
+                    <span class="patient-name">{{ patient.user.get_full_name }}</span>
+                    <span class="patient-status critical">Critical</span>
+                </div>
+                <div class="patient-details">Risk Score: {{ patient.risk_level }} • Last visit: {{ patient.last_visit|date:"M d" }}</div>
             </div>
-            
-            <div style="display: flex; flex-direction: column; gap: var(--spacing-4);">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-3); background: var(--neutral-50); border-radius: var(--radius-lg);">
-                    <span style="font-size: var(--font-size-sm); color: var(--text-secondary);">Patients Seen Today</span>
-                    <span style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--healthcare-primary);">{{ patients_seen_today|default:"15" }}</span>
+            {% empty %}
+            <div class="patient-item critical">
+                <div class="patient-header">
+                    <span class="patient-name">Robert Anderson</span>
+                    <span class="patient-status critical">Critical</span>
                 </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-3); background: var(--neutral-50); border-radius: var(--radius-lg);">
-                    <span style="font-size: var(--font-size-sm); color: var(--text-secondary);">Avg. Consultation Time</span>
-                    <span style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--healthcare-success);">{{ avg_consultation_time|default:"28" }}min</span>
+                <div class="patient-details">Cardiac episode • BP: 185/110</div>
+            </div>
+            <div class="patient-item critical">
+                <div class="patient-header">
+                    <span class="patient-name">Maria Garcia</span>
+                    <span class="patient-status critical">Critical</span>
                 </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-3); background: var(--neutral-50); border-radius: var(--radius-lg);">
-                    <span style="font-size: var(--font-size-sm); color: var(--text-secondary);">Patient Satisfaction</span>
-                    <span style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--healthcare-success);">{{ patient_satisfaction|default:"4.8" }}/5</span>
+                <div class="patient-details">Diabetic crisis • Glucose: 350</div>
+            </div>
+            <div class="patient-item">
+                <div class="patient-header">
+                    <span class="patient-name">John Smith</span>
+                    <span class="patient-status" style="background: rgba(237, 137, 54, 0.1); color: #ed8936;">Monitoring</span>
                 </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-3); background: var(--neutral-50); border-radius: var(--radius-lg);">
-                    <span style="font-size: var(--font-size-sm); color: var(--text-secondary);">Pending Lab Results</span>
-                    <span style="font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--healthcare-warning);">{{ pending_lab_results|default:"7" }}</span>
+                <div class="patient-details">Post-surgery • Day 3 recovery</div>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="card-action-btn" onclick="window.location.href='{% url 'clinical_portal:risk' %}'">
+            View All Patients <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <!-- My Patients (2x2 featured) -->
+    <div class="bento-card bento-featured" data-tilt>
+        <h3 style="font-size: 20px; font-weight: 700; color: #2D3748; margin-bottom: 24px;">
+            <i class="fas fa-users-medical" style="color: var(--color-blue); margin-right: 8px;"></i>
+            My Patient Panel
+        </h3>
+        <div class="patient-list">
+            {% for patient in my_patients %}
+            <div class="patient-item">
+                <div class="patient-header">
+                    <span class="patient-name">{{ patient.user.get_full_name }}</span>
+                    <span class="patient-status">{{ patient.status|default:"Stable" }}</span>
                 </div>
+                <div class="patient-details">
+                    {% if patient.conditions %}
+                        {{ patient.conditions|slice:":50" }}
+                    {% else %}
+                        Regular care • Next visit scheduled
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="patient-item">
+                <div class="patient-header">
+                    <span class="patient-name">Sarah Miller</span>
+                    <span class="patient-status">Stable</span>
+                </div>
+                <div class="patient-details">Diabetes Type 2 • Last HbA1c: 6.5%</div>
+            </div>
+            <div class="patient-item">
+                <div class="patient-header">
+                    <span class="patient-name">James Wilson</span>
+                    <span class="patient-status">Stable</span>
+                </div>
+                <div class="patient-details">Hypertension • BP: 130/85 mmHg</div>
+            </div>
+            <div class="patient-item">
+                <div class="patient-header">
+                    <span class="patient-name">Lisa Anderson</span>
+                    <span class="patient-status" style="background: rgba(72, 187, 120, 0.1); color: #48bb78;">Improving</span>
+                </div>
+                <div class="patient-details">Post-MI recovery • Week 4 cardiac rehab</div>
+            </div>
+            <div class="patient-item">
+                <div class="patient-header">
+                    <span class="patient-name">David Chen</span>
+                    <span class="patient-status">Stable</span>
+                </div>
+                <div class="patient-details">COPD management • SpO2: 94%</div>
+            </div>
+            <div class="patient-item">
+                <div class="patient-header">
+                    <span class="patient-name">Emma Thompson</span>
+                    <span class="patient-status">Stable</span>
+                </div>
+                <div class="patient-details">Asthma • No recent exacerbations</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pending Reviews (1x1) -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #F0C3A0, #f5d4b8);">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+        </div>
+        <div class="metric-value">{{ recent_records|length|default:"12" }}</div>
+        <div class="metric-label">Pending Reviews</div>
+        <div class="metric-trend" style="color: #ed8936;">
+            <i class="fas fa-clock"></i>
+            3 high priority
+        </div>
+    </div>
+
+    <!-- Quick Stats (1x1) -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <h3 style="font-size: 16px; font-weight: 700; color: #2D3748; margin-bottom: 16px;">Quick Stats</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value">{{ recent_vitals|length|default:"45" }}</div>
+                <div class="stat-label">Vitals Today</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ todays_appointments_list|length|default:"18" }}</div>
+                <div class="stat-label">Appointments</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Lab Results</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Referrals</div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Doctor Dashboard JavaScript functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize dashboard features
-    initializePatientMetrics();
-    initializeAlertSystem();
-    setupAutoRefresh();
-    
-    // Patient metric cards hover effects
-    document.querySelectorAll('.patient-metric-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-4px)';
+    // Add tilt effect
+    document.querySelectorAll('[data-tilt]').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / 20;
+            const rotateY = (centerX - x) / 20;
+            
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
         });
         
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
         });
     });
 });
-
-function initializePatientMetrics() {
-    // Load real-time patient metrics
-    fetchPatientMetrics();
-}
-
-function initializeAlertSystem() {
-    // Set up real-time alert notifications
-    setupAlertNotifications();
-}
-
-function setupAutoRefresh() {
-    // Refresh critical data every 2 minutes
-    setInterval(function() {
-        refreshCriticalData();
-    }, 120000);
-    
-    // Refresh general data every 5 minutes
-    setInterval(function() {
-        refreshDashboardData();
-    }, 300000);
-}
-
-function fetchPatientMetrics() {
-    fetch('{% url "clinical_portal:patient_metrics" %}')
-        .then(response => response.json())
-        .then(data => {
-            updateMetricCards(data);
-        })
-        .catch(error => {
-            console.error('Error fetching patient metrics:', error);
-        });
-}
-
-function updateMetricCards(data) {
-    // Update metric values with real data
-    Object.entries(data).forEach(([key, value]) => {
-        const element = document.querySelector(`[data-metric="${key}"] .metric-value`);
-        if (element) {
-            element.textContent = value;
-        }
-    });
-}
-
-function setupAlertNotifications() {
-    // WebSocket connection for real-time alerts
-    // This would integrate with Django Channels for real-time updates
-    console.log('Setting up alert notifications...');
-}
-
-function refreshCriticalData() {
-    // Refresh critical patient data and alerts
-    fetchPatientMetrics();
-    checkForNewAlerts();
-}
-
-function refreshDashboardData() {
-    // Refresh all dashboard components
-    fetchPatientMetrics();
-    updatePatientList();
-    updateAppointmentList();
-    updateActivityFeed();
-}
-
-function dismissAlert(alertId) {
-    const alertCard = document.querySelector(`[data-alert-id="${alertId}"]`);
-    if (alertCard) {
-        alertCard.style.opacity = '0';
-        alertCard.style.transform = 'translateY(-10px)';
-        
-        setTimeout(() => {
-            alertCard.style.display = 'none';
-        }, 300);
-        
-        // Send dismissal to server
-        fetch('{% url "clinical_portal:dismiss_alert" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify({ alert_id: alertId })
-        });
-    }
-}
-
-function checkForNewAlerts() {
-    fetch('{% url "clinical_portal:check_alerts" %}')
-        .then(response => response.json())
-        .then(data => {
-            if (data.new_alerts && data.new_alerts.length > 0) {
-                showNewAlertNotification(data.new_alerts.length);
-            }
-        })
-        .catch(error => {
-            console.error('Error checking for new alerts:', error);
-        });
-}
-
-function showNewAlertNotification(count) {
-    // Show browser notification for new alerts
-    if (Notification.permission === 'granted') {
-        new Notification(`${count} new patient alert(s)`, {
-            body: 'Click to view critical patient alerts',
-            icon: '/static/images/health-icon.png'
-        });
-    }
-}
-
-function updatePatientList() {
-    // Update patient list with latest data
-    fetch('{% url "clinical_portal:my_patients_data" %}')
-        .then(response => response.json())
-        .then(data => {
-            // Update patient list DOM
-            console.log('Updating patient list:', data);
-        });
-}
-
-function updateAppointmentList() {
-    // Update today's appointments
-    fetch('{% url "clinical_portal:todays_appointments" %}')
-        .then(response => response.json())
-        .then(data => {
-            // Update appointment list DOM
-            console.log('Updating appointments:', data);
-        });
-}
-
-function updateActivityFeed() {
-    // Update recent activity feed
-    fetch('{% url "clinical_portal:recent_activity" %}')
-        .then(response => response.json())
-        .then(data => {
-            // Update activity feed DOM
-            console.log('Updating activity feed:', data);
-        });
-}
-
-// Request notification permission on load
-if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-}
-</script>
-    <!-- My Patients -->
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="fas fa-users"></i> My Patients</h3>
-            <a href="{% url 'clinical_portal:journey' %}" class="btn btn-sm btn-outline">View All</a>
-        </div>
-        <div class="card-body">
-            {% if my_patients %}
-            <div class="patient-list">
-                {% for admission in my_patients %}
-                <div class="patient-item">
-                    <div class="patient-avatar">
-                        {{ admission.patient.first_name|slice:":1" }}{{ admission.patient.last_name|slice:":1" }}
-                    </div>
-                    <div class="patient-info">
-                        <strong>{{ admission.patient.get_full_name }}</strong>
-                        <span class="patient-meta">
-                            {{ admission.ward|default:"Ward TBD" }} | 
-                            Bed {{ admission.bed_number|default:"TBD" }}
-                        </span>
-                    </div>
-                    <div class="patient-status">
-                        <span class="badge badge-{{ admission.status }}">
-                            {{ admission.get_admission_type_display }}
-                        </span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state-compact">
-                <i class="fas fa-user-group" style="font-size:1.5rem; color:var(--text-muted); margin-bottom:0.5rem;"></i>
-                <p>No patients currently assigned.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- High Risk Patients -->
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="fas fa-shield-heart"></i> High Risk Patients</h3>
-            <a href="{% url 'clinical_portal:risk' %}" class="btn btn-sm btn-outline">View All</a>
-        </div>
-        <div class="card-body">
-            {% if high_risk_patients %}
-            <div class="risk-list">
-                {% for record in high_risk_patients %}
-                <div class="risk-item">
-                    <div class="risk-indicator 
-                        {% if record.severity == 'critical' %}risk-critical
-                        {% elif record.severity == 'high' %}risk-high
-                        {% else %}risk-medium{% endif %}">
-                    </div>
-                    <div class="risk-info">
-                        <strong>{{ record.patient.get_full_name }}</strong>
-                        <span>{{ record.title }}</span>
-                    </div>
-                    <span class="badge badge-{{ record.severity }}">
-                        {{ record.get_severity_display }}
-                    </span>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state-compact">
-                <i class="fas fa-check-circle" style="font-size:1.5rem; color:var(--sage-green); margin-bottom:0.5rem;"></i>
-                <p>No high-risk patients at this time.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Recent Activity -->
-<div class="card-grid">
-    <!-- Recent Medical Records -->
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="fas fa-file-medical"></i> Recent Records (Created by Me)</h3>
-        </div>
-        <div class="card-body">
-            {% if recent_records %}
-            <table class="data-table data-table-compact">
-                <thead>
-                    <tr>
-                        <th>Patient</th>
-                        <th>Type</th>
-                        <th>Title</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in recent_records %}
-                    <tr>
-                        <td>{{ record.patient.get_full_name }}</td>
-                        <td>
-                            <span class="badge badge-info">
-                                {{ record.get_record_type_display }}
-                            </span>
-                        </td>
-                        <td>{{ record.title|truncatechars:30 }}</td>
-                        <td>{{ record.record_date|date:"M d, H:i" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state-compact">
-                <i class="fas fa-folder-open" style="font-size:1.5rem; color:var(--text-muted); margin-bottom:0.5rem;"></i>
-                <p>No recent records.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Recent Vitals -->
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="fas fa-heartbeat"></i> Recent Vital Recordings</h3>
-        </div>
-        <div class="card-body">
-            {% if recent_vitals %}
-            <table class="data-table data-table-compact">
-                <thead>
-                    <tr>
-                        <th>Patient</th>
-                        <th>BP</th>
-                        <th>HR</th>
-                        <th>Temp</th>
-                        <th>SpO2</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for vital in recent_vitals %}
-                    <tr>
-                        <td>{{ vital.patient.get_full_name }}</td>
-                        <td>{{ vital.blood_pressure|default:"-" }}</td>
-                        <td>{{ vital.heart_rate|default:"-" }}</td>
-                        <td>{{ vital.temperature|default:"-" }}°C</td>
-                        <td>{{ vital.oxygen_saturation|default:"-" }}%</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state-compact">
-                <i class="fas fa-heart-circle-check" style="font-size:1.5rem; color:var(--text-muted); margin-bottom:0.5rem;"></i>
-                <p>No recent vital recordings.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="card">
-    <div class="card-header">
-        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-    </div>
-    <div class="card-body">
-        <div class="quick-actions">
-// Request notification permission on load
-if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-}
 </script>
 {% endblock %}

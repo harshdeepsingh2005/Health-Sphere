@@ -3,1147 +3,846 @@
 
 {% block title %}Admin Dashboard - HealthSphere AI{% endblock %}
 
+{% block sidebar_nav %}
+<!-- Admin Navigation -->
+<div class="nav-section">
+    <div class="nav-section-title">Main</div>
+    <div class="nav-item">
+        <a href="{% url 'admin_portal:dashboard' %}" class="nav-link active">
+            <i class="fas fa-th-large"></i>
+            <span class="nav-link-text">Dashboard</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'admin_portal:analytics' %}" class="nav-link">
+            <i class="fas fa-chart-line"></i>
+            <span class="nav-link-text">Analytics</span>
+        </a>
+    </div>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Management</div>
+    <div class="nav-item">
+        <a href="{% url 'admin_portal:patients' %}" class="nav-link">
+            <i class="fas fa-users"></i>
+            <span class="nav-link-text">Patients</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'admin_portal:resources' %}" class="nav-link">
+            <i class="fas fa-box"></i>
+            <span class="nav-link-text">Resources</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="/django-admin/" class="nav-link">
+            <i class="fas fa-cog"></i>
+            <span class="nav-link-text">System Admin</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
 {% block extra_css %}
 <style>
-/* =============================================
-   Admin Dashboard Styles
-   ============================================= */
-
-.dashboard-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-8);
-    flex-wrap: wrap;
-    gap: var(--spacing-4);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-6);
-    box-shadow: var(--glass-shadow-lg);
+/* ===== BENTO GRID LAYOUT ===== */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
-.dashboard-title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
+/* Card Size Classes */
+.bento-small { grid-column: span 1; grid-row: span 1; }  /* 1x1 */
+.bento-wide { grid-column: span 2; grid-row: span 1; }   /* 2x1 */
+.bento-tall { grid-column: span 1; grid-row: span 2; }   /* 1x2 */
+.bento-large { grid-column: span 2; grid-row: span 1; }  /* 2x1 */
+.bento-featured { grid-column: span 2; grid-row: span 2; } /* 2x2 */
+
+/* ===== BASE CARD STYLES ===== */
+.bento-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.dashboard-title i {
-    color: var(--healthcare-primary);
-    font-size: var(--font-size-2xl);
-}
-
-.dashboard-subtitle {
-    font-size: var(--font-size-base);
-    color: var(--text-secondary);
-    margin: var(--spacing-1) 0 0 0;
-}
-
-.dashboard-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
-}
-
-.quick-action-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2);
-    padding: var(--spacing-3) var(--spacing-4);
-    background: var(--healthcare-primary);
-    color: var(--neutral-white);
-    border: none;
-    border-radius: var(--radius-lg);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    text-decoration: none;
+/* ===== INTERACTIVE EFFECTS ===== */
+.interactive-card {
     cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: var(--glass-shadow-sm);
 }
 
-.quick-action-btn:hover {
-    background: var(--healthcare-primary-dark);
-    transform: translateY(-2px);
-    box-shadow: var(--glass-shadow-md);
+.interactive-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.15);
 }
 
-.quick-action-btn.secondary {
-    background: var(--glass-white);
-    color: var(--text-primary);
-    border: 1px solid var(--neutral-200);
+[data-hover-lift]:hover {
+    transform: translateY(-8px) scale(1.02);
 }
 
-.quick-action-btn.secondary:hover {
-    background: var(--neutral-50);
-    border-color: var(--neutral-300);
+[data-tilt] {
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease-out;
 }
 
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--spacing-6);
-    margin-bottom: var(--spacing-8);
+[data-tilt]:hover {
+    transform: perspective(1000px) rotateX(2deg) rotateY(-2deg);
 }
 
-.analytics-section {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: var(--spacing-6);
-    margin-bottom: var(--spacing-8);
+/* Card Glow Effect */
+.card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(232, 155, 135, 0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
 }
 
-.activity-section {
-    margin-bottom: var(--spacing-8);
+.interactive-card:hover .card-glow {
+    opacity: 1;
 }
 
-.section-header {
-    display: flex;
+.gradient-glow {
+    background: radial-gradient(circle, rgba(168, 197, 232, 0.2) 0%, transparent 70%);
+}
+
+/* ===== GREETING CARD (Large 2x1) ===== */
+.greeting-content {
+    position: relative;
+    z-index: 2;
+}
+
+.greeting-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    animation: wave 2s ease-in-out infinite;
+}
+
+@keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(20deg); }
+    75% { transform: rotate(-20deg); }
+}
+
+.greeting-content h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2D3748;
+    margin-bottom: 8px;
+}
+
+.greeting-subtitle {
+    font-size: 16px;
+    color: #718096;
+    margin-bottom: 20px;
+}
+
+.date-badge {
+    display: inline-flex;
     align-items: center;
+    gap: 8px;
+    background: rgba(232, 155, 135, 0.1);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #E89B87;
+    font-weight: 500;
+}
+
+.card-particles {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(240, 195, 160, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(40px);
+    pointer-events: none;
+}
+
+/* ===== METRIC CARDS ===== */
+.card-header {
+    display: flex;
     justify-content: space-between;
-    margin-bottom: var(--spacing-6);
+    align-items: flex-start;
+    margin-bottom: 20px;
 }
 
-.section-title {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-semibold);
-    color: var(--text-primary);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2);
-}
-
-.section-title i {
-    color: var(--healthcare-primary);
-}
-
-.section-action {
-    color: var(--healthcare-primary);
-    text-decoration: none;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-1);
-    transition: color var(--transition-fast);
-}
-
-.section-action:hover {
-    color: var(--healthcare-primary-dark);
-}
-
-.alert-banner {
-    background: var(--healthcare-warning-bg);
-    border: 1px solid var(--healthcare-warning);
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-4);
-    margin-bottom: var(--spacing-6);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-4);
-}
-
-.alert-banner.critical {
-    background: var(--healthcare-danger-bg);
-    border-color: var(--healthcare-danger);
-}
-
-.alert-banner.success {
-    background: var(--healthcare-success-bg);
-    border-color: var(--healthcare-success);
-}
-
-.alert-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-full);
+.metric-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 24px;
+    color: white;
+    transition: transform 0.3s ease;
+}
+
+.metric-icon.large {
+    width: 72px;
+    height: 72px;
+    font-size: 32px;
+}
+
+.interactive-card:hover .metric-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.pulse-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.card-badge {
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(168, 197, 232, 0.15);
+    color: var(--color-blue);
+}
+
+.card-badge.urgent {
+    background: rgba(232, 155, 135, 0.15);
+    color: var(--color-coral);
+}
+
+.metric-content {
+    position: relative;
+    z-index: 2;
+}
+
+.metric-value {
+    font-size: 48px;
+    font-weight: 700;
+    color: #2D3748;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.count-up {
+    font-variant-numeric: tabular-nums;
+}
+
+.metric-label {
+    font-size: 14px;
+    color: #718096;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.metric-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.metric-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #718096;
+}
+
+.metric-change.up {
+    color: #48bb78;
+}
+
+.quick-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(168, 197, 232, 0.1);
+    color: var(--color-blue);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-btn:hover {
+    background: var(--color-blue);
+    color: white;
+    transform: translateX(4px);
+}
+
+.card-sparkline {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 100px;
+    height: 30px;
+    opacity: 0.3;
+}
+
+/* ===== SPLIT CONTENT CARD (Wide 2x1) ===== */
+.split-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 32px;
+    height: 100%;
+}
+
+.left-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.right-section {
     flex-shrink: 0;
 }
 
-.alert-banner .alert-icon {
-    background: var(--healthcare-warning);
-    color: var(--neutral-white);
+.circular-progress {
+    position: relative;
+    width: 120px;
+    height: 120px;
 }
 
-.alert-banner.critical .alert-icon {
-    background: var(--healthcare-danger);
-    color: var(--neutral-white);
+.circular-progress svg {
+    transform: rotate(-90deg);
 }
 
-.alert-banner.success .alert-icon {
-    background: var(--healthcare-success);
-    color: var(--neutral-white);
+.progress-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
 }
 
-.alert-content {
-    flex: 1;
+.big-percent {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2D3748;
 }
 
-.alert-title {
-    font-weight: var(--font-weight-semibold);
-    color: var(--text-primary);
-    margin: 0 0 var(--spacing-1) 0;
-    font-size: var(--font-size-base);
+.metric-subtitle {
+    font-size: 13px;
+    color: #48bb78;
+    font-weight: 500;
 }
 
-.alert-text {
-    color: var(--text-secondary);
-    margin: 0;
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-relaxed);
-}
-
-.alert-actions {
+/* ===== TALL CARD (1x2) ===== */
+.bento-tall {
     display: flex;
-    gap: var(--spacing-2);
+    flex-direction: column;
 }
 
-.alert-action {
-    padding: var(--spacing-2) var(--spacing-3);
-    border-radius: var(--radius-lg);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    text-decoration: none;
-    transition: all var(--transition-fast);
+.appointment-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 20px 0;
 }
 
-.alert-action.primary {
-    background: var(--healthcare-primary);
-    color: var(--neutral-white);
+.mini-appointment {
+    padding: 12px;
+    background: rgba(168, 197, 232, 0.05);
+    border-radius: 12px;
+    border-left: 3px solid var(--color-blue);
 }
 
-.alert-action.primary:hover {
-    background: var(--healthcare-primary-dark);
+.apt-time {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-blue);
+    margin-bottom: 4px;
 }
 
-.alert-action.secondary {
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--neutral-200);
+.apt-info {
+    font-size: 13px;
+    color: #4A5568;
 }
 
-.alert-action.secondary:hover {
-    background: var(--neutral-50);
-    color: var(--text-primary);
+.card-action-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--color-blue), #b8d4f0);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.card-action-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(168, 197, 232, 0.4);
+}
+
+.card-action-btn.primary {
+    background: linear-gradient(135deg, #E89B87, #f4a690);
+}
+
+.card-action-btn.primary:hover {
+    box-shadow: 0 4px 12px rgba(232, 155, 135, 0.4);
+}
+
+/* ===== FEATURED CARD (2x2) ===== */
+.feature-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--color-blue), #b8d4f0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+}
+
+.feature-header h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2D3748;
+    margin: 0;
+}
+
+.feature-subtitle {
+    font-size: 13px;
+    color: #718096;
+}
+
+.ai-badge {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(72, 187, 120, 0.1);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #48bb78;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #48bb78;
+    animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.ai-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.ai-stat {
+    text-align: center;
+    padding: 16px;
+    background: rgba(168, 197, 232, 0.05);
+    border-radius: 12px;
+}
+
+.ai-stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2D3748;
+    margin-bottom: 4px;
+}
+
+.ai-stat-label {
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 8px;
+}
+
+.trend-indicator {
+    font-size: 12px;
+    font-weight: 600;
+    color: #718096;
+}
+
+.trend-indicator.up {
+    color: #48bb78;
+}
+
+.chart-container {
+    height: 180px;
+    margin-bottom: 20px;
+    background: rgba(168, 197, 232, 0.03);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+/* ===== STAFF AVATARS ===== */
+.staff-avatars {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-blue), #b8d4f0);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    border: 2px solid white;
+}
+
+.avatar.more {
+    background: #E2E8F0;
+    color: #718096;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.status-dot.online {
+    background: #48bb78;
+}
+
+/* ===== RADIAL PROGRESS ===== */
+.radial-progress {
+    width: 100px;
+    height: 100px;
+    margin: 16px auto 0;
+}
+
+.radial-progress svg {
+    transform: rotate(-90deg);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1400px) {
+    .bento-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .bento-featured {
+        grid-column: span 3;
+    }
 }
 
 @media (max-width: 1024px) {
-    .analytics-section {
-        grid-template-columns: 1fr;
+    .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .bento-large, .bento-wide {
+        grid-column: span 2;
+    }
+    .bento-featured {
+        grid-column: span 2;
     }
 }
 
 @media (max-width: 768px) {
-    .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .dashboard-actions {
-        width: 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
-    
-    .metrics-grid {
+    .bento-grid {
         grid-template-columns: 1fr;
     }
-    
-    .alert-banner {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .alert-actions {
-        justify-content: center;
-        flex-wrap: wrap;
+    .bento-small, .bento-wide, .bento-large, .bento-tall, .bento-featured {
+        grid-column: span 1;
+        grid-row: span 1;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <!-- Dashboard Header -->
-    <div class="dashboard-header">
-        <div>
-            <h1 class="dashboard-title">
-                <i class="fas fa-shield-alt"></i>
-                Admin Dashboard
-            </h1>
-            <p class="dashboard-subtitle">Monitor system health and manage HealthSphere AI platform</p>
-        </div>
-        <div class="dashboard-actions">
-            <div class="date-filter">
+<div class="bento-grid">
+    <!-- Large Greeting Card (2x1) -->
+    <div class="bento-card bento-large interactive-card" data-tilt>
+        <div class="card-glow"></div>
+        <div class="greeting-content">
+            <div class="greeting-icon">👋</div>
+            <h1>Good Morning, {{ user.get_full_name|default:user.username }}!</h1>
+            <p class="greeting-subtitle">Here's your health platform overview for today</p>
+            <div class="date-badge">
                 <i class="fas fa-calendar"></i>
-                <select id="dashboardTimeRange">
-                    <option value="24h">Last 24 Hours</option>
-                    <option value="7d" selected>Last 7 Days</option>
-                    <option value="30d">Last 30 Days</option>
-                    <option value="90d">Last 90 Days</option>
-                </select>
+                <span>Wednesday, February 19, 2026</span>
             </div>
-            <a href="{% url 'admin_portal:system_settings' %}" class="quick-action-btn secondary">
-                <i class="fas fa-cog"></i>
-                <span>System Settings</span>
-            </a>
-            <a href="{% url 'admin_portal:user_management' %}" class="quick-action-btn">
+        </div>
+        <div class="card-particles"></div>
+    </div>
+
+    <!-- Critical Alerts Card (1x1) -->
+    <div class="bento-card bento-small interactive-card alert-card" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon pulse-icon" style="background: linear-gradient(135deg, #E89B87, #f4a690);">
+                <i class="fas fa-bell"></i>
+            </div>
+            <span class="card-badge urgent">Urgent</span>
+        </div>
+        <div class="metric-content">
+            <h3 class="metric-value count-up">{{ stats.critical_alerts|default:"8" }}</h3>
+            <p class="metric-label">Critical Alerts</p>
+            <div class="metric-footer">
+                <span class="metric-change up"><i class="fas fa-arrow-up"></i> +3 today</span>
+                <button class="quick-btn"><i class="fas fa-eye"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patients Card (1x1) -->
+    <div class="bento-card bento-small interactive-card" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5E8, #b8d4f0);">
                 <i class="fas fa-users"></i>
-                <span>Manage Users</span>
-            </a>
+            </div>
+        </div>
+        <div class="metric-content">
+            <h3 class="metric-value count-up">{{ stats.total_patients|default:"1,248" }}</h3>
+            <p class="metric-label">Total Patients</p>
+            <div class="metric-footer">
+                <span class="metric-change up"><i class="fas fa-arrow-up"></i> +12 this week</span>
+                <button class="quick-btn"><i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+        <div class="card-sparkline">
+            <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+                <polyline points="0,25 20,20 40,22 60,15 80,18 100,10" fill="none" stroke="#A8C5E8" stroke-width="2"/>
+            </svg>
         </div>
     </div>
 
-    <!-- System Status Alerts -->
-    {% if critical_alerts > 0 %}
-    <div class="alert-banner critical">
-        <div class="alert-icon">
-            <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <div class="alert-content">
-            <h3 class="alert-title">Critical System Issues</h3>
-            <p class="alert-text">{{ critical_alerts }} critical issues require immediate attention.</p>
-        </div>
-        <div class="alert-actions">
-            <a href="{% url 'admin_portal:system_health' %}" class="alert-action primary">View Details</a>
-            <button class="alert-action secondary" onclick="dismissAlert('critical')">Acknowledge</button>
-        </div>
-    </div>
-    {% elif warning_alerts > 0 %}
-    <div class="alert-banner">
-        <div class="alert-icon">
-            <i class="fas fa-exclamation-circle"></i>
-        </div>
-        <div class="alert-content">
-            <h3 class="alert-title">System Warnings</h3>
-            <p class="alert-text">{{ warning_alerts }} system warnings detected. Review recommended.</p>
-        </div>
-        <div class="alert-actions">
-            <a href="{% url 'admin_portal:system_health' %}" class="alert-action primary">Review</a>
-            <button class="alert-action secondary" onclick="dismissAlert('warnings')">Dismiss</button>
-        </div>
-    </div>
-    {% else %}
-    <div class="alert-banner success">
-        <div class="alert-icon">
-            <i class="fas fa-shield-check"></i>
-        </div>
-        <div class="alert-content">
-            <h3 class="alert-title">System Status: Optimal</h3>
-            <p class="alert-text">All systems are running smoothly. Platform health is excellent.</p>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Key Metrics Grid -->
-    <div class="metrics-grid">
-        <!-- Total Users Metric -->
-        <div class="metric-card">
-            <div class="metric-header">
-                <div class="metric-icon">
-                    <i class="fas fa-users"></i>
+    <!-- Consultations Progress Card (2x1) -->
+    <div class="bento-card bento-wide interactive-card" data-tilt>
+        <div class="card-glow gradient-glow"></div>
+        <div class="split-content">
+            <div class="left-section">
+                <div class="metric-icon large" style="background: linear-gradient(135deg, #A8C5A8, #b8d4b8);">
+                    <i class="fas fa-clipboard-check"></i>
                 </div>
-                <div class="metric-trend up">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>+12%</span>
+                <div>
+                    <h3 class="metric-value count-up">{{ stats.consultations|default:"324" }}</h3>
+                    <p class="metric-label">Consultations Today</p>
+                    <span class="metric-subtitle">↑ 75% completion rate</span>
                 </div>
             </div>
-            <div class="metric-value">{{ total_users|default:"2,847" }}</div>
-            <div class="metric-label">Total Users</div>
-            <div class="metric-description">{{ new_users_today|default:"23" }} new registrations today</div>
-        </div>
-
-        <!-- Active Sessions Metric -->
-        <div class="metric-card">
-            <div class="metric-header">
-                <div class="metric-icon success">
-                    <i class="fas fa-wifi"></i>
+            <div class="right-section">
+                <div class="circular-progress">
+                    <svg viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="#E8E4DB" stroke-width="8"/>
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="#A8C5A8" 
+                                stroke-width="8" stroke-dasharray="235, 314" 
+                                stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                    </svg>
+                    <div class="progress-label">
+                        <span class="big-percent">75%</span>
+                    </div>
                 </div>
-                <div class="metric-trend up">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>+8%</span>
-                </div>
-            </div>
-            <div class="metric-value">{{ active_sessions|default:"1,243" }}</div>
-            <div class="metric-label">Active Sessions</div>
-            <div class="metric-description">{{ peak_concurrent|default:"1,456" }} peak concurrent this week</div>
-        </div>
-
-        <!-- System Health Score -->
-        <div class="metric-card">
-            <div class="metric-header">
-                <div class="metric-icon info">
-                    <i class="fas fa-heartbeat"></i>
-                </div>
-                <div class="metric-trend {% if system_health >= 95 %}up{% elif system_health >= 85 %}neutral{% else %}down{% endif %}">
-                    <i class="fas fa-{% if system_health >= 95 %}arrow-up{% elif system_health >= 85 %}minus{% else %}arrow-down{% endif %}"></i>
-                    <span>{{ system_health|default:"98" }}%</span>
-                </div>
-            </div>
-            <div class="metric-value">{{ system_health|default:"98.3" }}%</div>
-            <div class="metric-label">System Health</div>
-            <div class="metric-description">{{ uptime|default:"99.97" }}% uptime this month</div>
-        </div>
-
-        <!-- API Response Time -->
-        <div class="metric-card">
-            <div class="metric-header">
-                <div class="metric-icon warning">
-                    <i class="fas fa-tachometer-alt"></i>
-                </div>
-                <div class="metric-trend neutral">
-                    <i class="fas fa-minus"></i>
-                    <span>-2ms</span>
-                </div>
-            </div>
-            <div class="metric-value">{{ avg_response_time|default:"143" }}ms</div>
-            <div class="metric-label">Avg Response Time</div>
-            <div class="metric-description">{{ p95_response_time|default:"287" }}ms at 95th percentile</div>
-        </div>
-
-        <!-- Storage Usage -->
-        <div class="metric-card">
-            <div class="metric-header">
-                <div class="metric-icon {% if storage_usage > 85 %}danger{% elif storage_usage > 70 %}warning{% else %}info{% endif %}">
-                    <i class="fas fa-hdd"></i>
-                </div>
-                <div class="metric-trend {% if storage_growth > 5 %}up{% elif storage_growth > 0 %}neutral{% else %}down{% endif %}">
-                    <i class="fas fa-{% if storage_growth > 5 %}arrow-up{% elif storage_growth > 0 %}minus{% else %}arrow-down{% endif %}"></i>
-                    <span>{{ storage_growth|default:"+3.2" }}%</span>
-                </div>
-            </div>
-            <div class="metric-value">{{ storage_used|default:"2.4" }}TB</div>
-            <div class="metric-label">Storage Used</div>
-            <div class="metric-description">{{ storage_usage|default:"68" }}% of {{ storage_total|default:"3.5" }}TB capacity</div>
-        </div>
-
-        <!-- AI Model Performance -->
-        <div class="metric-card">
-            <div class="metric-header">
-                <div class="metric-icon">
-                    <i class="fas fa-brain"></i>
-                </div>
-                <div class="metric-trend up">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>+5%</span>
-                </div>
-            </div>
-            <div class="metric-value">{{ ai_accuracy|default:"94.7" }}%</div>
-            <div class="metric-label">AI Model Accuracy</div>
-            <div class="metric-description">{{ ai_predictions_today|default:"1,847" }} predictions processed today</div>
-        </div>
-    </div>
-
-    <!-- Analytics Section -->
-    <div class="analytics-grid">
-        <!-- User Activity Analytics -->
-        <div class="analytics-card">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-chart-line"></i>
-                    User Activity Trends
-                </h3>
-                <a href="{% url 'admin_portal:analytics' %}?tab=users" class="section-action">
-                    View Details <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="chart-container">
-                <i class="fas fa-chart-area fa-2x"></i>
-                <p>Interactive chart showing user activity over time will be displayed here</p>
-            </div>
-        </div>
-
-        <!-- System Performance Analytics -->
-        <div class="analytics-card">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-server"></i>
-                    System Performance
-                </h3>
-                <a href="{% url 'admin_portal:analytics' %}?tab=performance" class="section-action">
-                    View Details <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="chart-container">
-                <i class="fas fa-chart-bar fa-2x"></i>
-                <p>System performance metrics and trends will be displayed here</p>
-            </div>
-        </div>
-
-        <!-- AI Model Analytics -->
-        <div class="analytics-card">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-robot"></i>
-                    AI Model Performance
-                </h3>
-                <a href="{% url 'admin_portal:analytics' %}?tab=ai" class="section-action">
-                    View Details <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="chart-container">
-                <i class="fas fa-brain fa-2x"></i>
-                <p>AI model accuracy and usage statistics will be displayed here</p>
-            </div>
-        </div>
-
-        <!-- Security Monitoring -->
-        <div class="analytics-card">
-            <div class="section-header">
-                <h3 class="section-title">
-                    <i class="fas fa-shield-alt"></i>
-                    Security Overview
-                </h3>
-                <a href="{% url 'admin_portal:security' %}" class="section-action">
-                    View Details <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="chart-container">
-                <i class="fas fa-shield-check fa-2x"></i>
-                <p>Security events and threat detection status will be displayed here</p>
             </div>
         </div>
     </div>
 
-    <!-- Recent Activity -->
-    <div class="dashboard-section">
-        <div class="section-header">
-            <h3 class="section-title">
-                <i class="fas fa-clock"></i>
-                Recent System Activity
-            </h3>
-            <a href="{% url 'admin_portal:activity_log' %}" class="section-action">
-                View All Activity <i class="fas fa-arrow-right"></i>
-            </a>
+    <!-- Appointments Card (1x2) - Tall -->
+    <div class="bento-card bento-tall interactive-card" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #F0C3A0, #f5d4b8);">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <span class="card-badge">Today</span>
         </div>
-        
-        <div class="activity-list">
-            <!-- Sample Activity Items -->
-            <div class="activity-item">
-                <div class="activity-icon user">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-                <div class="activity-content">
-                    <h4 class="activity-title">New Administrator Account Created</h4>
-                    <p class="activity-description">Dr. Sarah Johnson has been granted admin privileges for Clinical Portal access</p>
-                    <span class="activity-time">2 minutes ago</span>
-                </div>
+        <div class="metric-content">
+            <h3 class="metric-value count-up">{{ stats.appointments|default:"18" }}</h3>
+            <p class="metric-label">Appointments</p>
+        </div>
+        <div class="appointment-list">
+            <div class="mini-appointment">
+                <div class="apt-time">10:30 AM</div>
+                <div class="apt-info">Dr. Smith - Cardiology</div>
             </div>
+            <div class="mini-appointment">
+                <div class="apt-time">2:00 PM</div>
+                <div class="apt-info">Dr. Jones - Neurology</div>
+            </div>
+            <div class="mini-appointment">
+                <div class="apt-time">4:30 PM</div>
+                <div class="apt-info">Dr. Lee - Pediatrics</div>
+            </div>
+        </div>
+        <button class="card-action-btn">View Schedule <i class="fas fa-arrow-right"></i></button>
+    </div>
 
-            <div class="activity-item">
-                <div class="activity-icon system">
-                    <i class="fas fa-sync-alt"></i>
-                </div>
-                <div class="activity-content">
-                    <h4 class="activity-title">System Backup Completed</h4>
-                    <p class="activity-description">Automated daily backup completed successfully. 2.4GB data archived</p>
-                    <span class="activity-time">15 minutes ago</span>
-                </div>
+    <!-- AI Analytics Card (2x2) - Large Feature -->
+    <div class="bento-card bento-featured interactive-card" data-tilt>
+        <div class="card-glow gradient-glow"></div>
+        <div class="feature-header">
+            <div class="feature-icon">
+                <i class="fas fa-brain"></i>
             </div>
+            <div>
+                <h3>AI Health Analytics</h3>
+                <p class="feature-subtitle">Real-time insights & predictions</p>
+            </div>
+            <div class="ai-badge">
+                <span class="pulse-dot"></span>
+                Live
+            </div>
+        </div>
+        <div class="ai-stats-grid">
+            <div class="ai-stat">
+                <div class="ai-stat-value">92</div>
+                <div class="ai-stat-label">Rush Score</div>
+                <div class="trend-indicator up">↑ 8%</div>
+            </div>
+            <div class="ai-stat">
+                <div class="ai-stat-value">85</div>
+                <div class="ai-stat-label">Health Score</div>
+                <div class="trend-indicator up">↑ 5%</div>
+            </div>
+            <div class="ai-stat">
+                <div class="ai-stat-value">12</div>
+                <div class="ai-stat-label">Predictions</div>
+                <div class="trend-indicator">New</div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="aiTrendChart"></canvas>
+        </div>
+        <button class="card-action-btn primary">View Full Report <i class="fas fa-chart-line"></i></button>
+    </div>
 
-            <div class="activity-item">
-                <div class="activity-icon alert">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="activity-content">
-                    <h4 class="activity-title">High CPU Usage Alert Resolved</h4>
-                    <p class="activity-description">CPU usage returned to normal levels after automatic scaling adjustment</p>
-                    <span class="activity-time">32 minutes ago</span>
-                </div>
+    <!-- Staff Card (1x1) -->
+    <div class="bento-card bento-small interactive-card" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5E8, #b8d4f0);">
+                <i class="fas fa-user-md"></i>
             </div>
+            <span class="status-dot online"></span>
+        </div>
+        <div class="metric-content">
+            <h3 class="metric-value count-up">{{ stats.active_staff|default:"24" }}</h3>
+            <p class="metric-label">Active Staff</p>
+            <div class="metric-footer">
+                <span class="metric-change"><i class="fas fa-circle" style="color: #48bb78;"></i> 18 online</span>
+            </div>
+        </div>
+        <div class="staff-avatars">
+            <div class="avatar">JS</div>
+            <div class="avatar">MK</div>
+            <div class="avatar">AL</div>
+            <div class="avatar more">+15</div>
+        </div>
+    </div>
 
-            <div class="activity-item">
-                <div class="activity-icon appointment">
-                    <i class="fas fa-database"></i>
-                </div>
-                <div class="activity-content">
-                    <h4 class="activity-title">Database Optimization Completed</h4>
-                    <p class="activity-description">Routine database maintenance improved query performance by 15%</p>
-                    <span class="activity-time">1 hour ago</span>
-                </div>
+    <!-- Bed Occupancy Card (1x1) -->
+    <div class="bento-card bento-small interactive-card" data-hover-lift>
+        <div class="card-header">
+            <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5A8, #b8d4b8);">
+                <i class="fas fa-bed"></i>
             </div>
-
-            <div class="activity-item">
-                <div class="activity-icon system">
-                    <i class="fas fa-shield-check"></i>
-                </div>
-                <div class="activity-content">
-                    <h4 class="activity-title">Security Scan Completed</h4>
-                    <p class="activity-description">Daily security vulnerability scan found no issues. System is secure</p>
-                    <span class="activity-time">2 hours ago</span>
-                </div>
-            </div>
-
-            <div class="activity-item">
-                <div class="activity-icon user">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="activity-content">
-                    <h4 class="activity-title">Bulk User Import Completed</h4>
-                    <p class="activity-description">Successfully imported 156 new patient records from external system</p>
-                    <span class="activity-time">3 hours ago</span>
-                </div>
-            </div>
+        </div>
+        <div class="metric-content">
+            <h3 class="metric-value">{{ stats.bed_occupancy|default:"78" }}%</h3>
+            <p class="metric-label">Bed Occupancy</p>
+        </div>
+        <div class="radial-progress" data-progress="78">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#E8E4DB" stroke-width="8"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#A8C5A8" 
+                        stroke-width="8" stroke-dasharray="195, 251" 
+                        stroke-linecap="round" transform="rotate(-90 50 50)"/>
+            </svg>
         </div>
     </div>
 </div>
 
 <script>
-// Dashboard JavaScript functionality
+// Number counting animation
 document.addEventListener('DOMContentLoaded', function() {
-    // Time range filter
-    const timeRangeSelect = document.getElementById('dashboardTimeRange');
-    if (timeRangeSelect) {
-        timeRangeSelect.addEventListener('change', function() {
-            // Update dashboard metrics based on selected time range
-            updateDashboardData(this.value);
-        });
-    }
-
-    // Auto-refresh dashboard data every 5 minutes
-    setInterval(function() {
-        refreshDashboardMetrics();
-    }, 300000);
-
-    // Initialize metric cards hover effects
-    initializeMetricCards();
-});
-
-function updateDashboardData(timeRange) {
-    // Show loading state
-    showDashboardLoading();
+    const counters = document.querySelectorAll('.count-up');
     
-    // Make AJAX request to update dashboard data
-    fetch(`{% url 'admin_portal:dashboard_data' %}?range=${timeRange}`)
-        .then(response => response.json())
-        .then(data => {
-            updateMetrics(data);
-            updateCharts(data);
-        })
-        .catch(error => {
-            console.error('Error updating dashboard:', error);
-        })
-        .finally(() => {
-            hideDashboardLoading();
-        });
-}
-
-function refreshDashboardMetrics() {
-    const currentRange = document.getElementById('dashboardTimeRange').value;
-    updateDashboardData(currentRange);
-}
-
-function showDashboardLoading() {
-    document.querySelectorAll('.metric-card, .analytics-card').forEach(card => {
-        card.style.opacity = '0.6';
-    });
-}
-
-function hideDashboardLoading() {
-    document.querySelectorAll('.metric-card, .analytics-card').forEach(card => {
-        card.style.opacity = '1';
-    });
-}
-
-function updateMetrics(data) {
-    // Update metric values with new data
-    if (data.metrics) {
-        Object.entries(data.metrics).forEach(([key, value]) => {
-            const element = document.querySelector(`[data-metric="${key}"]`);
-            if (element) {
-                element.textContent = value;
+    counters.forEach(counter => {
+        const target = parseInt(counter.textContent.replace(/,/g, ''));
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+        
+        const updateCounter = () => {
+            current += step;
+            if (current < target) {
+                counter.textContent = Math.floor(current).toLocaleString();
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target.toLocaleString();
             }
-        });
-    }
-}
-
-function updateCharts(data) {
-    // Update chart displays with new data
-    // This would integrate with chart libraries like Chart.js or D3.js
-    console.log('Updating charts with:', data);
-}
-
-function initializeMetricCards() {
-    document.querySelectorAll('.metric-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-4px)';
-        });
+        };
         
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
+        // Start counting when card is hovered
+        counter.closest('.interactive-card').addEventListener('mouseenter', function() {
+            if (!this.counted) {
+                updateCounter();
+                this.counted = true;
+            }
+        }, { once: true });
     });
-}
-
-function dismissAlert(alertType) {
-    const alertBanner = document.querySelector('.alert-banner');
-    if (alertBanner) {
-        alertBanner.style.opacity = '0';
-        alertBanner.style.transform = 'translateY(-10px)';
-        
-        setTimeout(() => {
-            alertBanner.style.display = 'none';
-        }, 300);
-        
-        // Make AJAX call to server to mark alert as dismissed
-        fetch(`{% url 'admin_portal:dismiss_alert' %}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: JSON.stringify({ alert_type: alertType })
-        });
-    }
-}
-</script>
-{% endblock %}
-                    <span>+12%</span>
-                </div>
-            </div>
-            <div class="kpi-content">
-                <div class="kpi-value">{{ total_patients|default:"2,847" }}</div>
-                <div class="kpi-label">Total Patients</div>
-                <div class="kpi-subtitle">
-                    <span class="kpi-change positive">Active in system</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-icon success">
-                    <i class="fas fa-user-md"></i>
-                </div>
-                <div class="kpi-trend">
-                    <span>{{ total_doctors|default:"45" }}</span>
-                </div>
-            </div>
-            <div class="kpi-content">
-                <div class="kpi-value">{{ total_staff|default:"312" }}</div>
-                <div class="kpi-label">Total Staff</div>
-                <div class="kpi-subtitle">
-                    <span class="kpi-change">{{ total_doctors|default:"45" }} doctors, {{ total_nurses|default:"267" }} nurses</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-icon warning">
-                    <i class="fas fa-bed"></i>
-                </div>
-                <div class="kpi-trend">
-                    <span>{{ bed_occupancy_rate|default:"78" }}%</span>
-                </div>
-            </div>
-            <div class="kpi-content">
-                <div class="kpi-value">{{ active_admissions|default:"234" }}</div>
-                <div class="kpi-label">Active Admissions</div>
-                <div class="kpi-subtitle">
-                    <span class="kpi-change">{{ available_beds|default:"66" }} beds available</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <div class="kpi-icon info">
-                    <i class="fas fa-heartbeat"></i>
-                </div>
-                <div class="kpi-trend positive">
-                    <i class="fas fa-check"></i>
-                    <span>99.9%</span>
-                </div>
-            </div>
-            <div class="kpi-content">
-                <div class="kpi-value">{{ system_uptime|default:"99.9%" }}</div>
-                <div class="kpi-label">System Uptime</div>
-                <div class="kpi-subtitle">
-                    <span class="kpi-change">Last 30 days</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Analytics Section -->
-    <div class="analytics-section">
-        <!-- Bed Occupancy Chart -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3 class="chart-title">
-                    <i class="fas fa-hospital"></i>
-                    Bed Occupancy Overview
-                </h3>
-                <div class="chart-actions">
-                    <select class="chart-period-selector">
-                        <option value="today">Today</option>
-                        <option value="week" selected>This Week</option>
-                        <option value="month">This Month</option>
-                    </select>
-                </div>
-            </div>
-            <div class="chart-content">
-                <div class="occupancy-display">
-                    <div class="occupancy-chart">
-                        <div class="progress-ring">
-                            <svg class="progress-ring-svg" width="120" height="120">
-                                <circle class="progress-ring-background" cx="60" cy="60" r="50"></circle>
-                                <circle class="progress-ring-progress" cx="60" cy="60" r="50" 
-                                        style="stroke-dasharray: {{ bed_occupancy_rate|default:'78' }}, 100;"></circle>
-                            </svg>
-                            <span class="progress-value">{{ bed_occupancy_rate|default:"78" }}%</span>
-                        </div>
-                    </div>
-                    <div class="occupancy-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Total Beds:</span>
-                            <span class="detail-value">{{ total_beds|default:"300" }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Available:</span>
-                            <span class="detail-value success">{{ available_beds|default:"66" }}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Occupied:</span>
-                            <span class="detail-value warning">{{ occupied_beds|default:"234" }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Staff Schedule -->
-        <div class="staff-schedule-card">
-            <div class="schedule-header">
-                <h3 class="schedule-title">
-                    <i class="fas fa-calendar-alt"></i>
-                    Today's Staff Schedule
-                </h3>
-                <a href="{% url 'admin_portal:schedules' %}" class="section-action">
-                    View All
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="schedule-content">
-                {% if todays_schedules %}
-                <div class="schedule-list">
-                    {% for schedule in todays_schedules %}
-                    <div class="schedule-item">
-                        <div class="schedule-avatar">
-                            <div class="avatar-placeholder">
-                                <i class="fas fa-user-md"></i>
-                            </div>
-                        </div>
-                        <div class="schedule-info">
-                            <div class="schedule-name">{{ schedule.staff_member.get_full_name }}</div>
-                            <div class="schedule-details">
-                                <span class="schedule-shift">{{ schedule.get_shift_display }}</span>
-                                <span class="schedule-department">{{ schedule.department|default:"General" }}</span>
-                            </div>
-                        </div>
-                        <div class="schedule-status">
-                            <div class="status-indicator success"></div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-calendar-times"></i>
-                    <p>No schedules for today</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Admissions -->
-    <div class="activity-section">
-        <div class="section-header">
-            <h2 class="section-title">
-                <i class="fas fa-ambulance"></i>
-                Recent Admissions
-            </h2>
-            <a href="{% url 'admin_portal:patients' %}" class="section-action">
-                View All Patients
-                <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-
-        <div class="data-card">
-            {% if recent_admissions %}
-            <div class="data-table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Patient</th>
-                            <th>Admission Type</th>
-                            <th>Date</th>
-                            <th>Ward</th>
-                            <th>Status</th>
-                            <th>Attending Doctor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for admission in recent_admissions %}
-                        <tr>
-                            <td>
-                                <div class="patient-info">
-                                    <div class="patient-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="patient-details">
-                                        <div class="patient-name">{{ admission.patient.get_full_name }}</div>
-                                        <div class="patient-id">ID: {{ admission.patient.id }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="admission-type">{{ admission.get_admission_type_display }}</span>
-                            </td>
-                            <td>
-                                <div class="date-info">
-                                    <div class="date">{{ admission.admission_date|date:"M d, Y" }}</div>
-                                    <div class="time">{{ admission.admission_date|date:"H:i" }}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="ward-name">{{ admission.ward|default:"TBD" }}</span>
-                            </td>
-                            <td>
-                                <span class="status-badge 
-                                    {% if admission.status == 'admitted' %}success
-                                    {% elif admission.status == 'discharged' %}info
-                                    {% else %}warning{% endif %}">
-                                    {{ admission.get_status_display }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if admission.attending_doctor %}
-                                <div class="doctor-info">
-                                    <div class="doctor-name">Dr. {{ admission.attending_doctor.get_full_name }}</div>
-                                </div>
-                                {% else %}
-                                <span class="unassigned">Not assigned</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <p>No recent admissions</p>
-                <small>New admissions will appear here</small>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="quick-actions-section">
-        <div class="section-header">
-            <h2 class="section-title">
-                <i class="fas fa-bolt"></i>
-                Quick Actions
-            </h2>
-        </div>
-
-        <div class="actions-grid">
-            <a href="{% url 'admin_portal:patients' %}" class="action-card">
-                <div class="action-icon healthcare">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="action-content">
-                    <h3 class="action-title">Manage Patients</h3>
-                    <p class="action-description">View, add, or update patient records</p>
-                </div>
-                <div class="action-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-            </a>
-
-            <a href="{% url 'admin_portal:resources' %}" class="action-card">
-                <div class="action-icon warning">
-                    <i class="fas fa-boxes"></i>
-                </div>
-                <div class="action-content">
-                    <h3 class="action-title">Check Resources</h3>
-                    <p class="action-description">Monitor equipment and supplies</p>
-                </div>
-                <div class="action-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-            </a>
-
-            <a href="{% url 'admin_portal:analytics' %}" class="action-card">
-                <div class="action-icon info">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <div class="action-content">
-                    <h3 class="action-title">View Analytics</h3>
-                    <p class="action-description">Hospital performance metrics</p>
-                </div>
-                <div class="action-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-            </a>
-
-            <a href="{% url 'admin:index' %}" class="action-card">
-                <div class="action-icon danger">
-                    <i class="fas fa-cogs"></i>
-                </div>
-                <div class="action-content">
-                    <h3 class="action-title">System Admin</h3>
-                    <p class="action-description">Advanced system configuration</p>
-                </div>
-                <div class="action-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-            </a>
-        </div>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize dashboard
-    initializeDashboard();
     
-    // Auto-refresh data every 30 seconds
-    setInterval(refreshDashboardData, 30000);
-});
-
-function initializeDashboard() {
-    // Initialize progress rings
-    initializeProgressRings();
-    
-    // Start real-time updates
-    startRealTimeUpdates();
-}
-
-function initializeProgressRings() {
-    const rings = document.querySelectorAll('.progress-ring-progress');
-    rings.forEach(ring => {
-        const radius = ring.r.baseVal.value;
-        const circumference = radius * 2 * Math.PI;
-        ring.style.strokeDasharray = `${circumference} ${circumference}`;
-        ring.style.strokeDashoffset = circumference;
-    });
-}
-
-function refreshDashboardData() {
-    // Fetch updated metrics
-    fetch('/api/admin/dashboard-metrics/')
-        .then(response => response.json())
-        .then(data => {
-            updateMetrics(data);
-        })
-        .catch(error => {
-            console.warn('Failed to refresh dashboard data:', error);
-        });
-}
-
-function updateMetrics(data) {
-    // Update KPI values
-    if (data.total_patients) {
-        const element = document.querySelector('.kpi-card .kpi-value');
-        if (element) element.textContent = data.total_patients.toLocaleString();
-    }
-    
-    // Update bed occupancy
-    if (data.bed_occupancy_rate) {
-        updateProgressRing(data.bed_occupancy_rate);
-    }
-}
-
-function updateProgressRing(percentage) {
-    const ring = document.querySelector('.progress-ring-progress');
-    const value = document.querySelector('.progress-value');
-    
-    if (ring && value) {
-        const radius = ring.r.baseVal.value;
-        const circumference = radius * 2 * Math.PI;
-        const offset = circumference - (percentage / 100) * circumference;
-        
-        ring.style.strokeDashoffset = offset;
-        value.textContent = percentage + '%';
-    }
-}
-
-function startRealTimeUpdates() {
-    // WebSocket connection for real-time updates
-    if ('WebSocket' in window) {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws/admin/dashboard/`;
-        
-        try {
-            const socket = new WebSocket(wsUrl);
+    // Tilt effect
+    document.querySelectorAll('[data-tilt]').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
             
-            socket.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                handleRealTimeUpdate(data);
-            };
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
             
-            socket.onclose = function() {
-                console.log('WebSocket connection closed. Attempting to reconnect...');
-                setTimeout(startRealTimeUpdates, 5000);
-            };
-        } catch (error) {
-            console.warn('WebSocket not available, using polling instead');
-        }
-    }
-}
-
-function handleRealTimeUpdate(data) {
-    if (data.type === 'metric_update') {
-        updateMetrics(data.data);
-    } else if (data.type === 'new_admission') {
-        addNewAdmission(data.data);
-    } else if (data.type === 'system_alert') {
-        showSystemAlert(data.data);
-    }
-}
-
-function dismissAlert(alertId) {
-    // Send dismiss request to server
-    fetch(`/api/admin/dismiss-alert/${alertId}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/json'
-        }
+            const rotateX = (y - centerY) / 20;
+            const rotateY = (centerX - x) / 20;
+            
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+        });
     });
-    
-    // Remove alert from UI
-    event.target.closest('.alert-banner').remove();
-}
-
-// Chart period selector
-document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('chart-period-selector')) {
-        const period = e.target.value;
-        updateChartPeriod(period);
-    }
 });
-
-function updateChartPeriod(period) {
-    // Update chart with new time period
-    console.log(`Updating chart for period: ${period}`);
-    // This would trigger a chart update with new data
-}
 </script>
 {% endblock %}

@@ -66,7 +66,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
                 <ul class="nav-menu" role="menubar">
                     {% block sidebar_menu %}
                     <li class="nav-item" role="none">
-                        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" role="menuitem">
+                        <a href="{% url 'users:redirect_after_login' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" role="menuitem">
                             <span class="nav-icon">
                                 <i class="fas fa-chart-line"></i>
                             </span>
@@ -75,7 +75,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
                     </li>
                     
                     <li class="nav-item" role="none">
-                        <a href="{% url 'patients:list' %}" class="nav-link {% if 'patients' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
+                        <a href="{% url 'admin_portal:patients' %}" class="nav-link {% if 'admin_portal' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
                             <span class="nav-icon">
                                 <i class="fas fa-users"></i>
                             </span>
@@ -102,7 +102,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
                     </li>
                     
                     <li class="nav-item" role="none">
-                        <a href="{% url 'reports:analytics' %}" class="nav-link {% if 'reports' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
+                        <a href="{% url 'analytics:reports_dashboard' %}" class="nav-link {% if 'analytics' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
                             <span class="nav-icon">
                                 <i class="fas fa-chart-bar"></i>
                             </span>
@@ -140,7 +140,10 @@ Soft Glass Dashboard | Healthcare Command Center Design
                         <ol class="breadcrumb-list">
                             {% block breadcrumb %}
                             <li class="breadcrumb-item">
-                                <a href="{% url 'dashboard' %}" class="breadcrumb-link">Dashboard</a>
+                                {% with ns=request.resolver_match.namespace|default:'clinical_portal' %}
+                                    {% url ns|add:':dashboard' as dashboard_url %}
+                                    <a href="{{ dashboard_url }}" class="breadcrumb-link">Dashboard</a>
+                                {% endwith %}
                             </li>
                             {% endblock %}
                         </ol>
@@ -190,7 +193,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
                                 <i class="fas fa-plus"></i>
                             </button>
                             <div class="quick-actions-panel" id="quick-actions-panel">
-                                <a href="{% url 'patients:add' %}" class="quick-action">
+                                <a href="{% url 'admin_portal:patients' %}" class="quick-action">
                                     <i class="fas fa-user-plus"></i>
                                     <span>Add Patient</span>
                                 </a>
@@ -219,7 +222,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
                                     </div>
                                 </div>
                                 <div class="user-menu-items">
-                                    <a href="{% url 'profile' %}" class="user-menu-item">
+                                    <a href="{% url 'users:profile' %}" class="user-menu-item">
                                         <i class="fas fa-user"></i>
                                         <span>Profile</span>
                                     </a>
@@ -228,7 +231,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
                                         <span>Settings</span>
                                     </a>
                                     <div class="menu-divider"></div>
-                                    <a href="{% url 'logout' %}" class="user-menu-item">
+                                    <a href="{% url 'users:logout' %}" class="user-menu-item">
                                         <i class="fas fa-sign-out-alt"></i>
                                         <span>Sign Out</span>
                                     </a>

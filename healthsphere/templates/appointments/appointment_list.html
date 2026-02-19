@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-calendar-alt"></i> Appointments</h2>
+                    <p class="text-muted">Manage your medical appointments</p>
+                </div>
+                
+                {% if user.is_patient or user.is_admin %}
+                <div>
+                    <a href="{% url 'appointments:create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Book Appointment
+                    </a>
+                    <a href="{% url 'appointments:calendar' %}" class="btn btn-outline-info">
+                        <i class="fas fa-calendar"></i> Calendar View
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Filter Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="">All Statuses</option>
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_from" class="form-label">From Date</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ current_date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <div class="pt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                                <a href="{% url 'appointments:list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Appointments List -->
+            <div class="card">
+                <div class="card-body">
+                    {% if appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>{% if user.is_patient %}Doctor{% else %}Patient{% endif %}</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Reason</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in appointments %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ appointment.scheduled_date|date:"M d, Y" }}</strong><br>
+                                            <small class="text-muted">{{ appointment.scheduled_time|time:"g:i A" }}</small>
+                                        </td>
+                                        <td>
+                                            {% if user.is_patient %}
+                                                <strong>{{ appointment.doctor.get_full_name }}</strong><br>
+                                                <small class="text-muted">{{ appointment.doctor.profile.specialization|default:"General" }}</small>
+                                            {% else %}
+                                                <strong>{{ appointment.patient.get_full_name }}</strong><br>
+                                                <small class="text-muted">{{ appointment.patient.email }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge" style="background-color: {{ appointment.appointment_type.color_code }};">
+                                                {{ appointment.appointment_type.get_name_display }}
+                                            </span>
+                                            {% if appointment.is_telemedicine %}
+                                                <br><small class="text-info"><i class="fas fa-video"></i> Telemedicine</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if appointment.status == 'requested' %}
+                                                <span class="badge badge-warning">{{ appointment.get_status_display }}</span>
+                                            {% elif appointment.status == 'confirmed' %}
+                                                <span class="badge badge-success">{{ appointment.get_status_display }}</span>
+                                            {% elif appointment.status == 'in_progress' %}
+                                                <span class="badge badge-info">{{ appointment.get_status_display }}</span>
+                                            {% elif appointment.status == 'completed' %}
+                                                <span class="badge badge-secondary">{{ appointment.get_status_display }}</span>
+                                            {% elif appointment.status == 'cancelled' %}
+                                                <span class="badge badge-danger">{{ appointment.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge badge-light">{{ appointment.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ appointment.reason|truncatechars:50 }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'appointments:detail' appointment.pk %}" class="btn btn-outline-primary btn-sm" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                
+                                                {% if appointment.can_be_rescheduled and user.is_patient %}
+                                                    <a href="{% url 'appointments:update' appointment.pk %}" class="btn btn-outline-warning btn-sm" title="Reschedule">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                {% endif %}
+                                                
+                                                {% if appointment.can_be_cancelled %}
+                                                    <a href="{% url 'appointments:cancel' appointment.pk %}" class="btn btn-outline-danger btn-sm" title="Cancel">
+                                                        <i class="fas fa-times"></i>
+                                                    </a>
+                                                {% endif %}
+                                                
+                                                {% if user.is_doctor and appointment.status == 'requested' %}
+                                                    <a href="{% url 'appointments:confirm' appointment.pk %}" class="btn btn-outline-success btn-sm" title="Confirm">
+                                                        <i class="fas fa-check"></i>
+                                                    </a>
+                                                {% endif %}
+                                                
+                                                {% if user.is_doctor and appointment.status == 'confirmed' %}
+                                                    <a href="{% url 'appointments:start' appointment.pk %}" class="btn btn-outline-info btn-sm" title="Start">
+                                                        <i class="fas fa-play"></i>
+                                                    </a>
+                                                {% endif %}
+                                                
+                                                {% if user.is_doctor and appointment.status == 'in_progress' %}
+                                                    <a href="{% url 'appointments:complete' appointment.pk %}" class="btn btn-outline-secondary btn-sm" title="Complete">
+                                                        <i class="fas fa-flag-checkered"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <nav aria-label="Appointments pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if current_status %}&status={{ current_status }}{% endif %}{% if current_date_from %}&date_from={{ current_date_from }}{% endif %}">First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_date_from %}&date_from={{ current_date_from }}{% endif %}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_date_from %}&date_from={{ current_date_from }}{% endif %}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_date_from %}&date_from={{ current_date_from }}{% endif %}">Last</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Appointments Found</h5>
+                            <p class="text-muted">
+                                {% if user.is_patient %}
+                                    You don't have any appointments yet. Book your first appointment to get started.
+                                {% else %}
+                                    No appointments match your current filters.
+                                {% endif %}
+                            </p>
+                            {% if user.is_patient %}
+                                <a href="{% url 'appointments:create' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Book Appointment
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.badge {
+    font-size: 0.8em;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.75rem;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        border: none;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin: 1px 0;
+    }
+}
+</style>
+{% endblock %}

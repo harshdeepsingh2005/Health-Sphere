@@ -1,0 +1,114 @@
+{% extends 'base_simple.html' %}
+{% load static %}
+
+{% block title %}Two-Factor Authentication Required{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-shield-alt text-primary"></i>
+                        Two-Factor Authentication Required
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Please enter the 6-digit code from your authenticator app to continue.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="token">Authentication Code:</label>
+                            <input type="text" 
+                                   class="form-control form-control-lg text-center" 
+                                   id="token" 
+                                   name="token" 
+                                   maxlength="6" 
+                                   pattern="[0-9]{6}" 
+                                   placeholder="000000"
+                                   autocomplete="off"
+                                   required
+                                   autofocus>
+                            <small class="form-text text-muted">
+                                Enter the 6-digit code from your authenticator app or use a backup code.
+                            </small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">
+                            <i class="fas fa-check"></i>
+                            Verify
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            Lost your authenticator device? 
+                            <a href="#" data-toggle="modal" data-target="#helpModal">Get help</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="fas fa-question-circle"></i>
+                    Need Help?
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h6>If you can't access your authenticator app:</h6>
+                <ul>
+                    <li>Try using one of your backup codes instead of the 6-digit code</li>
+                    <li>Contact your system administrator for account recovery</li>
+                    <li>Make sure your device's time is synchronized correctly</li>
+                </ul>
+                
+                <h6>Common issues:</h6>
+                <ul>
+                    <li><strong>Code doesn't work:</strong> Wait for the next code (codes change every 30 seconds)</li>
+                    <li><strong>No codes appearing:</strong> Check if your device's time is correct</li>
+                    <li><strong>Lost device:</strong> Use a backup code or contact support</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#token {
+    font-family: monospace;
+    letter-spacing: 0.2em;
+}
+</style>
+
+<script>
+// Auto-submit form when 6 digits are entered
+document.getElementById('token').addEventListener('input', function(e) {
+    if (e.target.value.length === 6) {
+        setTimeout(() => {
+            e.target.form.submit();
+        }, 500);
+    }
+});
+</script>
+{% endblock %}

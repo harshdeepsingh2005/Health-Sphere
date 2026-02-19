@@ -14,6 +14,12 @@ Models:
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+import secrets
+import qrcode
+from io import BytesIO
+from django.core.files import File
+from PIL import Image
+import pyotp
 
 
 class Role(models.Model):
@@ -256,3 +262,188 @@ class UserProfile(models.Model):
     def __str__(self):
         """String representation of the profile."""
         return f"Profile for {self.user.username}"
+
+
+class TwoFactorAuth(models.Model):
+    """
+    Two-Factor Authentication Model
+    ===============================
+    
+    Handles 2FA settings and backup codes for users who enable
+    two-factor authentication for enhanced security.
+    """
+    
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='two_factor_auth',
+        help_text='User associated with this 2FA setup'
+    )
+    
+    secret_key = models.CharField(
+        max_length=32,
+        help_text='Base32 encoded secret key for TOTP'
+    )
+    
+    is_enabled = models.BooleanField(
+        default=False,
+        help_text='Whether 2FA is currently enabled for this user'
+    )
+    
+    backup_codes = models.JSONField(
+        default=list,
+        help_text='List of backup codes for account recovery'
+    )
+    
+    qr_code = models.ImageField(
+        upload_to='qr_codes/',
+        null=True,
+        blank=True,
+        help_text='QR code image for initial setup'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Two Factor Authentication'
+        verbose_name_plural = 'Two Factor Authentications'
+    
+    def __str__(self):
+        return f"2FA for {self.user.username} ({'Enabled' if self.is_enabled else 'Disabled'})"
+    
+    def save(self, *args, **kwargs):
+        """Generate secret key and backup codes if not present."""
+        if not self.secret_key:
+            self.secret_key = pyotp.random_base32()
+            self.generate_backup_codes()
+        super().save(*args, **kwargs)
+    
+    def generate_backup_codes(self, count=10):
+        """Generate backup codes for account recovery."""
+        self.backup_codes = [secrets.token_hex(4).upper() for _ in range(count)]
+    
+    def generate_qr_code(self):
+        """Generate QR code for authenticator app setup."""
+        totp_uri = pyotp.totp.TOTP(self.secret_key).provisioning_uri(
+            name=self.user.email,
+            issuer_name="HealthSphere AI"
+        )
+        
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(totp_uri)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        
+        file_name = f'qr_{self.user.username}_{secrets.token_hex(4)}.png'
+        self.qr_code.save(file_name, File(buffer), save=False)
+    
+    def verify_token(self, token):
+        """Verify TOTP token or backup code."""
+        # Try TOTP first
+        totp = pyotp.TOTP(self.secret_key)
+        if totp.verify(token, valid_window=2):
+            return True
+        
+        # Try backup codes
+        if token.upper() in self.backup_codes:
+            self.backup_codes.remove(token.upper())
+            self.save()
+            return True
+        
+        return False
+
+
+class AuditLog(models.Model):
+    """
+    Audit Log Model
+    ===============
+    
+    Tracks all user actions and data access for compliance
+    and security monitoring. Critical for HIPAA compliance.
+    """
+    
+    ACTION_CHOICES = [
+        ('LOGIN', 'User Login'),
+        ('LOGOUT', 'User Logout'),
+        ('CREATE', 'Record Created'),
+        ('READ', 'Record Accessed'),
+        ('UPDATE', 'Record Modified'),
+        ('DELETE', 'Record Deleted'),
+        ('EXPORT', 'Data Exported'),
+        ('PRINT', 'Data Printed'),
+        ('SHARE', 'Data Shared'),
+        ('2FA_ENABLE', '2FA Enabled'),
+        ('2FA_DISABLE', '2FA Disabled'),
+        ('PASSWORD_CHANGE', 'Password Changed'),
+        ('FAILED_LOGIN', 'Failed Login Attempt'),
+    ]
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='audit_logs',
+        help_text='User who performed the action'
+    )
+    
+    action = models.CharField(
+        max_length=20,
+        choices=ACTION_CHOICES,
+        help_text='Type of action performed'
+    )
+    
+    resource_type = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='Type of resource accessed (e.g., Patient, Appointment)'
+    )
+    
+    resource_id = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='ID of the specific resource accessed'
+    )
+    
+    description = models.TextField(
+        blank=True,
+        help_text='Detailed description of the action'
+    )
+    
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        help_text='IP address from which action was performed'
+    )
+    
+    user_agent = models.TextField(
+        blank=True,
+        help_text='User agent string from the request'
+    )
+    
+    success = models.BooleanField(
+        default=True,
+        help_text='Whether the action was successful'
+    )
+    
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        help_text='When the action was performed'
+    )
+    
+    class Meta:
+        verbose_name = 'Audit Log'
+        verbose_name_plural = 'Audit Logs'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['action', '-timestamp']),
+            models.Index(fields=['resource_type', 'resource_id']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_action_display()} by {self.user} at {self.timestamp}"

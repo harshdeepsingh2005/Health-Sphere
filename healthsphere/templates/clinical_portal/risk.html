@@ -1,415 +1,254 @@
 {% extends "base_simple.html" %}
 {% load static %}
 
-{% block title %}Risk Assessment - Clinical Portal - HealthSphere AI{% endblock %}
+{% block title %}Risk Assessment - HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+<style>
+.gradient-risk { background: linear-gradient(135deg, #E89B87, #f0b097); }
+.gradient-high { background: linear-gradient(135deg, #f56565, #fc8181); }
+.gradient-medium { background: linear-gradient(135deg, #F0C3A0, #f8d3b0); }
+.gradient-low { background: linear-gradient(135deg, #A8C5A8, #b8d4b8); }
+
+.risk-badge-high { background: rgba(245, 101, 101, 0.15); color: #f56565; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+.risk-badge-medium { background: rgba(240, 173, 78, 0.15); color: #f0ad4e; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+.risk-badge-low { background: rgba(72, 187, 120, 0.15); color: #48bb78; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+
+.patient-risk-card {
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.patient-risk-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.risk-factor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(168, 197, 232, 0.03);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="bento-grid">
     <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="page-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="page-title">
-                            <i class="fas fa-shield-virus me-2 text-primary"></i>
-                            Risk Assessment
-                        </h1>
-                        <p class="page-subtitle mb-0">AI-powered patient risk analysis and insights</p>
-                    </div>
-                    <div>
-                        <a href="{% url 'clinical_portal:dashboard' %}" class="btn btn-outline-secondary me-2">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                        </a>
-                        <button class="btn btn-primary">
-                            <i class="fas fa-sync-alt me-2"></i>Refresh Analysis
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Risk Score Overview -->
-    <div class="row g-4 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="risk-card high-risk">
-                <div class="risk-icon">
+    <div class="bento-card bento-wide" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <div class="metric-icon gradient-risk">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <div class="risk-content">
-                    <h3 class="risk-count">12</h3>
-                    <p class="risk-label">High Risk Patients</p>
-                </div>
+                Risk Assessment
             </div>
+            <button class="bento-btn bento-btn-primary">
+                <i class="fas fa-plus"></i>
+                New Assessment
+            </button>
         </div>
-        
-        <div class="col-lg-3 col-md-6">
-            <div class="risk-card medium-risk">
-                <div class="risk-icon">
-                    <i class="fas fa-exclamation-circle"></i>
-                </div>
-                <div class="risk-content">
-                    <h3 class="risk-count">28</h3>
-                    <p class="risk-label">Medium Risk Patients</p>
-                </div>
+        <p style="color: #718096; margin: 0;">AI-powered patient risk analysis and monitoring</p>
+    </div>
+
+    <!-- Assessment Stats -->
+    <div class="bento-card bento-wide" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-chart-pie"></i>
+            Risk Distribution
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
+            <div style="text-align: center; padding: 12px; background: rgba(245, 101, 101, 0.05); border-radius: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: #f56565;">18</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">High Risk</div>
             </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6">
-            <div class="risk-card low-risk">
-                <div class="risk-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="risk-content">
-                    <h3 class="risk-count">85</h3>
-                    <p class="risk-label">Low Risk Patients</p>
-                </div>
+            <div style="text-align: center; padding: 12px; background: rgba(240, 173, 78, 0.05); border-radius: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: #f0ad4e;">45</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Medium Risk</div>
             </div>
-        </div>
-        
-        <div class="col-lg-3 col-md-6">
-            <div class="risk-card monitored">
-                <div class="risk-icon">
-                    <i class="fas fa-eye"></i>
-                </div>
-                <div class="risk-content">
-                    <h3 class="risk-count">15</h3>
-                    <p class="risk-label">Under Monitoring</p>
-                </div>
+            <div style="text-align: center; padding: 12px; background: rgba(72, 187, 120, 0.05); border-radius: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: #48bb78;">127</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Low Risk</div>
             </div>
         </div>
     </div>
 
     <!-- High Risk Patients -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-users-medical me-2 text-danger"></i>
-                        High Risk Patients Requiring Immediate Attention
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Patient</th>
-                                    <th>Risk Factors</th>
-                                    <th>Risk Score</th>
-                                    <th>Last Assessment</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="table-danger-subtle">
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar me-3">
-                                                <i class="fas fa-user"></i>
-                                            </div>
-                                            <div>
-                                                <span class="fw-medium">John Smith</span>
-                                                <br>
-                                                <small class="text-muted">ID: P001234</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="risk-factors">
-                                            <span class="badge bg-danger me-1">Diabetes</span>
-                                            <span class="badge bg-warning me-1">Hypertension</span>
-                                            <span class="badge bg-secondary me-1">Age 65+</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="risk-score-badge high">
-                                            <span class="score">92</span>
-                                            <small>High</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="text-muted">2 hours ago</span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-danger me-2">
-                                            <i class="fas fa-phone"></i> Call
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr class="table-danger-subtle">
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar me-3">
-                                                <i class="fas fa-user"></i>
-                                            </div>
-                                            <div>
-                                                <span class="fw-medium">Maria Garcia</span>
-                                                <br>
-                                                <small class="text-muted">ID: P001235</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="risk-factors">
-                                            <span class="badge bg-danger me-1">Heart Disease</span>
-                                            <span class="badge bg-warning me-1">High Cholesterol</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="risk-score-badge high">
-                                            <span class="score">89</span>
-                                            <small>High</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="text-muted">4 hours ago</span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-danger me-2">
-                                            <i class="fas fa-phone"></i> Call
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-high">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="metric-value">18</div>
+        <div class="metric-label">High Risk Patients</div>
+        <div class="metric-trend down">
+            <i class="fas fa-arrow-down"></i>
+            <span>-2 Today</span>
+        </div>
+    </div>
+
+    <!-- Medium Risk -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-medium">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="metric-value">45</div>
+        <div class="metric-label">Medium Risk</div>
+        <div class="metric-trend">
+            <i class="fas fa-arrow-up"></i>
+            <span>+3 Today</span>
+        </div>
+    </div>
+
+    <!-- Low Risk -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-low">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="metric-value">127</div>
+        <div class="metric-label">Low Risk</div>
+        <div class="metric-trend">
+            <i class="fas fa-check"></i>
+            <span>Stable</span>
+        </div>
+    </div>
+
+    <!-- AI Model Accuracy -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-risk">
+            <i class="fas fa-brain"></i>
+        </div>
+        <div class="metric-value">94.2%</div>
+        <div class="metric-label">AI Accuracy</div>
+        <div class="metric-trend">
+            <i class="fas fa-arrow-up"></i>
+            <span>+1.2%</span>
+        </div>
+    </div>
+
+    <!-- High Risk Patient List -->
+    <div class="bento-card bento-featured" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-users"></i>
+                High Risk Patients
+            </div>
+            <span class="card-badge" style="background: rgba(245, 101, 101, 0.15); color: #f56565;">Urgent</span>
+        </div>
+        
+        <div style="margin-top: 16px;">
+            <div class="patient-risk-card">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-weight: 600; color: #2D3748; font-size: 16px;">John Smith</div>
+                        <div style="font-size: 13px; color: #718096; margin-top: 2px;">Age 68 • ID: #PT-2831 • Cardiology</div>
                     </div>
+                    <span class="risk-badge-high">High Risk</span>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: rgba(245, 101, 101, 0.1); color: #f56565; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Diabetes</span>
+                    <span style="background: rgba(245, 101, 101, 0.1); color: #f56565; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Hypertension</span>
+                    <span style="background: rgba(245, 101, 101, 0.1); color: #f56565; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Heart Disease</span>
+                </div>
+            </div>
+
+            <div class="patient-risk-card">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-weight: 600; color: #2D3748; font-size: 16px;">Maria Garcia</div>
+                        <div style="font-size: 13px; color: #718096; margin-top: 2px;">Age 72 • ID: #PT-2829 • ICU</div>
+                    </div>
+                    <span class="risk-badge-high">High Risk</span>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: rgba(245, 101, 101, 0.1); color: #f56565; padding: 4px 10px; border-radius: 6px; font-size: 12px;">COPD</span>
+                    <span style="background: rgba(245, 101, 101, 0.1); color: #f56565; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Pneumonia</span>
+                </div>
+            </div>
+
+            <div class="patient-risk-card">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-weight: 600; color: #2D3748; font-size: 16px;">Robert Williams</div>
+                        <div style="font-size: 13px; color: #718096; margin-top: 2px;">Age 55 • ID: #PT-2827 • Emergency</div>
+                    </div>
+                    <span class="risk-badge-high">High Risk</span>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: rgba(245, 101, 101, 0.1); color: #f56565; padding: 4px 10px; border-radius: 6px; font-size: 12px;">Stroke</span>
+                    <span style="background: rgba(245, 101, 101, 0.1); color: #f56565; padding: 4px 10px; border-radius: 6px; font-size: 12px;">High BP</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Risk Analytics -->
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-line me-2"></i>
-                        Risk Trend Analysis
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="riskTrendChart" width="400" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
+    <!-- Risk Factors Analysis -->
+    <div class="bento-card bento-tall" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-chart-bar"></i>
+            Top Risk Factors
         </div>
-        
-        <div class="col-lg-4">
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-pie-chart me-2"></i>
-                        Risk Distribution
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="risk-distribution">
-                        <div class="distribution-item">
-                            <div class="distribution-color high"></div>
-                            <span class="distribution-label">High Risk</span>
-                            <span class="distribution-value">9.6%</span>
-                        </div>
-                        <div class="distribution-item">
-                            <div class="distribution-color medium"></div>
-                            <span class="distribution-label">Medium Risk</span>
-                            <span class="distribution-value">22.4%</span>
-                        </div>
-                        <div class="distribution-item">
-                            <div class="distribution-color low"></div>
-                            <span class="distribution-label">Low Risk</span>
-                            <span class="distribution-value">68.0%</span>
-                        </div>
+        <div style="margin-top: 16px;">
+            <div class="risk-factor">
+                <i class="fas fa-heartbeat" style="color: #f56565;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #2D3748; font-size: 14px;">Cardiovascular Disease</div>
+                    <div style="height: 6px; background: #E2E8F0; border-radius: 3px; margin-top: 6px; overflow: hidden;">
+                        <div style="width: 72%; height: 100%; background: #f56565;"></div>
                     </div>
                 </div>
+                <div style="font-weight: 700; color: #f56565;">72%</div>
+            </div>
+
+            <div class="risk-factor">
+                <i class="fas fa-lungs" style="color: #f0ad4e;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #2D3748; font-size: 14px;">Respiratory Issues</div>
+                    <div style="height: 6px; background: #E2E8F0; border-radius: 3px; margin-top: 6px; overflow: hidden;">
+                        <div style="width: 58%; height: 100%; background: #f0ad4e;"></div>
+                    </div>
+                </div>
+                <div style="font-weight: 700; color: #f0ad4e;">58%</div>
+            </div>
+
+            <div class="risk-factor">
+                <i class="fas fa-syringe" style="color: #f0ad4e;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #2D3748; font-size: 14px;">Diabetes</div>
+                    <div style="height: 6px; background: #E2E8F0; border-radius: 3px; margin-top: 6px; overflow: hidden;">
+                        <div style="width: 45%; height: 100%; background: #f0ad4e;"></div>
+                    </div>
+                </div>
+                <div style="font-weight: 700; color: #f0ad4e;">45%</div>
+            </div>
+
+            <div class="risk-factor">
+                <i class="fas fa-brain" style="color: #48bb78;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #2D3748; font-size: 14px;">Neurological</div>
+                    <div style="height: 6px; background: #E2E8F0; border-radius: 3px; margin-top: 6px; overflow: hidden;">
+                        <div style="width: 32%; height: 100%; background: #48bb78;"></div>
+                    </div>
+                </div>
+                <div style="font-weight: 700; color: #48bb78;">32%</div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.risk-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--radius-xl, 16px);
-    padding: var(--spacing-6, 24px);
-    display: flex;
-    align-items: center;
-    box-shadow: var(--shadow-soft);
-    transition: all 0.3s ease;
-}
-
-.risk-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
-}
-
-.risk-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: var(--spacing-4, 16px);
-    font-size: 24px;
-}
-
-.high-risk .risk-icon {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger-600);
-}
-
-.medium-risk .risk-icon {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--warning-600);
-}
-
-.low-risk .risk-icon {
-    background: rgba(34, 197, 94, 0.1);
-    color: var(--success-600);
-}
-
-.monitored .risk-icon {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--primary-600);
-}
-
-.risk-count {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: var(--spacing-1, 4px);
-}
-
-.risk-label {
-    color: var(--text-muted);
-    margin-bottom: 0;
-    font-size: 0.875rem;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, var(--primary-400), var(--primary-600));
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.risk-factors {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.risk-score-badge {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 12px;
-    border-radius: var(--radius-md);
-    min-width: 60px;
-}
-
-.risk-score-badge.high {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger-600);
-}
-
-.risk-score-badge .score {
-    font-size: 1.25rem;
-    font-weight: 700;
-}
-
-.risk-score-badge small {
-    font-size: 0.75rem;
-    opacity: 0.8;
-}
-
-.chart-container {
-    height: 300px;
-    position: relative;
-}
-
-.risk-distribution {
-    space-y: var(--spacing-3, 12px);
-}
-
-.distribution-item {
-    display: flex;
-    align-items: center;
-    padding: var(--spacing-3, 12px) 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.distribution-item:last-child {
-    border-bottom: none;
-}
-
-.distribution-color {
-    width: 16px;
-    height: 16px;
-    border-radius: var(--radius-full);
-    margin-right: var(--spacing-3, 12px);
-}
-
-.distribution-color.high {
-    background: var(--danger-500);
-}
-
-.distribution-color.medium {
-    background: var(--warning-500);
-}
-
-.distribution-color.low {
-    background: var(--success-500);
-}
-
-.distribution-label {
-    flex: 1;
-    font-weight: 500;
-}
-
-.distribution-value {
-    font-weight: 700;
-    color: var(--text-primary);
-}
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Mock chart - in real implementation, you'd use Chart.js or similar
-    console.log('Risk Assessment dashboard loaded');
-    
-    // Risk trend chart placeholder
-    const canvas = document.getElementById('riskTrendChart');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#64748b';
-        ctx.font = '16px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillText('Risk Trend Chart', canvas.width / 2, canvas.height / 2);
-        ctx.fillText('(Chart.js integration needed)', canvas.width / 2, canvas.height / 2 + 25);
-    }
-});
-</script>
 {% endblock %}

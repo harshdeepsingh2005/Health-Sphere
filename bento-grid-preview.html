@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Bento Grid Dashboard - HealthSphere AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #E8E4DB;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        /* ===== BENTO GRID LAYOUT ===== */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Card Size Classes */
+        .bento-small { grid-column: span 1; grid-row: span 1; }
+        .bento-wide { grid-column: span 2; grid-row: span 1; }
+        .bento-tall { grid-column: span 1; grid-row: span 2; }
+        .bento-large { grid-column: span 2; grid-row: span 1; }
+        .bento-featured { grid-column: span 2; grid-row: span 2; }
+
+        /* ===== BASE CARD STYLES ===== */
+        .bento-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* ===== INTERACTIVE EFFECTS ===== */
+        .interactive-card {
+            cursor: pointer;
+        }
+
+        .interactive-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+        }
+
+        [data-hover-lift]:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        /* Card Glow Effect */
+        .card-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(232, 155, 135, 0.15) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .interactive-card:hover .card-glow {
+            opacity: 1;
+        }
+
+        .gradient-glow {
+            background: radial-gradient(circle, rgba(168, 197, 232, 0.2) 0%, transparent 70%);
+        }
+
+        /* ===== GREETING CARD (Large 2x1) ===== */
+        .greeting-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .greeting-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            animation: wave 2s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(20deg); }
+            75% { transform: rotate(-20deg); }
+        }
+
+        .greeting-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 8px;
+        }
+
+        .greeting-subtitle {
+            font-size: 16px;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(232, 155, 135, 0.1);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #E89B87;
+            font-weight: 500;
+        }
+
+        .card-particles {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(240, 195, 160, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(40px);
+            pointer-events: none;
+        }
+
+        /* ===== METRIC CARDS ===== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .metric-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-icon.large {
+            width: 72px;
+            height: 72px;
+            font-size: 32px;
+        }
+
+        .interactive-card:hover .metric-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .pulse-icon {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .card-badge {
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(168, 197, 232, 0.15);
+            color: #A8C5E8;
+        }
+
+        .card-badge.urgent {
+            background: rgba(232, 155, 135, 0.15);
+            color: #E89B87;
+        }
+
+        .metric-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .metric-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #2D3748;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .metric-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .metric-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #718096;
+        }
+
+        .metric-change.up {
+            color: #48bb78;
+        }
+
+        .quick-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(168, 197, 232, 0.1);
+            color: #A8C5E8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            background: #A8C5E8;
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .card-sparkline {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 100px;
+            height: 30px;
+            opacity: 0.3;
+        }
+
+        /* ===== SPLIT CONTENT CARD (Wide 2x1) ===== */
+        .split-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 32px;
+            height: 100%;
+        }
+
+        .left-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .right-section {
+            flex-shrink: 0;
+        }
+
+        .circular-progress {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .progress-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .big-percent {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2D3748;
+        }
+
+        .metric-subtitle {
+            font-size: 13px;
+            color: #48bb78;
+            font-weight: 500;
+        }
+
+        /* ===== TALL CARD (1x2) ===== */
+        .bento-tall {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .appointment-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .mini-appointment {
+            padding: 12px;
+            background: rgba(168, 197, 232, 0.05);
+            border-radius: 12px;
+            border-left: 3px solid #A8C5E8;
+            transition: all 0.2s ease;
+        }
+
+        .mini-appointment:hover {
+            background: rgba(168, 197, 232, 0.1);
+            transform: translateX(4px);
+        }
+
+        .apt-time {
+            font-size: 12px;
+            font-weight: 600;
+            color: #A8C5E8;
+            margin-bottom: 4px;
+        }
+
+        .apt-info {
+            font-size: 13px;
+            color: #4A5568;
+        }
+
+        .card-action-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #A8C5E8, #b8d4f0);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .card-action-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(168, 197, 232, 0.4);
+        }
+
+        .card-action-btn.primary {
+            background: linear-gradient(135deg, #E89B87, #f4a690);
+        }
+
+        .card-action-btn.primary:hover {
+            box-shadow: 0 4px 12px rgba(232, 155, 135, 0.4);
+        }
+
+        /* ===== FEATURED CARD (2x2) ===== */
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #A8C5E8, #b8d4f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+        }
+
+        .feature-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2D3748;
+            margin: 0;
+        }
+
+        .feature-subtitle {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .ai-badge {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(72, 187, 120, 0.1);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #48bb78;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .ai-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .ai-stat {
+            text-align: center;
+            padding: 16px;
+            background: rgba(168, 197, 232, 0.05);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .ai-stat:hover {
+            background: rgba(168, 197, 232, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .ai-stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2D3748;
+            margin-bottom: 4px;
+        }
+
+        .ai-stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .trend-indicator {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+        }
+
+        .trend-indicator.up {
+            color: #48bb78;
+        }
+
+        .chart-preview {
+            height: 180px;
+            background: linear-gradient(180deg, rgba(168, 197, 232, 0.1) 0%, rgba(168, 197, 232, 0.05) 100%);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #A8C5E8 0%, #b8d4f0 100%);
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar:hover {
+            background: linear-gradient(180deg, #E89B87 0%, #f4a690 100%);
+        }
+
+        /* ===== STAFF AVATARS ===== */
+        .staff-avatars {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #A8C5E8, #b8d4f0);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            border: 2px solid white;
+            transition: transform 0.2s ease;
+        }
+
+        .avatar:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .avatar.more {
+            background: #E2E8F0;
+            color: #718096;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .status-dot.online {
+            background: #48bb78;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* ===== RADIAL PROGRESS ===== */
+        .radial-progress {
+            width: 100px;
+            height: 100px;
+            margin: 16px auto 0;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1400px) {
+            .bento-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .bento-featured {
+                grid-column: span 3;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .bento-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .bento-large, .bento-wide {
+                grid-column: span 2;
+            }
+            .bento-featured {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+            .bento-small, .bento-wide, .bento-large, .bento-tall, .bento-featured {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bento-grid">
+        <!-- Large Greeting Card (2x1) -->
+        <div class="bento-card bento-large interactive-card">
+            <div class="card-glow"></div>
+            <div class="greeting-content">
+                <div class="greeting-icon">👋</div>
+                <h1>Good Morning, Admin!</h1>
+                <p class="greeting-subtitle">Here's your health platform overview for today</p>
+                <div class="date-badge">
+                    <i class="fas fa-calendar"></i>
+                    <span>Wednesday, February 19, 2026</span>
+                </div>
+            </div>
+            <div class="card-particles"></div>
+        </div>
+
+        <!-- Critical Alerts Card (1x1) -->
+        <div class="bento-card bento-small interactive-card alert-card" data-hover-lift>
+            <div class="card-header">
+                <div class="metric-icon pulse-icon" style="background: linear-gradient(135deg, #E89B87, #f4a690);">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <span class="card-badge urgent">Urgent</span>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">8</h3>
+                <p class="metric-label">Critical Alerts</p>
+                <div class="metric-footer">
+                    <span class="metric-change up"><i class="fas fa-arrow-up"></i> +3 today</span>
+                    <button class="quick-btn"><i class="fas fa-eye"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patients Card (1x1) -->
+        <div class="bento-card bento-small interactive-card" data-hover-lift>
+            <div class="card-header">
+                <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5E8, #b8d4f0);">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">1,248</h3>
+                <p class="metric-label">Total Patients</p>
+                <div class="metric-footer">
+                    <span class="metric-change up"><i class="fas fa-arrow-up"></i> +12 this week</span>
+                    <button class="quick-btn"><i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+            <div class="card-sparkline">
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none">
+                    <polyline points="0,25 20,20 40,22 60,15 80,18 100,10" fill="none" stroke="#A8C5E8" stroke-width="2"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Consultations Progress Card (2x1) -->
+        <div class="bento-card bento-wide interactive-card">
+            <div class="card-glow gradient-glow"></div>
+            <div class="split-content">
+                <div class="left-section">
+                    <div class="metric-icon large" style="background: linear-gradient(135deg, #A8C5A8, #b8d4b8);">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="metric-value">324</h3>
+                        <p class="metric-label">Consultations Today</p>
+                        <span class="metric-subtitle">↑ 75% completion rate</span>
+                    </div>
+                </div>
+                <div class="right-section">
+                    <div class="circular-progress">
+                        <svg viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="#E8E4DB" stroke-width="8"/>
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="#A8C5A8" 
+                                    stroke-width="8" stroke-dasharray="235, 314" 
+                                    stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                        </svg>
+                        <div class="progress-label">
+                            <span class="big-percent">75%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments Card (1x2) - Tall -->
+        <div class="bento-card bento-tall interactive-card" data-hover-lift>
+            <div class="card-header">
+                <div class="metric-icon" style="background: linear-gradient(135deg, #F0C3A0, #f5d4b8);">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <span class="card-badge">Today</span>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">18</h3>
+                <p class="metric-label">Appointments</p>
+            </div>
+            <div class="appointment-list">
+                <div class="mini-appointment">
+                    <div class="apt-time">10:30 AM</div>
+                    <div class="apt-info">Dr. Smith - Cardiology</div>
+                </div>
+                <div class="mini-appointment">
+                    <div class="apt-time">2:00 PM</div>
+                    <div class="apt-info">Dr. Jones - Neurology</div>
+                </div>
+                <div class="mini-appointment">
+                    <div class="apt-time">4:30 PM</div>
+                    <div class="apt-info">Dr. Lee - Pediatrics</div>
+                </div>
+            </div>
+            <button class="card-action-btn">View Schedule <i class="fas fa-arrow-right"></i></button>
+        </div>
+
+        <!-- AI Analytics Card (2x2) - Large Feature -->
+        <div class="bento-card bento-featured interactive-card">
+            <div class="card-glow gradient-glow"></div>
+            <div class="feature-header">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div>
+                    <h3>AI Health Analytics</h3>
+                    <p class="feature-subtitle">Real-time insights & predictions</p>
+                </div>
+                <div class="ai-badge">
+                    <span class="pulse-dot"></span>
+                    Live
+                </div>
+            </div>
+            <div class="ai-stats-grid">
+                <div class="ai-stat">
+                    <div class="ai-stat-value">92</div>
+                    <div class="ai-stat-label">Rush Score</div>
+                    <div class="trend-indicator up">↑ 8%</div>
+                </div>
+                <div class="ai-stat">
+                    <div class="ai-stat-value">85</div>
+                    <div class="ai-stat-label">Health Score</div>
+                    <div class="trend-indicator up">↑ 5%</div>
+                </div>
+                <div class="ai-stat">
+                    <div class="ai-stat-value">12</div>
+                    <div class="ai-stat-label">Predictions</div>
+                    <div class="trend-indicator">New</div>
+                </div>
+            </div>
+            <div class="chart-preview">
+                <div class="chart-bar" style="height: 60%;"></div>
+                <div class="chart-bar" style="height: 75%;"></div>
+                <div class="chart-bar" style="height: 85%;"></div>
+                <div class="chart-bar" style="height: 92%;"></div>
+                <div class="chart-bar" style="height: 88%;"></div>
+                <div class="chart-bar" style="height: 95%;"></div>
+                <div class="chart-bar" style="height: 100%;"></div>
+                <div class="chart-bar" style="height: 90%;"></div>
+            </div>
+            <button class="card-action-btn primary">View Full Report <i class="fas fa-chart-line"></i></button>
+        </div>
+
+        <!-- Staff Card (1x1) -->
+        <div class="bento-card bento-small interactive-card" data-hover-lift>
+            <div class="card-header">
+                <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5E8, #b8d4f0);">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <span class="status-dot online"></span>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">24</h3>
+                <p class="metric-label">Active Staff</p>
+                <div class="metric-footer">
+                    <span class="metric-change"><i class="fas fa-circle" style="color: #48bb78;"></i> 18 online</span>
+                </div>
+            </div>
+            <div class="staff-avatars">
+                <div class="avatar">JS</div>
+                <div class="avatar">MK</div>
+                <div class="avatar">AL</div>
+                <div class="avatar more">+15</div>
+            </div>
+        </div>
+
+        <!-- Bed Occupancy Card (1x1) -->
+        <div class="bento-card bento-small interactive-card" data-hover-lift>
+            <div class="card-header">
+                <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5A8, #b8d4b8);">
+                    <i class="fas fa-bed"></i>
+                </div>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">78%</h3>
+                <p class="metric-label">Bed Occupancy</p>
+            </div>
+            <div class="radial-progress">
+                <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#E8E4DB" stroke-width="8"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#A8C5A8" 
+                            stroke-width="8" stroke-dasharray="195, 251" 
+                            stroke-linecap="round" transform="rotate(-90 50 50)"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

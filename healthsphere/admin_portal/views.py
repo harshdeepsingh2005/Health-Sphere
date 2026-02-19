@@ -58,12 +58,12 @@ class DashboardView(View):
         
         # Today's metrics
         today_admissions = AdmissionRecord.objects.filter(
-            admitted_date=today
+            admission_date=today
         ).count()
         
         # Monthly metrics
         monthly_admissions = AdmissionRecord.objects.filter(
-            admitted_date__gte=this_month
+            admission_date__gte=this_month
         ).count()
         
         # Active admissions (not discharged)
@@ -78,7 +78,7 @@ class DashboardView(View):
         
         available_beds = HospitalResource.objects.filter(
             resource_type='bed',
-            is_available=True
+            status='available'
         ).count()
         
         bed_occupancy_rate = ((total_beds - available_beds) / total_beds * 100) if total_beds > 0 else 0
@@ -86,17 +86,18 @@ class DashboardView(View):
         # Recent admissions
         recent_admissions = AdmissionRecord.objects.select_related(
             'patient', 'attending_doctor'
-        ).order_by('-admitted_date')[:8]
+        ).order_by('-admission_date')[:8]
         
         # Staff schedule for today
         today_staff = StaffSchedule.objects.filter(
             date=today
-        ).select_related('staff_member').order_by('shift_start')[:10]
+        ).select_related('staff_member').order_by('start_time')[:10]
         
         # Department breakdown
         department_stats = User.objects.filter(
-            role__name__in=['doctor', 'nurse']
-        ).values('department').annotate(
+            role__name__in=['doctor', 'nurse'],
+            profile__department__isnull=False
+        ).values('profile__department').annotate(
             count=Count('id')
         ).order_by('-count')[:5]
         
@@ -105,7 +106,7 @@ class DashboardView(View):
         for i in range(7):
             date = today - timezone.timedelta(days=i)
             count = AdmissionRecord.objects.filter(
-                admitted_date=date
+                admission_date=date
             ).count()
             weekly_admissions.append({
                 'date': date.strftime('%m/%d'),
@@ -130,24 +131,6 @@ class DashboardView(View):
         }
         
         return render(request, self.template_name, context)
-        total_doctors = User.objects.filter(role__name=Role.DOCTOR).count()
-        total_nurses = User.objects.filter(role__name=Role.NURSE).count()
-        active_admissions = AdmissionRecord.objects.filter(status='admitted').count()
-        
-        # Resource statistics
-        total_beds = HospitalResource.objects.filter(
-            resource_type__in=['bed', 'icu_bed']
-        ).aggregate(total=Count('id'))['total'] or 0
-        
-        available_beds = HospitalResource.objects.filter(
-            resource_type__in=['bed', 'icu_bed'],
-            status='available'
-        ).count()
-        
-        # Recent admissions
-        recent_admissions = AdmissionRecord.objects.select_related(
-            'patient', 'attending_doctor'
-        ).order_by('-admission_date')[:5]
         
         # Today's schedules
         today = timezone.now().date()

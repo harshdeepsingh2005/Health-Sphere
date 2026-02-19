@@ -54,6 +54,11 @@ LOCAL_APPS = [
     'clinical_portal.apps.ClinicalPortalConfig', # Doctor/Nurse clinical portal
     'patient_portal.apps.PatientPortalConfig',   # Patient portal
     'ai_services.apps.AiServicesConfig',         # AI/ML placeholder services
+    'appointments.apps.AppointmentsConfig',      # Appointment management system
+    'prescriptions.apps.PrescriptionsConfig',    # E-Prescriptions system
+    'telemedicine.apps.TelemedicineConfig',      # Telemedicine and remote monitoring
+    'analytics.apps.AnalyticsConfig',            # Predictive analytics and insights
+    'interoperability.apps.InteroperabilityConfig', # FHIR/HL7 healthcare interoperability
 ]
 
 # Combine all apps
@@ -70,6 +75,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',               # Common HTTP features
     'django.middleware.csrf.CsrfViewMiddleware',              # CSRF protection
     'django.contrib.auth.middleware.AuthenticationMiddleware', # Authentication
+    'users.middleware.AuditLogMiddleware',                     # Audit logging
+    'users.middleware.TwoFactorAuthMiddleware',                # 2FA enforcement
     'django.contrib.messages.middleware.MessageMiddleware',    # Flash messages
     'django.middleware.clickjacking.XFrameOptionsMiddleware', # Clickjacking protection
 ]

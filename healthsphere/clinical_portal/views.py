@@ -48,93 +48,6 @@ class DashboardView(View):
     Shows patient overview, recent activities, and quick actions.
     """
     
-    def get(self, request):
-        """Render the clinical dashboard."""
-        
-        # Dashboard statistics
-        today = timezone.now().date()
-        this_week = timezone.now() - timezone.timedelta(days=7)
-        
-        # Get today's patient metrics
-        today_appointments = AdmissionRecord.objects.filter(
-            admitted_date=today,
-            attending_doctor=request.user
-        ).count()
-        
-        # Get recent patients
-        recent_patients = User.objects.filter(
-            role__name='patient',
-            medical_records__created_by=request.user,
-            medical_records__created_at__gte=this_week
-        ).distinct().order_by('last_name')[:10]
-        
-        # Get high-priority cases
-        high_priority_records = MedicalRecord.objects.filter(
-            severity__in=['high', 'critical'],
-            created_at__gte=this_week,
-            created_by=request.user
-        ).order_by('-created_at')[:5]
-        
-        # Get recent medical records created by this doctor
-        recent_records = MedicalRecord.objects.filter(
-            created_by=request.user
-        ).order_by('-created_at')[:8]
-        
-        # Get active treatment plans
-        active_treatments = TreatmentPlan.objects.filter(
-            created_by=request.user,
-            status='active'
-        ).count()
-        
-        # Get today's vital recordings
-        today_vitals = VitalRecord.objects.filter(
-            recorded_date=today,
-            recorded_by=request.user
-        ).count()
-        
-        # Calculate pending tasks
-        pending_reviews = MedicalRecord.objects.filter(
-            created_by=request.user,
-            severity__in=['high', 'critical'],
-            created_at__gte=this_week
-        ).count()
-        
-        # Weekly patient stats for chart
-        weekly_patients = []
-        for i in range(7):
-            date = today - timezone.timedelta(days=i)
-            count = MedicalRecord.objects.filter(
-                created_by=request.user,
-                created_at__date=date
-            ).count()
-            weekly_patients.append({
-                'date': date.strftime('%m/%d'),
-                'count': count
-            })
-        weekly_patients.reverse()
-        
-        # Department stats (if applicable)
-        department_stats = {
-            'total_patients': User.objects.filter(role__name='patient').count(),
-            'active_treatments': TreatmentPlan.objects.filter(status='active').count(),
-            'high_priority_cases': MedicalRecord.objects.filter(severity='high').count(),
-            'critical_cases': MedicalRecord.objects.filter(severity='critical').count(),
-        }
-        
-        context = {
-            'today_appointments': today_appointments,
-            'recent_patients': recent_patients,
-            'high_priority_records': high_priority_records,
-            'recent_records': recent_records,
-            'active_treatments': active_treatments,
-            'today_vitals': today_vitals,
-            'pending_reviews': pending_reviews,
-            'weekly_patients': weekly_patients,
-            'department_stats': department_stats,
-            'doctor_name': request.user.get_full_name(),
-        }
-        
-        return render(request, 'clinical_portal/dashboard.html', context)
     template_name = 'clinical_portal/dashboard.html'
     
     def get(self, request):
@@ -195,6 +108,9 @@ class DashboardView(View):
             'recent_vitals': recent_vitals,
             'stats': stats,
             'high_risk_patients': high_risk_patients,
+            # Template expects these variables
+            'critical_alerts': [],
+            'todays_appointments_list': [],
         }
         
         return render(request, self.template_name, context)

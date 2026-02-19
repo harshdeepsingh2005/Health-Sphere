@@ -396,6 +396,71 @@ strong {
     margin-bottom: var(--spacing-6);
 }
 
+/* =============================================
+   Notification & Accent Tweaks (Pastel Theme)
+   ============================================= */
+:root {
+    --healthcare-notification-bg: linear-gradient(90deg,#BBF7D0,#86EFAC); /* soft green */
+    --healthcare-notification-text: #064E3B;
+    --healthcare-accent-pastel: linear-gradient(90deg,#D6BCFA,#A78BFA);
+}
+
+.notifications-btn {
+    background: var(--glass-white);
+    border: 1px solid rgba(14,38,59,0.04);
+    padding: 8px 10px;
+    border-radius: 10px;
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--glass-shadow-sm);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.notifications-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow-md);
+}
+
+.notifications-btn i { font-size: 16px; color: var(--healthcare-primary-dark); }
+
+.notification-badge {
+    background: var(--healthcare-notification-bg);
+    color: var(--healthcare-notification-text);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    box-shadow: 0 6px 18px rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.12);
+    min-width: 22px;
+    text-align: center;
+}
+
+.notifications-panel {
+    background: rgba(255,255,255,0.98);
+    border: 1px solid rgba(14,38,59,0.04);
+    box-shadow: 0 12px 24px rgba(15, 39, 72, 0.06);
+    border-radius: 12px;
+    width: 360px;
+    overflow: hidden;
+}
+
+.notifications-header h3 { margin: 0; font-size: 1rem; }
+.notifications-header .mark-all-read {
+    background: transparent;
+    border: none;
+    color: var(--healthcare-primary-dark);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Slightly softer primary for subtle pastel look */
+:root {
+    --healthcare-primary: #60A5FA;
+    --healthcare-primary-light: #93C5FD;
+}
+
 .form-label {
     display: block;
     font-size: var(--font-size-sm);

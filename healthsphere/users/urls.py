@@ -48,11 +48,28 @@ urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
     
     # ==========================================================================
+    # TWO-FACTOR AUTHENTICATION
+    # ==========================================================================
+    
+    # 2FA Setup and Management
+    path('2fa-setup/', views.TwoFactorSetupView.as_view(), name='2fa_setup'),
+    
+    # 2FA Verification
+    path('2fa-verify/', views.TwoFactorVerifyView.as_view(), name='2fa_verify'),
+    
+    # ==========================================================================
     # PROFILE
     # ==========================================================================
     
     # User profile page
     path('profile/', views.ProfileView.as_view(), name='profile'),
+    
+    # ==========================================================================
+    # AUDIT & SECURITY
+    # ==========================================================================
+    
+    # Audit log for users and admins
+    path('audit-log/', views.AuditLogView.as_view(), name='audit_log'),
     
     # ==========================================================================
     # REDIRECTION

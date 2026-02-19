@@ -246,7 +246,7 @@ class StaffSchedule(models.Model):
     staff_member = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='schedules',
+        related_name='staff_schedules',
         help_text='Staff member for this schedule'
     )
     date = models.DateField(
