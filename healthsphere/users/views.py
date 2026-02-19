@@ -15,11 +15,65 @@ from django.utils.decorators import method_decorator
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.core.mail import send_mail
+from django.conf import settings as django_settings
 import json
 import pyotp
 
 from .forms import LoginForm, UserRegistrationForm, UserProfileForm, UserUpdateForm
 from .models import Role, UserProfile, TwoFactorAuth, AuditLog
+
+
+def _send_welcome_email(user):
+    """Send a welcome / account-verified email using Gmail SMTP."""
+    subject = '🎉 Welcome to HealthSphere AI!'
+    message = (
+        f'Hi {user.get_full_name()},\n\n'
+        'Your HealthSphere AI account has been successfully created.\n\n'
+        'You can now log in and access your personalised health dashboard.\n\n'
+        'Stay healthy,\n'
+        'The HealthSphere AI Team'
+    )
+    html_message = f"""
+    <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;">
+      <div style="background:linear-gradient(135deg,#6366f1,#3b82f6);padding:28px 32px;border-radius:12px 12px 0 0;">
+        <h1 style="color:#fff;margin:0;font-size:1.4rem;">🏥 HealthSphere AI</h1>
+      </div>
+      <div style="background:#f8fafc;padding:28px 32px;border:1px solid #e2e8f0;border-top:0;border-radius:0 0 12px 12px;">
+        <h2 style="color:#1e293b;margin-top:0;">Welcome, {user.get_full_name()}! 👋</h2>
+        <p style="color:#475569;">Your account has been created successfully.</p>
+        <p style="color:#475569;">You can now log in and access:</p>
+        <ul style="color:#475569;line-height:1.8;">
+          <li>Your personalised health dashboard</li>
+          <li>AI-powered health insights</li>
+          <li>Appointment booking</li>
+          <li>Secure health records</li>
+        </ul>
+        <a href="http://localhost:8000/users/login/"
+           style="display:inline-block;margin-top:16px;padding:12px 24px;
+                  background:linear-gradient(135deg,#6366f1,#3b82f6);
+                  color:#fff;text-decoration:none;border-radius:8px;
+                  font-weight:600;">Sign In Now →</a>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+        <p style="color:#94a3b8;font-size:.85rem;">
+          If you didn't create this account, you can safely ignore this email.
+        </p>
+      </div>
+    </div>
+    """
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+    except Exception as e:
+        # Log the error but don't crash registration
+        import logging
+        logging.getLogger(__name__).warning('Welcome email failed: %s', e)
 
 
 class LoginView(View):
@@ -115,10 +169,14 @@ class RegisterView(View):
         if form.is_valid():
             user = form.save()
             login(request, user)
+
+            # Send welcome email (non-blocking — logs warning on failure)
+            _send_welcome_email(user)
+
             messages.success(
                 request,
                 f'Welcome to HealthSphere AI, {user.get_full_name()}! '
-                'Your account has been created successfully.'
+                'Your account has been created. Check your email for confirmation.'
             )
             return redirect('users:redirect_after_login')
         

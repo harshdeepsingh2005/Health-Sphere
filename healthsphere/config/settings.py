@@ -15,7 +15,9 @@ from pathlib import Path
 # Load environment variables from .env file (if present)
 try:
     from dotenv import load_dotenv
-    load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+    # settings.py lives at healthsphere/config/settings.py
+    # .env lives at the project root (Health-Sphere/)
+    load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env')
 except ImportError:
     pass  # python-dotenv not installed — use OS environment variables directly
 
@@ -251,4 +253,18 @@ AI_FEATURES_ENABLED = True
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
 # Gemini model to use
+# Gemini model to use
 GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-2.0-flash')
+
+
+# =============================================================================
+# EMAIL CONFIGURATION (Gmail SMTP)
+# =============================================================================
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = f'HealthSphere AI <{os.environ.get("EMAIL_HOST_USER", "noreply@healthsphere.ai")}>'
