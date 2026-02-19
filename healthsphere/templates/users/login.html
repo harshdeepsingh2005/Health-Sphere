@@ -1,299 +1,368 @@
 {% extends "base_simple.html" %}
 {% load static %}
 
-{% block title %}Login - HealthSphere AI{% endblock %}
-
-{% block hide_sidebar %}true{% endblock %}
+{% block title %}Sign In — HealthSphere AI{% endblock %}
 
 {% block extra_css %}
 <style>
-/* Hide sidebar and header on login page */
-.sidebar,
-.header {
-    display: none !important;
+/* ── Reset layout for auth pages ─────────────────────────── */
+.sidebar, .header { display: none !important; }
+.main-content { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
+body { background: #0b0f1a; }
+
+/* ── Full-page canvas ────────────────────────────────────── */
+.auth-scene {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+  padding: 24px;
 }
 
-.main-content {
-    margin-left: 0 !important;
-    width: 100% !important;
+/* Animated gradient orbs */
+.auth-scene::before,
+.auth-scene::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: .45;
+  pointer-events: none;
+  animation: drift 12s ease-in-out infinite alternate;
+}
+.auth-scene::before {
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, #3b82f6, #6366f1);
+  top: -120px; left: -120px;
+}
+.auth-scene::after {
+  width: 420px; height: 420px;
+  background: radial-gradient(circle, #10b981, #0ea5e9);
+  bottom: -100px; right: -100px;
+  animation-delay: -6s;
+}
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(40px, 30px) scale(1.08); }
 }
 
-/* =============================================
-   Login Page Styles - Healthcare Theme
-   ============================================= */
-
-.auth-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, 
-        rgba(59, 130, 246, 0.1) 0%, 
-        rgba(16, 185, 129, 0.1) 100%);
-    background-image: 
-        radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 25%),
-        radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.05) 0%, transparent 25%);
-    padding: var(--spacing-6, 24px);
-}
-
+/* ── Card ────────────────────────────────────────────────── */
 .auth-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--radius-2xl, 20px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-    padding: var(--spacing-8, 32px);
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 440px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 32px 64px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
+  animation: slideUp .5s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.auth-header {
-    text-align: center;
-    margin-bottom: var(--spacing-8, 32px);
+/* ── Logo ────────────────────────────────────────────────── */
+.auth-logo-wrap {
+  width: 72px; height: 72px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.75rem; color: #fff;
+  box-shadow: 0 8px 24px rgba(59,130,246,.45);
+  position: relative;
+}
+.auth-logo-wrap::after {
+  content: '';
+  position: absolute; inset: -2px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(59,130,246,.4), rgba(16,185,129,.4));
+  z-index: -1;
+  animation: pulse-ring 2.5s ease-in-out infinite;
+}
+@keyframes pulse-ring {
+  0%,100% { opacity: .6; transform: scale(1); }
+  50%      { opacity: 0; transform: scale(1.3); }
 }
 
-.auth-logo {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto var(--spacing-4, 16px);
-    background: linear-gradient(135deg, #3b82f6, #10b981);
-    border-radius: var(--radius-xl, 16px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-}
-
+/* ── Headers ─────────────────────────────────────────────── */
+.auth-header { text-align: center; margin-bottom: 32px; }
 .auth-title {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: var(--neutral-900, #111827);
-    margin-bottom: var(--spacing-2, 8px);
+  font-size: 1.75rem; font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -.02em;
+  margin-bottom: 6px;
 }
+.auth-subtitle { font-size: .875rem; color: #94a3b8; }
 
-.auth-subtitle {
-    font-size: 0.875rem;
-    color: var(--neutral-600, #6b7280);
-}
+/* ── Form elements ───────────────────────────────────────── */
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
 
-.auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-4, 16px);
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-2, 8px);
-}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
 
 .form-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--neutral-700, #374151);
+  font-size: .8125rem; font-weight: 600;
+  color: #cbd5e1;
+  letter-spacing: .02em;
+  text-transform: uppercase;
 }
 
-.form-input {
-    padding: var(--spacing-3, 12px);
-    border: 1px solid var(--neutral-200, #e5e7eb);
-    border-radius: var(--radius-lg, 12px);
-    font-size: 0.875rem;
-    background: white;
-    transition: all 0.3s ease;
+.form-input-wrap { position: relative; }
+.input-icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: #475569; font-size: .95rem; pointer-events: none;
+  transition: color .2s;
 }
 
-.form-input:focus {
-    outline: none;
-    border-color: var(--healthcare-primary, #3b82f6);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.form-input, input[type="text"], input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 13px 14px 13px 40px;
+  background: rgba(30,41,59,.7);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  color: #f1f5f9;
+  font-size: .9375rem;
+  font-family: inherit;
+  transition: border-color .25s, box-shadow .25s, background .25s;
+  box-sizing: border-box;
+}
+.form-input::placeholder, input::placeholder { color: #475569; }
+.form-input:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: rgba(30,41,59,.95);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+}
+.form-input:focus ~ .input-icon,
+.form-input-wrap:focus-within .input-icon { color: #3b82f6; }
+
+/* Password toggle */
+.pw-toggle {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: #475569; cursor: pointer; font-size: .9rem;
+  background: none; border: none; padding: 0; transition: color .2s;
+}
+.pw-toggle:hover { color: #94a3b8; }
+
+/* ── Remember / Forgot row ───────────────────────────────── */
+.auth-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 4px 0;
+}
+.form-checkbox-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .85rem; color: #94a3b8; cursor: pointer;
+}
+.form-checkbox-label input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+.auth-link {
+  font-size: .85rem; color: #3b82f6;
+  text-decoration: none; transition: color .2s;
+}
+.auth-link:hover { color: #60a5fa; }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn-primary-auth {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem; font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .25s;
+  position: relative; overflow: hidden;
+  letter-spacing: .01em;
+}
+.btn-primary-auth::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.12), transparent);
+  opacity: 0; transition: opacity .25s;
+}
+.btn-primary-auth:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,.45); }
+.btn-primary-auth:hover::after { opacity: 1; }
+.btn-primary-auth:active { transform: translateY(0); }
+
+.btn-ghost-auth {
+  width: 100%;
+  padding: 13px;
+  background: rgba(255,255,255,.05);
+  color: #cbd5e1;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  font-size: .9375rem; font-weight: 600;
+  font-family: inherit;
+  cursor: pointer; text-decoration: none;
+  text-align: center; display: block;
+  transition: all .25s;
+}
+.btn-ghost-auth:hover {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.2);
+  color: #f1f5f9;
 }
 
-.form-actions {
-    margin-top: var(--spacing-4, 16px);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-3, 12px);
+/* ── Divider ─────────────────────────────────────────────── */
+.auth-divider {
+  display: flex; align-items: center; gap: 12px;
+  color: #475569; font-size: .8125rem;
+}
+.auth-divider::before, .auth-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: rgba(255,255,255,.08);
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white;
-    border: none;
-    padding: var(--spacing-3, 12px) var(--spacing-4, 16px);
-    border-radius: var(--radius-lg, 12px);
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+/* ── Alerts ──────────────────────────────────────────────── */
+.alert-box {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: .875rem;
+  display: flex; align-items: flex-start; gap: 10px;
 }
+.alert-box.error  { background: rgba(239,68,68,.12);  border: 1px solid rgba(239,68,68,.25);  color: #fca5a5; }
+.alert-box.success{ background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.25); color: #6ee7b7; }
+.alert-box.info   { background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.25); color: #93c5fd; }
+.field-error { font-size: .8rem; color: #f87171; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
 
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-}
+/* ── Footer ──────────────────────────────────────────────── */
+.auth-footer { text-align: center; margin-top: 24px; font-size: .8125rem; color: #475569; }
 
-.btn-secondary {
-    background: white;
-    color: var(--healthcare-primary, #3b82f6);
-    border: 1px solid var(--healthcare-primary, #3b82f6);
-    padding: var(--spacing-3, 12px) var(--spacing-4, 16px);
-    border-radius: var(--radius-lg, 12px);
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    text-align: center;
-}
-
-.btn-secondary:hover {
-    background: var(--healthcare-primary-bg, rgba(59, 130, 246, 0.1));
-}
-
-.auth-footer {
-    margin-top: var(--spacing-6, 24px);
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--neutral-500, #6b7280);
-}
-
-.alert {
-    padding: var(--spacing-3, 12px);
-    border-radius: var(--radius-lg, 12px);
-    margin-bottom: var(--spacing-4, 16px);
-    font-size: 0.875rem;
-}
-
-.alert-error {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--healthcare-danger, #ef4444);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.alert-success {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--healthcare-success, #10b981);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.form-checkbox {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2, 8px);
-    font-size: 0.875rem;
-    color: var(--neutral-600, #6b7280);
-}
-
-.form-checkbox input {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--healthcare-primary, #3b82f6);
+/* ── Security badge ──────────────────────────────────────── */
+.security-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.2);
+  border-radius: 20px;
+  color: #34d399; font-size: .75rem; font-weight: 600;
+  margin-top: 16px;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="auth-container">
-    <div class="auth-card">
-        <div class="auth-header">
-            <div class="auth-logo">
-                <i class="fas fa-heartbeat"></i>
-            </div>
-            <h1 class="auth-title">Welcome Back</h1>
-            <p class="auth-subtitle">Sign in to your HealthSphere AI account</p>
-        </div>
-
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
-
-        <form method="post" class="auth-form">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="{{ form.username.id_for_label }}" class="form-label">
-                    Username or Email
-                </label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                <div class="alert alert-error">
-                    {{ form.username.errors.0 }}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label for="{{ form.password.id_for_label }}" class="form-label">
-                    Password
-                </label>
-                {{ form.password }}
-                {% if form.password.errors %}
-                <div class="alert alert-error">
-                    {{ form.password.errors.0 }}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="form-checkbox">
-                <input type="checkbox" id="remember_me" name="remember_me">
-                <label for="remember_me">Remember me for 30 days</label>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="btn-primary">
-                    Sign In
-                </button>
-                <a href="{% url 'users:register' %}" class="btn-secondary">
-                    Create New Account
-                </a>
-            </div>
-        </form>
-
-        <div class="auth-footer">
-            <p>
-                <a href="#" style="color: var(--healthcare-primary);">
-                    Forgot your password?
-                </a>
-            </p>
-            <p style="margin-top: var(--spacing-2, 8px);">
-                Secure login powered by HealthSphere AI
-            </p>
-        </div>
+<div class="auth-scene">
+  <div class="auth-card">
+    <!-- Logo -->
+    <div class="auth-header">
+      <div class="auth-logo-wrap">
+        <i class="fas fa-heartbeat"></i>
+      </div>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Sign in to your HealthSphere AI account</p>
     </div>
+
+    <!-- Messages -->
+    {% if messages %}
+      {% for message in messages %}
+      <div class="alert-box {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}" style="margin-bottom:16px;">
+        <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" class="auth-form" id="login-form">
+      {% csrf_token %}
+
+      <!-- Username -->
+      <div class="form-group">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+        <div class="form-input-wrap">
+          <i class="fas fa-user input-icon"></i>
+          {{ form.username }}
+        </div>
+        {% if form.username.errors %}
+        <span class="field-error"><i class="fas fa-exclamation-circle"></i>{{ form.username.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+        <div class="form-input-wrap">
+          <i class="fas fa-lock input-icon"></i>
+          {{ form.password }}
+          <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Toggle password visibility">
+            <i class="fas fa-eye" id="pw-icon"></i>
+          </button>
+        </div>
+        {% if form.password.errors %}
+        <span class="field-error"><i class="fas fa-exclamation-circle"></i>{{ form.password.errors.0 }}</span>
+        {% endif %}
+      </div>
+
+      <!-- Remember / Forgot -->
+      <div class="auth-row">
+        <label class="form-checkbox-label">
+          <input type="checkbox" name="remember_me" id="remember_me">
+          Remember me
+        </label>
+        <a href="#" class="auth-link">Forgot password?</a>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-primary-auth" id="submit-btn">
+        <i class="fas fa-sign-in-alt"></i>&nbsp; Sign In
+      </button>
+
+      <div class="auth-divider">or</div>
+
+      <a href="{% url 'users:register' %}" class="btn-ghost-auth">
+        <i class="fas fa-user-plus"></i>&nbsp; Create New Account
+      </a>
+    </form>
+
+    <div class="auth-footer">
+      <div class="security-badge">
+        <i class="fas fa-shield-alt"></i> End-to-end encrypted · HIPAA compliant
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add form input classes
-    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
-    inputs.forEach(input => {
-        input.classList.add('form-input');
-        
-        // Add focus effects
-        input.addEventListener('focus', function() {
-            this.parentElement.classList.add('form-group-focused');
-        });
-        
-        input.addEventListener('blur', function() {
-            this.parentElement.classList.remove('form-group-focused');
-        });
-    });
+document.addEventListener('DOMContentLoaded', function () {
+  // Style Django form inputs
+  document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]').forEach(el => {
+    el.classList.add('form-input');
+    el.style.paddingLeft = '40px';
+  });
 
-    // Auto-hide loading overlay
-    setTimeout(() => {
-        const loading = document.getElementById('app-loading');
-        if (loading) {
-            loading.style.display = 'none';
-        }
-    }, 500);
+  // Password toggle
+  const pwToggle = document.getElementById('pw-toggle');
+  const pwIcon   = document.getElementById('pw-icon');
+  const pwField  = document.querySelector('input[type="password"]');
+  if (pwToggle && pwField) {
+    pwToggle.addEventListener('click', () => {
+      const isHidden = pwField.type === 'password';
+      pwField.type = isHidden ? 'text' : 'password';
+      pwIcon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+    });
+  }
+
+  // Button loading state
+  document.getElementById('login-form').addEventListener('submit', function () {
+    const btn = document.getElementById('submit-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>&nbsp; Signing In…';
+    btn.disabled = true;
+  });
 });
 </script>
 {% endblock %}

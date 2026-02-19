@@ -1,156 +1,344 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Two-Factor Authentication Setup{% endblock %}
+{% block title %}Two-Factor Authentication Setup — HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Page header ─────────────────────────────────────────── */
+.tfa-page { max-width: 860px; margin: 0 auto; padding: 32px 24px; font-family: 'Inter', system-ui, sans-serif; }
+
+.page-hero {
+  background: linear-gradient(135deg, rgba(124,58,237,.15) 0%, rgba(79,70,229,.1) 100%);
+  border: 1px solid rgba(124,58,237,.25);
+  border-radius: 20px; padding: 28px 32px; margin-bottom: 28px;
+  display: flex; align-items: center; gap: 20px;
+}
+.page-hero-icon {
+  width: 64px; height: 64px; flex-shrink: 0;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  border-radius: 18px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: white; box-shadow: 0 8px 20px rgba(124,58,237,.4);
+}
+.page-hero h1 { font-size: 1.5rem; font-weight: 800; color: var(--neutral-900,#111827); margin-bottom: 4px; }
+.page-hero p  { font-size: .9rem; color: var(--neutral-500,#6b7280); }
+
+/* ── Status banner ───────────────────────────────────────── */
+.status-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; border-radius: 14px; margin-bottom: 24px;
+  font-size: .9rem; font-weight: 600;
+}
+.status-banner.enabled  { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); color: #065f46; }
+.status-banner.disabled { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25); color: #92400e; }
+.status-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; animation: blink 2s ease-in-out infinite;
+}
+.status-dot.green { background: #10b981; }
+.status-dot.amber { background: #f59e0b; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.4} }
+
+/* ── Card grid ───────────────────────────────────────────── */
+.tfa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+@media (max-width: 640px) { .tfa-grid { grid-template-columns: 1fr; } }
+
+.tfa-card {
+  background: white; border: 1px solid rgba(0,0,0,.07);
+  border-radius: 18px; padding: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.tfa-card-title {
+  font-size: 1rem; font-weight: 700; color: var(--neutral-800,#1f2937);
+  margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+}
+.tfa-card-title i { color: #7c3aed; }
+.tfa-card-sub { font-size: .8125rem; color: var(--neutral-500,#6b7280); margin-bottom: 16px; }
+
+/* ── QR frame ────────────────────────────────────────────── */
+.qr-frame {
+  width: 180px; height: 180px; margin: 0 auto 14px;
+  background: white; border: 2px solid rgba(124,58,237,.15);
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  padding: 8px; box-shadow: 0 4px 16px rgba(124,58,237,.1);
+}
+.qr-frame img { width: 100%; height: 100%; object-fit: contain; }
+.qr-placeholder {
+  width: 100%; height: 100%; border-radius: 12px;
+  background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 4px, white 4px, white 12px);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px; color: #9ca3af; font-size: .8rem; text-align: center;
+}
+
+/* ── Steps ───────────────────────────────────────────────── */
+.step-list { display: flex; flex-direction: column; gap: 14px; }
+.step-item { display: flex; gap: 14px; align-items: flex-start; }
+.step-num {
+  width: 28px; height: 28px; min-width: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  font-size: .8rem; font-weight: 700; color: white;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 8px rgba(124,58,237,.35);
+}
+.step-content strong { display: block; font-size: .9rem; color: var(--neutral-800,#1f2937); }
+.step-content span   { font-size: .8rem; color: var(--neutral-500,#6b7280); }
+.app-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.app-chip {
+  padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600;
+  background: rgba(124,58,237,.08); color: #7c3aed; border: 1px solid rgba(124,58,237,.15);
+}
+
+/* ── OTP input strip ─────────────────────────────────────── */
+.otp-group { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+.otp-box {
+  width: 44px; height: 52px;
+  background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
+  font-size: 1.25rem; font-weight: 700; font-family: monospace;
+  color: #1f2937; text-align: center;
+  transition: border-color .2s, box-shadow .2s;
+}
+.otp-box:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.15); }
+.otp-box.filled { border-color: #7c3aed; background: rgba(124,58,237,.04); }
+
+/* ── Backup codes ────────────────────────────────────────── */
+.backup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.backup-code {
+  font-family: 'JetBrains Mono', monospace; font-size: .875rem;
+  padding: 9px 12px; border-radius: 10px;
+  background: #f8fafc; border: 1px solid #e2e8f0; color: #374151;
+  text-align: center; letter-spacing: .08em;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn-purple {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: white; border: none; border-radius: 12px;
+  font-size: .9375rem; font-weight: 700; font-family: inherit;
+  cursor: pointer; transition: all .25s;
+}
+.btn-purple:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,.4); }
+.btn-danger  {
+  width: 100%; padding: 12px;
+  background: transparent; border: 1px solid rgba(239,68,68,.3);
+  color: #ef4444; border-radius: 12px;
+  font-size: .9375rem; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: all .25s;
+}
+.btn-danger:hover { background: rgba(239,68,68,.06); }
+.btn-outline {
+  width: 100%; padding: 12px;
+  background: transparent; border: 1px solid hsl(220,13%,84%);
+  color: #374151; border-radius: 12px;
+  font-size: .9375rem; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: all .25s;
+}
+.btn-outline:hover { background: #f8fafc; }
+.btn-gap { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── Security info card ──────────────────────────────────── */
+.info-card {
+  background: linear-gradient(135deg, rgba(59,130,246,.05), rgba(16,185,129,.05));
+  border: 1px solid rgba(59,130,246,.12); border-radius: 18px; padding: 24px;
+}
+.info-card h2 { font-size: 1rem; font-weight: 700; color: var(--neutral-800,#1f2937); margin-bottom: 12px; }
+.info-list { display: flex; flex-direction: column; gap: 10px; }
+.info-item { display: flex; align-items: flex-start; gap: 10px; }
+.info-item i { color: #10b981; margin-top: 2px; font-size: .9rem; }
+.info-item p { font-size: .875rem; color: var(--neutral-600,#4b5563); margin: 0; line-height: 1.5; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">
-                        <i class="fas fa-shield-alt"></i>
-                        Two-Factor Authentication Setup
-                    </h4>
-                </div>
-                <div class="card-body">
-                    {% if two_factor_auth.is_enabled %}
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            Two-factor authentication is currently <strong>enabled</strong> for your account.
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>Manage 2FA</h5>
-                                <form method="post">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="disable">
-                                    <button type="submit" class="btn btn-warning mb-3">
-                                        <i class="fas fa-times"></i>
-                                        Disable 2FA
-                                    </button>
-                                </form>
-                                
-                                <form method="post">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="regenerate_codes">
-                                    <button type="submit" class="btn btn-secondary mb-3">
-                                        <i class="fas fa-sync"></i>
-                                        Generate New Backup Codes
-                                    </button>
-                                </form>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <h5>Backup Codes</h5>
-                                <div class="alert alert-info">
-                                    <strong>Important:</strong> Save these backup codes in a safe place. 
-                                    You can use them to access your account if you lose your authenticator device.
-                                </div>
-                                <div class="backup-codes">
-                                    {% for code in backup_codes %}
-                                        <code class="d-block">{{ code }}</code>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                    {% else %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Two-factor authentication is currently <strong>disabled</strong> for your account.
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>Setup Instructions</h5>
-                                <ol>
-                                    <li>Install an authenticator app on your phone:
-                                        <ul>
-                                            <li><strong>Google Authenticator</strong> (iOS/Android)</li>
-                                            <li><strong>Authy</strong> (iOS/Android)</li>
-                                            <li><strong>Microsoft Authenticator</strong> (iOS/Android)</li>
-                                        </ul>
-                                    </li>
-                                    <li>Scan the QR code with your authenticator app</li>
-                                    <li>Enter the 6-digit code from your app to verify setup</li>
-                                </ol>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <h5>QR Code</h5>
-                                <div class="text-center mb-3">
-                                    {% if two_factor_auth.qr_code %}
-                                        <img src="{{ two_factor_auth.qr_code.url }}" 
-                                             alt="2FA QR Code" 
-                                             class="img-fluid border" 
-                                             style="max-width: 200px;">
-                                    {% else %}
-                                        <p class="text-muted">QR Code not generated</p>
-                                    {% endif %}
-                                </div>
-                                
-                                <form method="post">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="enable">
-                                    <div class="form-group">
-                                        <label for="token">Enter 6-digit code:</label>
-                                        <input type="text" 
-                                               class="form-control" 
-                                               id="token" 
-                                               name="token" 
-                                               maxlength="6" 
-                                               pattern="[0-9]{6}" 
-                                               placeholder="000000"
-                                               required>
-                                    </div>
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-check"></i>
-                                        Enable 2FA
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Security Info -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-info-circle"></i>
-                        Security Information
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>What is Two-Factor Authentication?</strong></p>
-                    <p>Two-factor authentication (2FA) adds an extra layer of security to your account. 
-                    Even if someone knows your password, they won't be able to access your account 
-                    without also having access to your phone.</p>
-                    
-                    <p><strong>Why should I enable 2FA?</strong></p>
-                    <ul>
-                        <li>Protects sensitive healthcare data</li>
-                        <li>Prevents unauthorized access to patient information</li>
-                        <li>Required for compliance with healthcare security standards</li>
-                        <li>Helps maintain HIPAA compliance</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="tfa-page">
 
-<style>
-.backup-codes code {
-    font-size: 1.1em;
-    padding: 5px;
-    margin: 2px 0;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-}
-</style>
+  <!-- Page hero -->
+  <div class="page-hero">
+    <div class="page-hero-icon"><i class="fas fa-shield-alt"></i></div>
+    <div>
+      <h1>Two-Factor Authentication</h1>
+      <p>Add an extra layer of protection to your HealthSphere AI account</p>
+    </div>
+  </div>
+
+  <!-- Status -->
+  {% if two_factor_auth.is_enabled %}
+  <div class="status-banner enabled">
+    <div class="status-dot green"></div>
+    <i class="fas fa-check-circle" style="color:#10b981"></i>
+    Two-factor authentication is <strong>&nbsp;active&nbsp;</strong> on your account
+  </div>
+
+  <!-- ENABLED state -->
+  <div class="tfa-grid">
+    <!-- Manage -->
+    <div class="tfa-card">
+      <div class="tfa-card-title"><i class="fas fa-cog"></i> Manage 2FA</div>
+      <div class="tfa-card-sub">Control your two-factor authentication settings</div>
+      <div class="btn-gap">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="regenerate_codes">
+          <button type="submit" class="btn-outline">
+            <i class="fas fa-sync-alt"></i>&nbsp; Regenerate Backup Codes
+          </button>
+        </form>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="disable">
+          <button type="submit" class="btn-danger">
+            <i class="fas fa-times-circle"></i>&nbsp; Disable 2FA
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Backup codes -->
+    <div class="tfa-card">
+      <div class="tfa-card-title"><i class="fas fa-key"></i> Backup Codes</div>
+      <div class="tfa-card-sub">Store these in a safe place — each can be used once</div>
+      {% if backup_codes %}
+      <div class="backup-grid">
+        {% for code in backup_codes %}
+        <div class="backup-code">{{ code }}</div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p style="font-size:.85rem;color:#6b7280;">No backup codes — regenerate to create new ones.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% else %}
+  <div class="status-banner disabled">
+    <div class="status-dot amber"></div>
+    <i class="fas fa-exclamation-triangle" style="color:#f59e0b"></i>
+    Two-factor authentication is <strong>&nbsp;disabled&nbsp;</strong> — we recommend enabling it
+  </div>
+
+  <!-- DISABLED state -->
+  <div class="tfa-grid">
+    <!-- Setup steps -->
+    <div class="tfa-card">
+      <div class="tfa-card-title"><i class="fas fa-list-ol"></i> Setup Steps</div>
+      <div class="tfa-card-sub">Follow these steps to enable 2FA</div>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>Install an authenticator app</strong>
+            <div class="app-chips">
+              <span class="app-chip">Google Authenticator</span>
+              <span class="app-chip">Authy</span>
+              <span class="app-chip">Microsoft Auth</span>
+            </div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>Scan the QR code</strong>
+            <span>Use your authenticator app to scan the QR code on the right</span>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>Enter the 6-digit code</strong>
+            <span>Type the code shown in your app to verify &amp; activate 2FA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR code + verify -->
+    <div class="tfa-card">
+      <div class="tfa-card-title"><i class="fas fa-qrcode"></i> Scan &amp; Verify</div>
+      <div class="tfa-card-sub">Scan the QR code then enter the code below</div>
+
+      <!-- QR Code -->
+      <div class="qr-frame">
+        {% if two_factor_auth.qr_code %}
+          <img src="{{ two_factor_auth.qr_code.url }}" alt="2FA QR Code">
+        {% else %}
+          <div class="qr-placeholder">
+            <i class="fas fa-qrcode" style="font-size:2rem;color:#d1d5db;"></i>
+            <span>QR Code<br>not generated</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Inline verify form -->
+      <form method="post" id="enable-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="enable">
+        <input type="hidden" name="token" id="token-v">
+        <div class="otp-group">
+          {% for i in "123456" %}
+          <input class="otp-box" type="text" inputmode="numeric" maxlength="1">
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn-purple">
+          <i class="fas fa-lock"></i>&nbsp; Enable 2FA
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Security info -->
+  <div class="info-card">
+    <h2><i class="fas fa-info-circle" style="color:#3b82f6"></i>&nbsp; Why use Two-Factor Authentication?</h2>
+    <div class="info-list">
+      <div class="info-item">
+        <i class="fas fa-user-shield"></i>
+        <p><strong>Protects sensitive healthcare data</strong> — even if your password is stolen, attackers cannot access your account without your phone.</p>
+      </div>
+      <div class="info-item">
+        <i class="fas fa-hospital"></i>
+        <p><strong>Healthcare compliance</strong> — 2FA helps meet HIPAA security requirements for protecting electronic protected health information (ePHI).</p>
+      </div>
+      <div class="info-item">
+        <i class="fas fa-clock"></i>
+        <p><strong>TOTP codes expire</strong> — each 6-digit code is valid for only 30 seconds, making them virtually impossible to reuse.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const boxes = Array.from(document.querySelectorAll('.otp-box'));
+  const hid   = document.getElementById('token-v');
+  if (!boxes.length || !hid) return;
+
+  function sync() {
+    const v = boxes.map(b=>b.value).join('');
+    hid.value = v;
+    boxes.forEach(b => b.classList.toggle('filled', b.value!==''));
+  }
+
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/\D/g,'').slice(-1);
+      sync();
+      if (box.value && i < boxes.length-1) boxes[i+1].focus();
+    });
+    box.addEventListener('keydown', e => {
+      if (e.key==='Backspace' && !box.value && i>0) { boxes[i-1].value=''; boxes[i-1].focus(); sync(); }
+      if (e.key==='ArrowLeft'  && i>0)               boxes[i-1].focus();
+      if (e.key==='ArrowRight' && i<boxes.length-1)  boxes[i+1].focus();
+    });
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const t=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      t.split('').forEach((c,j)=>{ if(boxes[j]) boxes[j].value=c; });
+      sync();
+      boxes[Math.min(t.length,5)].focus();
+    });
+  });
+});
+</script>
 {% endblock %}
