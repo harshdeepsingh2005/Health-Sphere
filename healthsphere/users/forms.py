@@ -89,20 +89,22 @@ class UserRegistrationForm(UserCreationForm):
             'placeholder': 'Phone Number'
         })
     )
-    role = forms.ModelChoiceField(
-        queryset=Role.objects.all(),
+    role = forms.ChoiceField(
+        choices=[
+            ('patient', 'Patient'),
+            ('doctor', 'Doctor'),
+            ('nurse', 'Nurse'),
+            ('admin', 'Administrator'),
+        ],
         required=True,
-        widget=forms.Select(attrs={
-            'class': 'form-control'
-        }),
-        empty_label='Select Role'
+        widget=forms.HiddenInput(),
     )
     
     class Meta:
         model = User
         fields = [
             'username', 'email', 'first_name', 'last_name',
-            'phone', 'role', 'password1', 'password2'
+            'phone', 'password1', 'password2'
         ]
         widgets = {
             'username': forms.TextInput(attrs={
@@ -130,13 +132,19 @@ class UserRegistrationForm(UserCreationForm):
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
         user.phone = self.cleaned_data.get('phone', '')
-        user.role = self.cleaned_data['role']
-        
+
+        # Look up the Role object by its name string (e.g. 'patient', 'doctor')
+        role_name = self.cleaned_data.get('role', 'patient')
+        try:
+            user.role = Role.objects.get(name=role_name)
+        except Role.DoesNotExist:
+            user.role = None
+
         if commit:
             user.save()
             # Create associated UserProfile
-            UserProfile.objects.create(user=user)
-        
+            UserProfile.objects.get_or_create(user=user)
+
         return user
 
 

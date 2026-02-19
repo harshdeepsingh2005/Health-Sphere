@@ -320,7 +320,7 @@ body { background: #0b0f1a; }
           {% if form.password2.errors %}<span class="field-error"><i class="fas fa-exclamation-circle"></i>{{ form.password2.errors.0 }}</span>{% endif %}
         </div>
         <label class="check-label">
-          <input type="checkbox" id="terms" name="terms" required>
+          <input type="checkbox" id="terms" name="terms">
           I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
         </label>
         <div style="display:flex; gap:10px;">
@@ -387,16 +387,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+// ── Step navigation ───────────────────────────────────────
 let currentStep = 0;
-// If any form errors, jump to appropriate step
-{% if form.errors %}
-  {% if form.first_name.errors or form.last_name.errors or form.email.errors or form.username.errors %}
-  currentStep = 1;
-  {% elif form.password1.errors or form.password2.errors %}
-  currentStep = 2;
-  {% endif %}
-  showStep(currentStep);
-{% endif %}
 
 function showStep(n) {
   document.querySelectorAll('.form-step').forEach((el, i) => {
@@ -411,8 +403,27 @@ function showStep(n) {
 }
 function nextStep(n) { showStep(n); }
 
-// Loading state
-document.getElementById('reg-form').addEventListener('submit', function () {
+// If Django returned errors, jump to the right step
+{% if form.errors %}
+  {% if form.first_name.errors or form.last_name.errors or form.email.errors or form.username.errors %}
+  showStep(1);
+  {% elif form.password1.errors or form.password2.errors %}
+  showStep(2);
+  {% else %}
+  showStep(2);
+  {% endif %}
+{% endif %}
+
+// Submit: validate terms then show loading
+document.getElementById('reg-form').addEventListener('submit', function (e) {
+  const terms = document.getElementById('terms');
+  if (!terms.checked) {
+    e.preventDefault();
+    terms.closest('.check-label').style.outline = '2px solid #ef4444';
+    terms.closest('.check-label').style.borderRadius = '6px';
+    showStep(2);
+    return;
+  }
   const btn = document.getElementById('submit-btn');
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>&nbsp; Creating…';
   btn.disabled = true;
