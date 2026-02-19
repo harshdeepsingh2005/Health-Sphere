@@ -42,6 +42,10 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 _allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(',') if h.strip()]
 
+# Allow all Vercel preview deployment domains automatically
+if not DEBUG:
+    ALLOWED_HOSTS += ['.vercel.app', '.now.sh']
+
 
 # =============================================================================
 # APPLICATION DEFINITION
@@ -84,6 +88,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',           # Security enhancements
+    'whitenoise.middleware.WhiteNoiseMiddleware',              # Static file serving (Vercel)
     'django.contrib.sessions.middleware.SessionMiddleware',    # Session management
     'django.middleware.common.CommonMiddleware',               # Common HTTP features
     'django.middleware.csrf.CsrfViewMiddleware',              # CSRF protection
@@ -199,6 +204,10 @@ STATICFILES_DIRS = [
 
 # Directory where collectstatic will gather static files (for production)
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Use WhiteNoise's compressed manifest storage in production for cache busting
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # =============================================================================

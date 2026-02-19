@@ -21,9 +21,9 @@ Pillow>=10.0.0                # Image processing for QR codes
 # Development Tools
 # django-debug-toolbar>=4.2.0  # Uncomment for debugging
 
-# Production (uncomment for deployment)
-# gunicorn>=21.2.0
-# whitenoise>=6.6.0
+# Production
+gunicorn>=21.2.0
+whitenoise>=6.6.0
 
 # Image Processing (if handling uploaded images)
 Pillow>=10.2.0
@@ -33,3 +33,6 @@ pytz>=2024.1
 
 # Environment Variables
 python-dotenv>=1.0.0
+
+# Google Gemini AI
+google-generativeai>=0.5.0
