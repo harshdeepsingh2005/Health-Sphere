@@ -92,7 +92,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <span class="badge" style="background-color: {{ appointment.appointment_type.color_code }};">
+                                            <span class="badge {{ appointment.appointment_type.color_class|default:'bg-secondary' }}">
                                                 {{ appointment.appointment_type.get_name_display }}
                                             </span>
                                             {% if appointment.is_telemedicine %}

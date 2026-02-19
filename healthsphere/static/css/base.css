@@ -117,6 +117,21 @@ Soft Glass Healthcare Dashboard | Modern Medical Interface
     --line-height-normal: 1.5;
     --line-height-relaxed: 1.625;
     --line-height-loose: 2;
+
+        /* ===== Project-specific color tokens (user request) ===== */
+        --color-primary: #2563EB;
+        --color-secondary: #10B981;
+
+        --color-bg: #F8FAFC;
+        --color-card: #FFFFFF;
+
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+
+        --success: #10B981;
+        --warning: #F59E0B;
+        --error: #EF4444;
+        --info: #3B82F6;
     
     /* ===== Spacing Scale ===== */
     --spacing-0: 0;
@@ -406,7 +421,7 @@ strong {
 }
 
 .notifications-btn {
-    background: var(--glass-white);
+    background: var(--color-card);
     border: 1px solid rgba(14,38,59,0.04);
     padding: 8px 10px;
     border-radius: 10px;
@@ -422,17 +437,17 @@ strong {
     box-shadow: var(--glass-shadow-md);
 }
 
-.notifications-btn i { font-size: 16px; color: var(--healthcare-primary-dark); }
+.notifications-btn i { font-size: 16px; color: var(--color-primary); }
 
 .notification-badge {
-    background: var(--healthcare-notification-bg);
-    color: var(--healthcare-notification-text);
+    background: var(--color-secondary);
+    color: var(--color-card);
     font-weight: 700;
     font-size: 12px;
     padding: 4px 8px;
     border-radius: 999px;
     box-shadow: 0 6px 18px rgba(16,185,129,0.12);
-    border: 1px solid rgba(16,185,129,0.12);
+    border: 1px solid rgba(16,185,129,0.08);
     min-width: 22px;
     text-align: center;
 }
