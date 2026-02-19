@@ -1,247 +1,226 @@
 """
-HealthSphere AI - Report Explainer Service
-==========================================
+HealthSphere AI - Report Explainer Service (Gemini-powered)
+============================================================
 
-Simulated AI service for explaining medical reports to patients.
-Returns simplified explanations of medical terminology and reports.
-
-In a real implementation, this would use:
-- Natural Language Processing (NLP) models
-- Medical ontologies (SNOMED CT, ICD-10)
-- Large Language Models (GPT, BERT variants)
-
-Author: HealthSphere AI Team
-Version: 1.0.0 (Academic Prototype)
+Uses Google Gemini to produce real, patient-friendly explanations
+of medical reports and simplify clinical terminology.
 """
 
+import json
+import logging
 import random
 from datetime import datetime
 
+from .gemini_client import generate_text, is_available
 
-def explain_report(report_text):
+logger = logging.getLogger(__name__)
+
+
+def explain_report(report_text: str) -> dict:
     """
-    Generate a patient-friendly explanation of a medical report.
-    
-    This is a SIMULATED function for academic demonstration.
-    In production, this would use NLP models to analyze and explain reports.
-    
+    Generate a patient-friendly explanation of a medical report using Gemini.
+    Falls back to mock data when Gemini is not configured.
+
     Args:
-        report_text (str): The original medical report text
-    
+        report_text: Raw medical report text or notes.
+
     Returns:
-        dict: Explanation containing:
-            - summary: Brief overview in simple terms
-            - sections: Explained sections of the report
-            - key_findings: Important findings highlighted
-            - action_items: What the patient should do next
+        dict: summary, sections, key_findings, action_items, ai_powered, disclaimer.
     """
-    
-    # Simulated report explanation
-    # In a real system, this would analyze the actual report text
-    
-    summaries = [
-        "Your test results show that most values are within normal ranges. "
-        "There are a few items that need attention, which are explained below.",
-        
-        "Overall, your health indicators look good. Some values are slightly "
-        "outside the normal range, but nothing that requires immediate concern.",
-        
-        "Your report indicates generally healthy results. Your doctor may want "
-        "to discuss a few findings with you at your next appointment.",
-        
-        "The results show some areas that are doing well and a few that we "
-        "should keep an eye on. Regular monitoring is recommended.",
-    ]
-    
-    section_explanations = [
-        {
-            "title": "Blood Cell Counts",
-            "original": "WBC: 7.2 x10^9/L, RBC: 4.8 x10^12/L, Platelets: 245 x10^9/L",
-            "explanation": "Your blood cell counts are normal. White blood cells help "
-                          "fight infection, red blood cells carry oxygen, and platelets "
-                          "help your blood clot properly."
-        },
-        {
-            "title": "Metabolic Panel",
-            "original": "Glucose: 95 mg/dL, Creatinine: 0.9 mg/dL, BUN: 15 mg/dL",
-            "explanation": "Your blood sugar and kidney function tests look healthy. "
-                          "This means your body is processing sugars and filtering waste "
-                          "properly."
-        },
-        {
-            "title": "Lipid Panel",
-            "original": "Total Cholesterol: 195 mg/dL, HDL: 55 mg/dL, LDL: 120 mg/dL",
-            "explanation": "Your cholesterol levels are in an acceptable range. HDL is "
-                          "the 'good' cholesterol that protects your heart, while LDL "
-                          "should be kept low."
-        },
-        {
-            "title": "Liver Function",
-            "original": "ALT: 25 U/L, AST: 28 U/L, Bilirubin: 0.8 mg/dL",
-            "explanation": "Your liver is working well. These enzymes show that your "
-                          "liver is healthy and processing nutrients properly."
-        },
-    ]
-    
-    key_findings = [
-        {
-            "finding": "Slightly elevated cholesterol",
-            "significance": "Minor - Monitor with diet changes",
-            "action": "Consider reducing saturated fat intake"
-        },
-        {
-            "finding": "Vitamin D slightly low",
-            "significance": "Minor - Common finding",
-            "action": "Your doctor may recommend a supplement"
-        },
-        {
-            "finding": "Blood pressure within normal range",
-            "significance": "Positive - Keep up the good work",
-            "action": "Continue current lifestyle habits"
-        },
-    ]
-    
-    action_items = [
-        "Schedule a follow-up appointment in 6 months for routine monitoring",
-        "Continue taking any prescribed medications as directed",
-        "Maintain a balanced diet and regular exercise routine",
-        "Discuss any questions about these results with your doctor",
-        "Keep a copy of this report for your personal health records",
-    ]
-    
-    # Select random elements for this explanation
-    selected_sections = random.sample(section_explanations, random.randint(2, 4))
-    selected_findings = random.sample(key_findings, random.randint(1, 3))
-    selected_actions = random.sample(action_items, random.randint(3, 5))
-    
+    if is_available() and report_text:
+        prompt = f"""You are a compassionate medical AI assistant integrated into HealthSphere.
+A patient wants to understand their medical report. Explain it clearly and kindly.
+
+Medical report:
+\"\"\"
+{report_text[:3000]}
+\"\"\"
+
+Return ONLY valid JSON (no markdown, no extra text) with this exact structure:
+{{
+  "summary": "<2-3 sentence plain-English summary of the overall report>",
+  "sections": [
+    {{
+      "title": "<section name>",
+      "original": "<key value from report>",
+      "explanation": "<plain-English explanation for the patient>"
+    }}
+  ],
+  "key_findings": [
+    {{
+      "finding": "<specific finding>",
+      "significance": "<what this means for the patient>",
+      "action": "<what the patient should do>"
+    }}
+  ],
+  "action_items": ["<actionable step for the patient>"],
+  "suggested_questions": ["<question the patient could ask their doctor>"]
+}}
+
+Guidelines:
+- Use everyday language, avoid jargon
+- Explain 2-4 sections relevant to the report
+- List 2-4 key findings
+- List 3-5 action items
+- List 3 suggested questions for the doctor
+- Be reassuring but honest
+"""
+        raw = generate_text(prompt)
+        if raw:
+            try:
+                cleaned = raw.strip().lstrip('`').rstrip('`')
+                if cleaned.startswith('json'):
+                    cleaned = cleaned[4:]
+                data = json.loads(cleaned)
+                return {
+                    'summary': data.get('summary', ''),
+                    'sections': data.get('sections', []),
+                    'key_findings': data.get('key_findings', []),
+                    'action_items': data.get('action_items', []),
+                    'suggested_questions': data.get('suggested_questions', []),
+                    'ai_powered': True,
+                    'generated_at': datetime.now().isoformat(),
+                    'disclaimer': (
+                        'This explanation was generated by Gemini AI for educational purposes. '
+                        'Please consult your healthcare provider for personalised medical advice.'
+                    ),
+                }
+            except (json.JSONDecodeError, KeyError) as exc:
+                logger.warning(f"Gemini report explainer parse error: {exc}. raw={raw[:200]}")
+
+    # --- Fallback mock data ---
     return {
-        "summary": random.choice(summaries),
-        "sections": selected_sections,
-        "key_findings": selected_findings,
-        "action_items": selected_actions,
-        "generated_at": datetime.now().isoformat(),
-        "disclaimer": "This is an AI-generated explanation for educational purposes. "
-                     "Please consult your healthcare provider for medical advice.",
+        'summary': (
+            'Your test results show that most values are within normal ranges. '
+            'There are a few items that may need attention, which are explained below.'
+        ),
+        'sections': [
+            {
+                'title': 'Blood Cell Counts',
+                'original': 'WBC: 7.2 x10⁹/L, RBC: 4.8 x10¹²/L, Platelets: 245 x10⁹/L',
+                'explanation': (
+                    'Your blood cell counts are normal. White blood cells fight infection, '
+                    'red blood cells carry oxygen, and platelets help your blood clot.'
+                ),
+            },
+            {
+                'title': 'Metabolic Panel',
+                'original': 'Glucose: 95 mg/dL, Creatinine: 0.9 mg/dL',
+                'explanation': (
+                    'Your blood sugar and kidney function tests look healthy. '
+                    'Your body is processing sugars and filtering waste properly.'
+                ),
+            },
+        ],
+        'key_findings': [
+            {
+                'finding': 'Vitamin D slightly low',
+                'significance': 'Minor — very common finding',
+                'action': 'Your doctor may recommend a supplement.',
+            },
+        ],
+        'action_items': [
+            'Schedule a follow-up in 6 months for routine monitoring.',
+            'Continue taking any prescribed medications as directed.',
+            'Discuss any questions about these results with your doctor.',
+        ],
+        'suggested_questions': [
+            'What do these results mean for my overall health?',
+            'Are there lifestyle changes you recommend?',
+            'When should I have this test done again?',
+        ],
+        'ai_powered': False,
+        'generated_at': datetime.now().isoformat(),
+        'disclaimer': (
+            'This is a template explanation for educational purposes. '
+            'Please consult your healthcare provider for medical advice.'
+        ),
     }
 
 
-def simplify_medical_terms(text):
+def simplify_medical_terms(text: str) -> list:
     """
-    Convert medical terminology to patient-friendly language.
-    
-    This is a SIMULATED function for academic demonstration.
-    In production, this would use medical NLP models.
-    
-    Args:
-        text (str): Text containing medical terminology
-    
-    Returns:
-        list: List of term definitions
+    Convert medical terminology to patient-friendly language using Gemini.
     """
-    
-    # Medical term dictionary (simulated)
-    medical_terms = {
-        "hypertension": {
-            "term": "Hypertension",
-            "simple": "High Blood Pressure",
-            "explanation": "A condition where the force of blood against your artery "
-                          "walls is too high. It can lead to heart problems if not managed."
-        },
-        "hyperlipidemia": {
-            "term": "Hyperlipidemia",
-            "simple": "High Cholesterol",
-            "explanation": "Having too much fat (lipids) in your blood. This can increase "
-                          "the risk of heart disease."
-        },
-        "tachycardia": {
-            "term": "Tachycardia",
-            "simple": "Fast Heart Rate",
-            "explanation": "When your heart beats faster than normal at rest (over 100 "
-                          "beats per minute)."
-        },
-        "bradycardia": {
-            "term": "Bradycardia",
-            "simple": "Slow Heart Rate",
-            "explanation": "When your heart beats slower than normal (under 60 beats per "
-                          "minute). Sometimes normal for athletes."
-        },
-        "anemia": {
-            "term": "Anemia",
-            "simple": "Low Red Blood Cells",
-            "explanation": "Not having enough healthy red blood cells to carry adequate "
-                          "oxygen to your body's tissues."
-        },
-        "edema": {
-            "term": "Edema",
-            "simple": "Swelling",
-            "explanation": "Swelling caused by excess fluid trapped in your body's tissues."
-        },
-        "dyspnea": {
-            "term": "Dyspnea",
-            "simple": "Shortness of Breath",
-            "explanation": "Difficulty breathing or feeling like you can't get enough air."
-        },
-        "benign": {
-            "term": "Benign",
-            "simple": "Not Cancer",
-            "explanation": "A growth or tumor that is not cancerous and does not spread "
-                          "to other parts of the body."
-        },
-        "malignant": {
-            "term": "Malignant",
-            "simple": "Cancerous",
-            "explanation": "A growth that is cancerous and can spread to other parts of "
-                          "the body."
-        },
-        "chronic": {
-            "term": "Chronic",
-            "simple": "Long-lasting",
-            "explanation": "A condition that persists for a long time or keeps coming back."
-        },
-        "acute": {
-            "term": "Acute",
-            "simple": "Sudden/Short-term",
-            "explanation": "A condition that comes on quickly and may be intense but "
-                          "doesn't last long."
-        },
-        "prognosis": {
-            "term": "Prognosis",
-            "simple": "Expected Outcome",
-            "explanation": "The likely course and outcome of a disease or condition."
-        },
+    if is_available() and text:
+        prompt = f"""You are a medical terminology assistant. Extract medical terms from the text below
+and explain each one in plain English for a patient.
+
+Text:
+\"\"\"{text[:1000]}\"\"\"
+
+Return ONLY valid JSON (no markdown):
+{{
+  "terms": [
+    {{
+      "term": "<original medical term>",
+      "simple": "<simple phrase e.g. High Blood Pressure>",
+      "explanation": "<1-2 sentence plain-English explanation>"
+    }}
+  ]
+}}
+
+Include up to 8 terms. Only include terms actually present in the text.
+"""
+        raw = generate_text(prompt)
+        if raw:
+            try:
+                cleaned = raw.strip().lstrip('`').rstrip('`')
+                if cleaned.startswith('json'):
+                    cleaned = cleaned[4:]
+                data = json.loads(cleaned)
+                return data.get('terms', [])
+            except Exception as exc:
+                logger.warning(f"Gemini simplify terms parse error: {exc}")
+
+    # Fallback dictionary
+    fallback_terms = {
+        'hypertension': {'term': 'Hypertension', 'simple': 'High Blood Pressure',
+                         'explanation': 'The force of blood against your artery walls is too high.'},
+        'hyperlipidemia': {'term': 'Hyperlipidemia', 'simple': 'High Cholesterol',
+                           'explanation': 'Too much fat in your blood, increasing heart disease risk.'},
+        'tachycardia': {'term': 'Tachycardia', 'simple': 'Fast Heart Rate',
+                        'explanation': 'Heart beats faster than normal at rest (over 100 bpm).'},
+        'anemia': {'term': 'Anemia', 'simple': 'Low Red Blood Cells',
+                   'explanation': 'Not enough healthy red blood cells to carry oxygen to your tissues.'},
+        'dyspnea': {'term': 'Dyspnea', 'simple': 'Shortness of Breath',
+                    'explanation': 'Difficulty breathing or feeling like you cannot get enough air.'},
     }
-    
-    # Return a selection of common terms (simulated detection)
-    num_terms = random.randint(4, 8)
-    selected_terms = random.sample(list(medical_terms.values()), num_terms)
-    
-    return selected_terms
+    text_lower = text.lower() if text else ''
+    return [v for k, v in fallback_terms.items() if k in text_lower] or list(fallback_terms.values())[:4]
 
 
-def generate_questions(report_data):
-    """
-    Generate suggested questions for the patient to ask their doctor.
-    
-    This is a SIMULATED function for academic demonstration.
-    
-    Args:
-        report_data (dict): Report analysis data
-    
-    Returns:
-        list: List of suggested questions
-    """
-    
-    questions = [
-        "What do these results mean for my overall health?",
-        "Are there any lifestyle changes I should make?",
-        "Do I need any follow-up tests?",
-        "How often should I have this test done?",
-        "Are any of my medications affecting these results?",
-        "What is the normal range for these values?",
-        "Should I be concerned about any of these findings?",
-        "What can I do to improve these numbers?",
-        "When should I schedule my next check-up?",
-        "Are there any symptoms I should watch for?",
+def generate_questions(report_data: dict) -> list:
+    """Generate suggested questions for the patient to ask their doctor."""
+    if is_available():
+        findings = report_data.get('key_findings', [])
+        if findings:
+            findings_text = '\n'.join(f"- {f.get('finding', '')}" for f in findings)
+            prompt = f"""A patient has the following medical findings and wants to prepare questions for their doctor.
+
+Findings:
+{findings_text}
+
+List 5 specific, helpful questions the patient should ask their doctor.
+Return ONLY a JSON array of strings (no markdown):
+["question 1", "question 2", ...]
+"""
+            raw = generate_text(prompt)
+            if raw:
+                try:
+                    cleaned = raw.strip().lstrip('`').rstrip('`')
+                    if cleaned.startswith('json'):
+                        cleaned = cleaned[4:]
+                    questions = json.loads(cleaned)
+                    if isinstance(questions, list):
+                        return questions[:6]
+                except Exception as exc:
+                    logger.warning(f"Gemini questions parse error: {exc}")
+
+    return [
+        'What do these results mean for my overall health?',
+        'Are there lifestyle changes I should make?',
+        'Do I need any follow-up tests?',
+        'Are any of my medications affecting these results?',
+        'When should I schedule my next check-up?',
     ]
-    
-    return random.sample(questions, random.randint(4, 6))

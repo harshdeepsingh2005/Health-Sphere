@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Staff Schedule — Admin Portal | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_portal:dashboard' %}" class="breadcrumb-link">Dashboard</a></li>
+<li class="breadcrumb-item"><a href="{% url 'admin_portal:staff' %}" class="breadcrumb-link">Staff</a></li>
+<li class="breadcrumb-item breadcrumb-current">Schedule</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header { margin-bottom: 1.75rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.page-header p { color: var(--neutral-500); margin: .25rem 0 0; }
+
+/* 7-day calendar grid */
+.week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: .75rem;
+}
+.day-col {
+    background: white;
+    border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: 0 1px 5px rgba(0,0,0,.04);
+}
+.day-col.today { border-color: var(--healthcare-primary); box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+.day-header {
+    padding: .75rem;
+    background: var(--neutral-50);
+    text-align: center;
+    border-bottom: 1px solid var(--neutral-100);
+}
+.day-header.today-hdr { background: var(--healthcare-primary); }
+.day-name { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--neutral-500); }
+.day-header.today-hdr .day-name { color: rgba(255,255,255,.8); }
+.day-number { font-size: 1.25rem; font-weight: 800; color: var(--neutral-900); margin-top: .15rem; }
+.day-header.today-hdr .day-number { color: white; }
+
+.day-shifts { padding: .5rem; min-height: 100px; }
+.shift-card {
+    background: rgba(59,130,246,.08);
+    border-left: 3px solid var(--healthcare-primary);
+    border-radius: var(--radius-md);
+    padding: .4rem .6rem;
+    margin-bottom: .35rem;
+    font-size: .7375rem;
+}
+.shift-card.nurse-shift { border-color: var(--healthcare-success); background: rgba(16,185,129,.08); }
+.shift-name { font-weight: 600; color: var(--neutral-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shift-time { color: var(--neutral-500); font-size: .65rem; margin-top: .1rem; }
+
+.no-shifts { text-align: center; padding: 1rem .5rem; color: var(--neutral-300); font-size: .75rem; }
+
+/* Make responsive */
+@media (max-width: 900px) {
+    .week-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 600px) {
+    .week-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Legend */
+.legend { display: flex; gap: 1.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: .4rem; font-size: .8125rem; color: var(--neutral-600); }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+.legend-dot.doctor { background: var(--healthcare-primary); }
+.legend-dot.nurse  { background: var(--healthcare-success); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-calendar-week" style="color: var(--healthcare-accent); margin-right: .5rem;"></i>Staff Schedule</h1>
+    <p>7-day shift overview for all clinical staff</p>
+</div>
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot doctor"></div> Doctor shift</div>
+    <div class="legend-item"><div class="legend-dot nurse"></div>  Nurse shift</div>
+</div>
+
+<div class="week-grid">
+    {% for date in week_dates %}
+    <div class="day-col {% if date == today %}today{% endif %}">
+        <div class="day-header {% if date == today %}today-hdr{% endif %}">
+            <div class="day-name">{{ date|date:"D" }}</div>
+            <div class="day-number">{{ date|date:"j" }}</div>
+        </div>
+        <div class="day-shifts">
+            {% for shift in schedules %}
+            {% if shift.date == date %}
+            <div class="shift-card {% if shift.staff_member.role.name == 'nurse' %}nurse-shift{% endif %}">
+                <div class="shift-name">
+                    Dr. {{ shift.staff_member.last_name|default:shift.staff_member.username }}
+                </div>
+                <div class="shift-time">
+                    {% if shift.start_time %}{{ shift.start_time|time:"g:i A" }} – {{ shift.end_time|time:"g:i A" }}{% else %}Full day{% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% empty %}
+            {% endfor %}
+            <!-- Empty state if no shifts today -->
+            {% with day_count=0 %}
+            {% for shift in schedules %}{% if shift.date == date %}{% with day_count=day_count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+            {% endwith %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div style="margin-top: 1.5rem; text-align: center;">
+    <a href="{% url 'admin_portal:staff' %}" style="color: var(--healthcare-primary); font-size: .875rem; text-decoration: none; font-weight: 500;">
+        ← Back to Staff List
+    </a>
+</div>
+{% endblock %}

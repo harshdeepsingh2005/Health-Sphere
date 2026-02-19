@@ -5,31 +5,34 @@ Soft Glass Dashboard | Healthcare Command Center Design
 {% endcomment %}
 <!DOCTYPE html>
 <html lang="en" class="h-full">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="HealthSphere AI - Intelligent Healthcare Platform">
     <meta name="theme-color" content="#f8fafc">
     <title>{% block title %}HealthSphere AI{% endblock %}</title>
-    
+
     {% load static %}
-    
+
     <!-- Core Stylesheets -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    
+    <link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+    <link rel="stylesheet" href="{% static 'css/theme-consistency.css' %}">
+
     <!-- External Dependencies -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     {% block extra_css %}{% endblock %}
 </head>
 
 <body class="healthcare-app {% if not user.is_authenticated %}auth-layout{% endif %}" data-theme="healthcare">
-    
+
     <!-- Loading Overlay -->
     <div id="app-loading" class="app-loading">
         <div class="loading-spinner healthcare-spinner">
@@ -43,7 +46,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
     {% if user.is_authenticated %}
     <!-- Authenticated App Shell -->
     <div class="app-shell" id="app-shell">
-        
+
         <!-- Sidebar Navigation -->
         <aside class="app-sidebar" id="app-sidebar" role="navigation" aria-label="Main navigation">
             <div class="sidebar-header">
@@ -56,7 +59,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
                         <span class="logo-subtitle">AI Platform</span>
                     </div>
                 </div>
-                
+
                 <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
                     <i class="fas fa-chevron-left"></i>
                 </button>
@@ -65,57 +68,346 @@ Soft Glass Dashboard | Healthcare Command Center Design
             <nav class="sidebar-nav">
                 <ul class="nav-menu" role="menubar">
                     {% block sidebar_menu %}
+
+                    {# ── PATIENT SIDEBAR ─────────────────────────────── #}
+                    {% if user.is_patient %}
+
                     <li class="nav-item" role="none">
-                        <a href="{% url 'users:redirect_after_login' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" role="menuitem">
-                            <span class="nav-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </span>
+                        <a href="{% url 'patient_portal:dashboard' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'dashboard' and 'patient_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-th-large"></i></span>
                             <span class="nav-text">Dashboard</span>
                         </a>
                     </li>
-                    
                     <li class="nav-item" role="none">
-                        <a href="{% url 'admin_portal:patients' %}" class="nav-link {% if 'admin_portal' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
-                            <span class="nav-icon">
-                                <i class="fas fa-users"></i>
-                            </span>
-                            <span class="nav-text">Patients</span>
+                        <a href="{% url 'patient_portal:health_details' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'health_details' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-notes-medical"></i></span>
+                            <span class="nav-text">Health Details</span>
                         </a>
                     </li>
-                    
                     <li class="nav-item" role="none">
-                        <a href="{% url 'appointments:calendar' %}" class="nav-link {% if 'appointments' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
-                            <span class="nav-icon">
-                                <i class="fas fa-calendar-check"></i>
-                            </span>
+                        <a href="{% url 'patient_portal:appointments' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'appointments' and 'patient_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
                             <span class="nav-text">Appointments</span>
                         </a>
                     </li>
-                    
                     <li class="nav-item" role="none">
-                        <a href="{% url 'ai:insights' %}" class="nav-link {% if 'ai' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
-                            <span class="nav-icon">
-                                <i class="fas fa-brain"></i>
-                            </span>
-                            <span class="nav-text">AI Insights</span>
+                        <a href="{% url 'patient_portal:medications' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'medications' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-pills"></i></span>
+                            <span class="nav-text">Medications</span>
                         </a>
                     </li>
-                    
                     <li class="nav-item" role="none">
-                        <a href="{% url 'analytics:reports_dashboard' %}" class="nav-link {% if 'analytics' in request.resolver_match.namespace %}active{% endif %}" role="menuitem">
-                            <span class="nav-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </span>
+                        <a href="{% url 'patient_portal:health_records' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'health_records' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-folder-open"></i></span>
+                            <span class="nav-text">Health Records</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'patient_portal:lab_results' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'lab_results' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-flask"></i></span>
+                            <span class="nav-text">Lab Results</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'patient_portal:report' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'report' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-file-medical"></i></span>
                             <span class="nav-text">Reports</span>
                         </a>
                     </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'patient_portal:risk' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'risk' and 'patient_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-heartbeat"></i></span>
+                            <span class="nav-text">Risk Score</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'patient_portal:chat_doctor' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'chat_doctor' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-comment-medical"></i></span>
+                            <span class="nav-text">Chat Doctor</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'patient_portal:assistant' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'assistant' and 'patient_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-robot"></i></span>
+                            <span class="nav-text">AI Assistant</span>
+                        </a>
+                    </li>
+
+                    {# ── DIVIDER ─────────────────────────────────────── #}
+                    <li class="nav-divider" role="none"><span>Platform</span></li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'prescriptions:dashboard' %}"
+                            class="nav-link {% if 'prescriptions' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-prescription-bottle-medical"></i></span>
+                            <span class="nav-text">Prescriptions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'telemedicine:dashboard' %}"
+                            class="nav-link {% if 'telemedicine' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-video"></i></span>
+                            <span class="nav-text">Telemedicine</span>
+                        </a>
+                    </li>
+
+                    {# ── CLINICAL SIDEBAR ─────────────────────────────── #}
+                    {% elif user.is_clinical_staff %}
+
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:dashboard' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'dashboard' and 'clinical_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:patients' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'patients' and 'clinical_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-users"></i></span>
+                            <span class="nav-text">Patients</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:records' %}"
+                            class="nav-link {% if 'records' in request.resolver_match.url_name|default:'' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-file-medical-alt"></i></span>
+                            <span class="nav-text">Records</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:treatment_plans' %}"
+                            class="nav-link {% if 'treatment' in request.resolver_match.url_name|default:'' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-clipboard-list"></i></span>
+                            <span class="nav-text">Treatment Plans</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:vitals' %}"
+                            class="nav-link {% if 'vitals' in request.resolver_match.url_name|default:'' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-heartbeat"></i></span>
+                            <span class="nav-text">Vitals</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:triage' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'triage' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-ambulance"></i></span>
+                            <span class="nav-text">Triage</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:risk' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'risk' and 'clinical_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                            <span class="nav-text">Risk Insights</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:journey' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'journey' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-route"></i></span>
+                            <span class="nav-text">Journey</span>
+                        </a>
+                    </li>
+
+                    {# ── DIVIDER ─────────────────────────────────────── #}
+                    <li class="nav-divider" role="none"><span>Shared</span></li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'appointments:calendar' %}"
+                            class="nav-link {% if 'appointments' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
+                            <span class="nav-text">Appointments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'prescriptions:dashboard' %}"
+                            class="nav-link {% if 'prescriptions' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-prescription-bottle-medical"></i></span>
+                            <span class="nav-text">Prescriptions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'telemedicine:dashboard' %}"
+                            class="nav-link {% if 'telemedicine' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-video"></i></span>
+                            <span class="nav-text">Telemedicine</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'analytics:dashboard' %}"
+                            class="nav-link {% if 'analytics' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-chart-pie"></i></span>
+                            <span class="nav-text">Analytics</span>
+                        </a>
+                    </li>
+
+                    {# ── ADMIN SIDEBAR ────────────────────────────────── #}
+                    {% elif user.is_admin %}
+
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'admin_portal:dashboard' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'dashboard' and 'admin_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'admin_portal:patients' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'patients' and 'admin_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-users"></i></span>
+                            <span class="nav-text">Patients</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'admin_portal:resources' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'resources' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-hospital"></i></span>
+                            <span class="nav-text">Resources</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'admin_portal:admissions' %}"
+                            class="nav-link {% if 'admission' in request.resolver_match.url_name|default:'' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-bed"></i></span>
+                            <span class="nav-text">Admissions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'admin_portal:staff' %}"
+                            class="nav-link {% if 'staff' in request.resolver_match.url_name|default:'' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-user-md"></i></span>
+                            <span class="nav-text">Staff</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'admin_portal:analytics' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'analytics' and 'admin_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+                            <span class="nav-text">Analytics</span>
+                        </a>
+                    </li>
+
+                    {# ── DIVIDER ─────────────────────────────────────── #}
+                    <li class="nav-divider" role="none"><span>Platform</span></li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'appointments:calendar' %}"
+                            class="nav-link {% if 'appointments' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
+                            <span class="nav-text">Appointments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'prescriptions:dashboard' %}"
+                            class="nav-link {% if 'prescriptions' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-prescription-bottle-medical"></i></span>
+                            <span class="nav-text">Prescriptions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'analytics:dashboard' %}"
+                            class="nav-link {% if 'analytics' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-chart-pie"></i></span>
+                            <span class="nav-text">Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'interoperability:dashboard' %}"
+                            class="nav-link {% if 'interoperability' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-exchange-alt"></i></span>
+                            <span class="nav-text">Interoperability</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'ai:insights' %}"
+                            class="nav-link {% if 'ai' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-brain"></i></span>
+                            <span class="nav-text">AI Insights</span>
+                        </a>
+                    </li>
+
+                    {# ── FALLBACK (unknown role) ───────────────────────── #}
+                    {% else %}
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'users:redirect_after_login' %}"
+                            class="nav-link" role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {# ── ALWAYS VISIBLE ───────────────────────────────── #}
+                    <li class="nav-divider" role="none"><span>Account</span></li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'users:profile' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-user-circle"></i></span>
+                            <span class="nav-text">Profile</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a href="{% url 'settings' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-cog"></i></span>
+                            <span class="nav-text">Settings</span>
+                        </a>
+                    </li>
+
                     {% endblock %}
                 </ul>
 
                 <div class="sidebar-footer">
                     <div class="user-profile">
                         <div class="user-avatar">
-                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.get_full_name }}" class="avatar-img">
+                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.get_full_name }}"
+                                class="avatar-img">
                         </div>
                         <div class="user-info">
                             <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
@@ -128,21 +420,21 @@ Soft Glass Dashboard | Healthcare Command Center Design
 
         <!-- Main Content Area -->
         <div class="app-main" id="app-main">
-            
+
             <!-- Top Navigation Bar -->
             <header class="app-navbar" id="app-navbar" role="banner">
                 <div class="navbar-left">
                     <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle mobile menu">
                         <i class="fas fa-bars"></i>
                     </button>
-                    
+
                     <nav class="breadcrumb" aria-label="Breadcrumb">
                         <ol class="breadcrumb-list">
                             {% block breadcrumb %}
                             <li class="breadcrumb-item">
                                 {% with ns=request.resolver_match.namespace|default:'clinical_portal' %}
-                                    {% url ns|add:':dashboard' as dashboard_url %}
-                                    <a href="{{ dashboard_url }}" class="breadcrumb-link">Dashboard</a>
+                                {% url ns|add:':dashboard' as dashboard_url %}
+                                <a href="{{ dashboard_url }}" class="breadcrumb-link">Dashboard</a>
                                 {% endwith %}
                             </li>
                             {% endblock %}
@@ -154,12 +446,9 @@ Soft Glass Dashboard | Healthcare Command Center Design
                     <div class="search-container">
                         <form class="search-form" method="get" action="{% url 'search' %}">
                             <div class="search-input-wrapper">
-                                <input type="search" 
-                                       name="q" 
-                                       class="search-input" 
-                                       placeholder="Search patients, appointments, records..."
-                                       value="{{ request.GET.q }}"
-                                       autocomplete="off">
+                                <input type="search" name="q" class="search-input"
+                                    placeholder="Search patients, appointments, records..." value="{{ request.GET.q }}"
+                                    autocomplete="off">
                                 <button type="submit" class="search-submit" aria-label="Search">
                                     <i class="fas fa-search"></i>
                                 </button>
@@ -170,74 +459,120 @@ Soft Glass Dashboard | Healthcare Command Center Design
 
                 <div class="navbar-right">
                     <div class="navbar-actions">
-                        <!-- Notifications -->
-                        <div class="navbar-item notifications-dropdown">
-                            <button class="notifications-btn" id="notifications-btn" aria-label="View notifications">
+
+                        <!-- Role-aware action buttons (visible in topbar) -->
+                        {% if user.is_patient %}
+                        <a href="{% url 'patient_portal:book_appointment' %}" class="topbar-action-btn">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>New Appointment</span>
+                        </a>
+                        <a href="{% url 'patient_portal:assistant' %}" class="topbar-action-btn topbar-action-btn--ai">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                        {% elif user.is_clinical_staff %}
+                        <a href="{% url 'appointments:create' %}" class="topbar-action-btn">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>New Appointment</span>
+                        </a>
+                        <a href="{% url 'ai:assistant' %}" class="topbar-action-btn topbar-action-btn--ai">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Assistant</span>
+                        </a>
+                        {% elif user.is_admin %}
+                        <a href="{% url 'appointments:create' %}" class="topbar-action-btn">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>New Appointment</span>
+                        </a>
+                        <a href="{% url 'ai:insights' %}" class="topbar-action-btn topbar-action-btn--ai">
+                            <i class="fas fa-brain"></i>
+                            <span>AI Insights</span>
+                        </a>
+                        {% endif %}
+
+                        <!-- Notifications bell -->
+                        <div class="navbar-item" id="notif-wrapper">
+                            <button class="notif-bell-btn" id="notif-btn" aria-label="View notifications" aria-expanded="false">
                                 <i class="fas fa-bell"></i>
-                                <span class="notification-badge" id="notification-badge">3</span>
+                                <span class="notif-badge" id="notif-badge">3</span>
                             </button>
-                            <div class="notifications-panel" id="notifications-panel">
-                                <div class="notifications-header">
-                                    <h3>Notifications</h3>
-                                    <button class="mark-all-read">Mark all read</button>
-                                </div>
-                                <div class="notifications-list">
-                                    <!-- Notifications will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Quick Actions -->
-                        <div class="navbar-item quick-actions-dropdown">
-                            <button class="quick-actions-btn" id="quick-actions-btn" aria-label="Quick actions">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <div class="quick-actions-panel" id="quick-actions-panel">
-                                <a href="{% url 'admin_portal:patients' %}" class="quick-action">
-                                    <i class="fas fa-user-plus"></i>
-                                    <span>Add Patient</span>
-                                </a>
-                                <a href="{% url 'appointments:create' %}" class="quick-action">
-                                    <i class="fas fa-calendar-plus"></i>
-                                    <span>New Appointment</span>
-                                </a>
-                                <a href="{% url 'ai:assistant' %}" class="quick-action">
-                                    <i class="fas fa-robot"></i>
-                                    <span>AI Assistant</span>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- User Menu -->
-                        <div class="navbar-item user-dropdown">
-                            <button class="user-menu-btn" id="user-menu-btn" aria-label="User menu">
-                                <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.get_full_name }}" class="user-avatar-small">
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                            <div class="user-menu-panel" id="user-menu-panel">
-                                <div class="user-menu-header">
-                                    <div class="user-info">
-                                        <strong>{{ user.get_full_name|default:user.username }}</strong>
-                                        <span>{{ user.email }}</span>
+                            <div class="notif-panel" id="notif-panel" hidden>
+                                <div class="notif-panel__header">
+                                    <span class="notif-panel__title">Notifications</span>
+                                    <button class="notif-panel__mark-all" id="notif-mark-all">Mark all read</button>
+                                </div>
+                                <div class="notif-panel__list">
+                                    <div class="notif-item notif-item--urgent">
+                                        <div class="notif-item__icon"><i class="fas fa-exclamation"></i></div>
+                                        <div class="notif-item__body">
+                                            <div class="notif-item__title">Critical alert: Patient vitals</div>
+                                            <div class="notif-item__msg">Room 4B — heart rate above threshold</div>
+                                            <div class="notif-item__time">2 min ago</div>
+                                        </div>
+                                        <button class="notif-item__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div class="notif-item">
+                                        <div class="notif-item__icon"><i class="fas fa-calendar-check"></i></div>
+                                        <div class="notif-item__body">
+                                            <div class="notif-item__title">Appointment confirmed</div>
+                                            <div class="notif-item__msg">Dr. Johnson — tomorrow at 10:30 AM</div>
+                                            <div class="notif-item__time">18 min ago</div>
+                                        </div>
+                                        <button class="notif-item__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div class="notif-item">
+                                        <div class="notif-item__icon"><i class="fas fa-file-medical-alt"></i></div>
+                                        <div class="notif-item__body">
+                                            <div class="notif-item__title">Lab results ready</div>
+                                            <div class="notif-item__msg">Complete blood panel report available</div>
+                                            <div class="notif-item__time">1 hr ago</div>
+                                        </div>
+                                        <button class="notif-item__close" aria-label="Dismiss"><i class="fas fa-times"></i></button>
                                     </div>
                                 </div>
-                                <div class="user-menu-items">
-                                    <a href="{% url 'users:profile' %}" class="user-menu-item">
-                                        <i class="fas fa-user"></i>
-                                        <span>Profile</span>
+                                <div class="notif-panel__footer">
+                                    <a href="#" class="notif-panel__view-all">View all notifications</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User avatar + dropdown -->
+                        <div class="navbar-item" id="user-menu-wrapper">
+                            <button class="user-menu-btn" id="user-menu-btn" aria-label="User menu" aria-expanded="false">
+                                <div class="user-avatar-initials">
+                                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                </div>
+                                <div class="user-menu-info">
+                                    <span class="user-menu-name">{{ user.get_full_name|default:user.username|truncatechars:18 }}</span>
+                                    <span class="user-menu-role">{% if user.is_patient %}Patient{% elif user.is_clinical_staff %}Clinical Staff{% elif user.is_admin %}Administrator{% else %}User{% endif %}</span>
+                                </div>
+                                <i class="fas fa-chevron-down user-menu-chevron"></i>
+                            </button>
+
+                            <div class="user-menu-panel" id="user-menu-panel" hidden>
+                                <div class="user-menu-panel__header">
+                                    <div class="user-menu-panel__avatar">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                                    <div>
+                                        <div class="user-menu-panel__name">{{ user.get_full_name|default:user.username }}</div>
+                                        <div class="user-menu-panel__email">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                                <div class="user-menu-panel__items">
+                                    <a href="{% url 'users:profile' %}" class="user-menu-panel__item">
+                                        <i class="fas fa-user-circle"></i> Profile
                                     </a>
-                                    <a href="{% url 'settings' %}" class="user-menu-item">
-                                        <i class="fas fa-cog"></i>
-                                        <span>Settings</span>
+                                    <a href="{% url 'settings' %}" class="user-menu-panel__item">
+                                        <i class="fas fa-cog"></i> Settings
                                     </a>
-                                    <div class="menu-divider"></div>
-                                    <a href="{% url 'users:logout' %}" class="user-menu-item">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                        <span>Sign Out</span>
+                                    <div class="user-menu-panel__divider"></div>
+                                    <a href="{% url 'users:logout' %}" class="user-menu-panel__item user-menu-panel__item--danger">
+                                        <i class="fas fa-sign-out-alt"></i> Sign Out
                                     </a>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </header>
@@ -249,13 +584,13 @@ Soft Glass Dashboard | Healthcare Command Center Design
                 <div class="system-alert alert-{{ message.tags }}" role="alert" aria-live="polite">
                     <div class="alert-icon">
                         {% if message.tags == 'success' %}
-                            <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-check-circle"></i>
                         {% elif message.tags == 'error' or message.tags == 'danger' %}
-                            <i class="fas fa-exclamation-circle"></i>
+                        <i class="fas fa-exclamation-circle"></i>
                         {% elif message.tags == 'warning' %}
-                            <i class="fas fa-exclamation-triangle"></i>
+                        <i class="fas fa-exclamation-triangle"></i>
                         {% else %}
-                            <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle"></i>
                         {% endif %}
                     </div>
                     <div class="alert-content">
@@ -283,8 +618,8 @@ Soft Glass Dashboard | Healthcare Command Center Design
                 <div class="footer-container">
                     <div class="footer-left">
                         <span class="footer-copyright">
-                            &copy; 2026 HealthSphere AI &middot; 
-                            <a href="#" class="footer-link">Privacy Policy</a> &middot; 
+                            &copy; 2026 HealthSphere AI &middot;
+                            <a href="#" class="footer-link">Privacy Policy</a> &middot;
                             <a href="#" class="footer-link">Terms of Service</a>
                         </span>
                     </div>
@@ -309,13 +644,13 @@ Soft Glass Dashboard | Healthcare Command Center Design
             <div class="auth-alert alert-{{ message.tags }}" role="alert">
                 <div class="alert-icon">
                     {% if message.tags == 'success' %}
-                        <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-check-circle"></i>
                     {% elif message.tags == 'error' or message.tags == 'danger' %}
-                        <i class="fas fa-exclamation-circle"></i>
+                    <i class="fas fa-exclamation-circle"></i>
                     {% elif message.tags == 'warning' %}
-                        <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas fa-exclamation-triangle"></i>
                     {% else %}
-                        <i class="fas fa-info-circle"></i>
+                    <i class="fas fa-info-circle"></i>
                     {% endif %}
                 </div>
                 <span class="alert-message">{{ message }}</span>
@@ -326,7 +661,7 @@ Soft Glass Dashboard | Healthcare Command Center Design
             {% endfor %}
         </div>
         {% endif %}
-        
+
         <main class="auth-content" role="main">
             {% block auth_content %}
             <!-- Authentication content will be inserted here -->
@@ -338,15 +673,15 @@ Soft Glass Dashboard | Healthcare Command Center Design
     <!-- Core JavaScript -->
     <script src="{% static 'js/app.js' %}"></script>
     <script src="{% static 'js/components.js' %}"></script>
-    
+
     {% block extra_js %}{% endblock %}
-    
+
     <!-- App Initialization -->
     <script>
         // Initialize HealthSphere App
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             HealthSphereApp.init();
-            
+
             // Hide loading overlay
             const loading = document.getElementById('app-loading');
             if (loading) {
@@ -366,4 +701,5 @@ Soft Glass Dashboard | Healthcare Command Center Design
         }
     </script>
 </body>
+
 </html>

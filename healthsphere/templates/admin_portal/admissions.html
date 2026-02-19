@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Admissions — Admin Portal | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_portal:dashboard' %}" class="breadcrumb-link">Dashboard</a></li>
+<li class="breadcrumb-item breadcrumb-current">Admissions</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header { margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.page-header p { color: var(--neutral-500); margin: .25rem 0 0; }
+
+.btn-primary {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: var(--healthcare-primary); color: white;
+    border: none; border-radius: var(--radius-lg);
+    padding: .65rem 1.25rem; font-size: .9rem; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: background .2s, transform .15s;
+}
+.btn-primary:hover { background: #1a6fb3; transform: translateY(-1px); }
+
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card {
+    background: white; border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-xl); padding: 1.25rem 1rem; text-align: center;
+    box-shadow: 0 1px 5px rgba(0,0,0,.04);
+}
+.stat-card .val { font-size: 2rem; font-weight: 800; color: var(--neutral-900); }
+.stat-card .lbl { font-size: .8125rem; color: var(--neutral-500); margin-top: .15rem; }
+.stat-card.primary .val { color: var(--healthcare-primary); }
+.stat-card.success .val { color: var(--healthcare-success); }
+.stat-card.warning .val { color: var(--healthcare-warning); }
+.stat-card.danger  .val { color: var(--healthcare-danger); }
+
+.filter-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+.filter-select { padding: .5rem .875rem; border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); background: white; color: var(--neutral-700); font-size: .875rem; }
+.search-box { display: flex; align-items: center; gap: .5rem; background: white; border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); padding: .5rem 1rem; flex: 1; min-width: 220px; }
+.search-box input { border: none; outline: none; width: 100%; font-size: .875rem; }
+.btn-filter { padding: .5rem 1rem; border-radius: var(--radius-lg); border: none; cursor: pointer; font-size: .875rem; font-weight: 500; }
+.btn-apply { background: var(--healthcare-primary); color: white; }
+.btn-clear { background: var(--neutral-100); color: var(--neutral-700); text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; }
+
+.table-wrap { background: white; border-radius: var(--radius-xl); border: 1px solid var(--neutral-100); overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.04); }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--neutral-50); }
+th { padding: .75rem 1.25rem; text-align: left; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--neutral-500); border-bottom: 1px solid var(--neutral-100); }
+td { padding: .875rem 1.25rem; border-bottom: 1px solid var(--neutral-50); font-size: .875rem; color: var(--neutral-700); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--neutral-50); }
+
+.status-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .625rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+.s-admitted  { background: rgba(16,185,129,.12); color: #059669; }
+.s-discharged{ background: rgba(100,116,139,.1);  color: #64748b; }
+.s-transferred{ background: rgba(99,102,241,.1); color: #6366f1; }
+.s-deceased  { background: rgba(239,68,68,.1);   color: #dc2626; }
+
+a.link-btn { color: var(--healthcare-primary); font-size: .8125rem; font-weight: 500; text-decoration: none; }
+a.link-btn:hover { text-decoration: underline; }
+.empty-state { text-align: center; padding: 3rem; color: var(--neutral-500); }
+
+/* ---- Admit Modal ---- */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 1000;
+    align-items: flex-start; justify-content: center; padding-top: 60px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+    background: white; border-radius: 20px; padding: 2rem;
+    width: 100%; max-width: 620px; max-height: 86vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    animation: slideDown .25s ease;
+}
+@keyframes slideDown { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform:none; } }
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--neutral-100);
+}
+.modal-header h2 { font-size: 1.2rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--neutral-400); line-height: 1; padding: 0; }
+.modal-close:hover { color: var(--neutral-700); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: .35rem; }
+.form-group.full { grid-column: 1/-1; }
+.form-label { font-size: .8125rem; font-weight: 600; color: var(--neutral-700); }
+.form-label span { color: #ef4444; }
+.form-control {
+    padding: .6rem .875rem; border: 1.5px solid var(--neutral-200);
+    border-radius: var(--radius-lg); font-size: .875rem; color: var(--neutral-800);
+    transition: border-color .2s; width: 100%; box-sizing: border-box;
+}
+.form-control:focus { outline: none; border-color: var(--healthcare-primary); }
+.form-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; }
+.btn-cancel {
+    padding: .65rem 1.25rem; border-radius: var(--radius-lg);
+    border: 1.5px solid var(--neutral-200); background: white;
+    color: var(--neutral-700); font-weight: 600; cursor: pointer;
+}
+.btn-submit {
+    padding: .65rem 1.5rem; border-radius: var(--radius-lg);
+    border: none; background: var(--healthcare-primary); color: white;
+    font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem;
+}
+.btn-submit:hover { background: #1a6fb3; }
+
+.alert-msg {
+    padding: .875rem 1.25rem; border-radius: var(--radius-lg);
+    font-size: .875rem; font-weight: 500; margin-bottom: 1rem;
+    border-left: 4px solid;
+}
+.alert-success { background: rgba(16,185,129,.1); color: #059669; border-color: #059669; }
+.alert-error   { background: rgba(239,68,68,.1);  color: #dc2626; border-color: #dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Flash messages -->
+{% if messages %}
+  {% for msg in messages %}
+    <div class="alert-msg {% if msg.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
+      <i class="fas {% if msg.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+      {{ msg }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Header -->
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-hospital-alt" style="color: var(--healthcare-primary); margin-right: .5rem;"></i>Admissions Management</h1>
+        <p>Track and manage all patient admissions and discharges</p>
+    </div>
+    <button class="btn-primary" id="openAdmitModal">
+        <i class="fas fa-plus"></i> Admit Patient
+    </button>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+    <div class="stat-card primary">
+        <div class="val">{{ stats.total }}</div>
+        <div class="lbl">Total Records</div>
+    </div>
+    <div class="stat-card success">
+        <div class="val">{{ stats.admitted }}</div>
+        <div class="lbl">Currently Admitted</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="val">{{ stats.today }}</div>
+        <div class="lbl">Admitted Today</div>
+    </div>
+    <div class="stat-card">
+        <div class="val">{{ stats.discharged_today }}</div>
+        <div class="lbl">Discharged Today</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filter-row">
+    <div class="search-box">
+        <i class="fas fa-search" style="color: var(--neutral-400);"></i>
+        <input type="text" name="search" placeholder="Search patient name or diagnosis…" value="{{ search_query }}">
+    </div>
+    <select name="status" class="filter-select">
+        <option value="">All statuses</option>
+        {% for val, lbl in status_choices %}
+        <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ lbl }}</option>
+        {% endfor %}
+    </select>
+    <select name="type" class="filter-select">
+        <option value="">All types</option>
+        {% for val, lbl in admission_types %}
+        <option value="{{ val }}" {% if selected_type == val %}selected{% endif %}>{{ lbl }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter btn-apply"><i class="fas fa-filter"></i> Filter</button>
+    <a href="{% url 'admin_portal:admissions' %}" class="btn-filter btn-clear"><i class="fas fa-times"></i> Clear</a>
+</form>
+
+<!-- Table -->
+<div class="table-wrap">
+    {% if admissions %}
+    <table>
+        <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Type</th>
+                <th>Diagnosis</th>
+                <th>Attending Doctor</th>
+                <th>Admitted</th>
+                <th>Discharged</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for adm in admissions %}
+            <tr>
+                <td>
+                    <strong>{{ adm.patient.get_full_name|default:adm.patient.username }}</strong>
+                    <div style="font-size:.75rem; color: var(--neutral-400);">{{ adm.patient.email }}</div>
+                </td>
+                <td>{{ adm.get_admission_type_display }}</td>
+                <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ adm.diagnosis|default:"—" }}
+                </td>
+                <td>{{ adm.attending_doctor.get_full_name|default:"—" }}</td>
+                <td>{{ adm.admission_date|date:"M j, Y" }}</td>
+                <td>{{ adm.discharge_date|date:"M j, Y"|default:"—" }}</td>
+                <td>
+                    <span class="status-badge s-{{ adm.status }}">
+                        {{ adm.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'admin_portal:patient_detail' adm.patient.id %}" class="link-btn">View →</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-hospital-alt" style="font-size: 2.5rem; color: var(--neutral-300); display: block; margin-bottom: 1rem;"></i>
+        <p>No admissions found matching your criteria.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ===== ADMIT PATIENT MODAL ===== -->
+<div class="modal-overlay" id="admitModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2><i class="fas fa-hospital-alt" style="color:var(--healthcare-primary);margin-right:.5rem;"></i>Admit Patient</h2>
+            <button class="modal-close" id="closeAdmitModal">&times;</button>
+        </div>
+        <form method="post" action="{% url 'admin_portal:admissions' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label">Patient <span>*</span></label>
+                    <select name="patient" class="form-control" required>
+                        <option value="">— Select patient —</option>
+                        {% for p in all_patients %}
+                        <option value="{{ p.id }}">{{ p.get_full_name|default:p.username }} ({{ p.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Admission Type <span>*</span></label>
+                    <select name="admission_type" class="form-control" required>
+                        {% for val, lbl in admission_types %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Attending Doctor</label>
+                    <select name="attending_doctor" class="form-control">
+                        <option value="">— Unassigned —</option>
+                        {% for d in all_doctors %}
+                        <option value="{{ d.id }}">Dr. {{ d.get_full_name|default:d.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ward / Department</label>
+                    <input type="text" name="ward" class="form-control" placeholder="e.g. General, ICU, Cardiology">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Room Number</label>
+                    <input type="text" name="room_number" class="form-control" placeholder="e.g. 204">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bed Number</label>
+                    <input type="text" name="bed_number" class="form-control" placeholder="e.g. B3">
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Initial Diagnosis</label>
+                    <input type="text" name="diagnosis" class="form-control" placeholder="e.g. Acute appendicitis, Hypertensive crisis…">
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Additional Notes</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Additional clinical notes…" style="resize:vertical;"></textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" id="cancelAdmitModal">Cancel</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-hospital-alt"></i> Admit Patient</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const admitModal = document.getElementById('admitModal');
+document.getElementById('openAdmitModal').addEventListener('click', () => admitModal.classList.add('open'));
+document.getElementById('closeAdmitModal').addEventListener('click', () => admitModal.classList.remove('open'));
+document.getElementById('cancelAdmitModal').addEventListener('click', () => admitModal.classList.remove('open'));
+admitModal.addEventListener('click', (e) => { if (e.target === admitModal) admitModal.classList.remove('open'); });
+</script>
+{% endblock %}

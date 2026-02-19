@@ -111,7 +111,13 @@ def external_systems_list(request):
         'systems': systems,
         'status_filter': status_filter,
         'search_query': search_query,
-        'status_choices': ExternalSystem.CONNECTION_STATUS_CHOICES,
+        'status_choices': [
+            ('unknown', 'Unknown'),
+            ('connected', 'Connected'),
+            ('disconnected', 'Disconnected'),
+            ('error', 'Connection Error'),
+        ],
+        'system_types': ExternalSystem.SYSTEM_TYPES,
     }
     
     return render(request, 'interoperability/external_systems_list.html', context)
@@ -290,8 +296,9 @@ def hl7_messages_list(request):
         'direction': direction,
         'search_query': search_query,
         'message_types': message_types,
-        'status_choices': HL7Message.STATUS_CHOICES,
-        'direction_choices': HL7Message.DIRECTION_CHOICES,
+        'status_choices': HL7Message.PROCESSING_STATUS,
+        'direction_choices': HL7Message.DIRECTIONS,
+        'all_message_types': HL7Message.MESSAGE_TYPES,
     }
     
     return render(request, 'interoperability/hl7_messages_list.html', context)
@@ -377,7 +384,7 @@ def data_mappings_list(request):
         'mapping_type': mapping_type,
         'active_only': active_only,
         'search_query': search_query,
-        'mapping_type_choices': DataMapping.MAPPING_TYPE_CHOICES,
+        'mapping_type_choices': DataMapping.MAPPING_TYPES,
     }
     
     return render(request, 'interoperability/data_mappings_list.html', context)
@@ -450,8 +457,8 @@ def integration_transactions_list(request):
         'date_from': date_from,
         'date_to': date_to,
         'systems': systems,
-        'status_choices': IntegrationTransaction.STATUS_CHOICES,
-        'transaction_type_choices': IntegrationTransaction.TRANSACTION_TYPE_CHOICES,
+        'status_choices': IntegrationTransaction.TRANSACTION_STATUS,
+        'transaction_type_choices': IntegrationTransaction.TRANSACTION_TYPES,
     }
     
     return render(request, 'interoperability/integration_transactions_list.html', context)
@@ -492,8 +499,8 @@ def consent_management_list(request):
         'consent_type': consent_type,
         'status': status,
         'search_query': search_query,
-        'consent_type_choices': ConsentManagement.CONSENT_TYPE_CHOICES,
-        'status_choices': ConsentManagement.STATUS_CHOICES,
+        'consent_type_choices': ConsentManagement.CONSENT_TYPES,
+        'status_choices': ConsentManagement.CONSENT_STATUS,
     }
     
     return render(request, 'interoperability/consent_management_list.html', context)

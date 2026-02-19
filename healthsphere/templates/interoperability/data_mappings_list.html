@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Data Mappings — Interoperability | HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.75rem; flex-wrap:wrap; gap:1rem; }
+.page-title-group h1 { font-size:1.5rem; font-weight:700; color:#1e293b; margin:0 0 2px; }
+.page-title-group p { font-size:0.875rem; color:#64748b; margin:0; }
+.filter-bar { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; background:white; border:1px solid #e2e8f0; border-radius:14px; padding:1rem 1.25rem; margin-bottom:1.5rem; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+.filter-bar form { display:flex; gap:0.75rem; flex-wrap:wrap; width:100%; align-items:center; }
+.filter-search { flex:1; min-width:200px; display:flex; align-items:center; gap:0.5rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.5rem 0.875rem; }
+.filter-search i { color:#94a3b8; font-size:14px; }
+.filter-search input { border:none; background:transparent; outline:none; font-size:0.875rem; color:#1e293b; width:100%; }
+.filter-select { padding:0.5rem 0.875rem; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; font-size:0.875rem; color:#1e293b; outline:none; cursor:pointer; }
+.btn-filter { display:inline-flex; align-items:center; gap:0.375rem; padding:0.5rem 1rem; background:#3b82f6; color:white; border:none; border-radius:10px; font-size:0.875rem; font-weight:600; cursor:pointer; text-decoration:none; transition:all 0.15s ease; }
+.btn-filter:hover { background:#2563eb; transform:translateY(-1px); }
+.btn-filter-secondary { background:white; color:#64748b; border:1px solid #e2e8f0; }
+.btn-filter-secondary:hover { background:#f8fafc; color:#1e293b; }
+
+.mappings-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:1.25rem; }
+.mapping-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; box-shadow:0 1px 4px rgba(0,0,0,0.04); transition:all 0.2s ease; }
+.mapping-card:hover { border-color:#93c5fd; box-shadow:0 4px 16px rgba(59,130,246,0.1); transform:translateY(-2px); }
+.mapping-card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1rem; gap:0.5rem; }
+.mapping-type-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.mapping-type-icon.fhir_resource { background:rgba(59,130,246,0.1); color:#3b82f6; }
+.mapping-type-icon.hl7_segment { background:rgba(139,92,246,0.1); color:#8b5cf6; }
+.mapping-type-icon.custom_api { background:rgba(16,185,129,0.1); color:#10b981; }
+.mapping-type-icon.database_table { background:rgba(245,158,11,0.1); color:#f59e0b; }
+.badge-active { background:rgba(16,185,129,0.1); color:#10b981; padding:3px 10px; border-radius:999px; font-size:0.75rem; font-weight:600; }
+.badge-inactive { background:rgba(100,116,139,0.1); color:#64748b; padding:3px 10px; border-radius:999px; font-size:0.75rem; font-weight:600; }
+.mapping-name { font-size:1rem; font-weight:700; color:#1e293b; margin:0 0 4px; }
+.mapping-type-label { font-size:0.75rem; color:#64748b; margin:0 0 0.875rem; }
+.mapping-flow { display:flex; align-items:center; gap:0.5rem; margin-bottom:0.875rem; }
+.flow-system { background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:4px 10px; font-size:0.75rem; color:#334155; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.flow-arrow { color:#94a3b8; font-size:12px; }
+.mapping-formats { font-size:0.8125rem; color:#64748b; margin-bottom:0.875rem; }
+.mapping-footer { display:flex; align-items:center; justify-content:space-between; padding-top:0.75rem; border-top:1px solid #f1f5f9; }
+.test-btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; background:#f1f5f9; border:none; border-radius:8px; font-size:0.75rem; font-weight:600; color:#334155; cursor:pointer; transition:all 0.15s; }
+.test-btn:hover { background:#dbeafe; color:#3b82f6; }
+.last-tested { font-size:0.75rem; color:#94a3b8; }
+.empty-state { text-align:center; padding:4rem 2rem; background:white; border:1px solid #e2e8f0; border-radius:16px; }
+.empty-state i { font-size:3rem; color:#cbd5e1; margin-bottom:1rem; display:block; }
+.empty-state h3 { font-size:1.125rem; color:#334155; margin-bottom:0.5rem; }
+.empty-state p { color:#64748b; font-size:0.875rem; margin:0; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="{% url 'interoperability:dashboard' %}" class="breadcrumb-link"><i class="fas fa-exchange-alt"></i> Interoperability</a></li>
+        <li class="breadcrumb-item"><span class="breadcrumb-current">Data Mappings</span></li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="page-title-group">
+        <h1><i class="fas fa-map" style="color:#10b981;margin-right:8px;"></i>Data Mappings</h1>
+        <p>Configure transformation rules between internal models and external system formats</p>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" action="">
+        <div class="filter-search">
+            <i class="fas fa-search"></i>
+            <input type="text" name="q" placeholder="Search mappings by name or description…" value="{{ search_query|default:'' }}">
+        </div>
+        <select name="type" class="filter-select">
+            <option value="">All Types</option>
+            {% for value, label in mapping_type_choices %}
+            <option value="{{ value }}" {% if mapping_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="active_only" class="filter-select">
+            <option value="">All</option>
+            <option value="true" {% if active_only == 'true' %}selected{% endif %}>Active Only</option>
+        </select>
+        <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+        {% if mapping_type or active_only or search_query %}
+        <a href="{% url 'interoperability:data_mappings_list' %}" class="btn-filter btn-filter-secondary"><i class="fas fa-times"></i> Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if mappings %}
+<div class="mappings-grid">
+    {% for mapping in mappings %}
+    <div class="mapping-card">
+        <div class="mapping-card-header">
+            <div class="mapping-type-icon {{ mapping.mapping_type }}">
+                {% if mapping.mapping_type == 'fhir_resource' %}<i class="fas fa-fire"></i>
+                {% elif mapping.mapping_type == 'hl7_segment' %}<i class="fas fa-layer-group"></i>
+                {% elif mapping.mapping_type == 'custom_api' %}<i class="fas fa-code"></i>
+                {% else %}<i class="fas fa-database"></i>{% endif %}
+            </div>
+            {% if mapping.is_active %}
+            <span class="badge-active"><i class="fas fa-circle" style="font-size:7px;"></i> Active</span>
+            {% else %}
+            <span class="badge-inactive"><i class="fas fa-pause-circle" style="font-size:10px;"></i> Inactive</span>
+            {% endif %}
+        </div>
+        <h3 class="mapping-name">{{ mapping.name }}</h3>
+        <p class="mapping-type-label">{{ mapping.get_mapping_type_display }}</p>
+        {% if mapping.description %}
+        <p style="font-size:0.8125rem;color:#64748b;margin-bottom:0.875rem;line-height:1.5;">{{ mapping.description|truncatechars:100 }}</p>
+        {% endif %}
+        <div class="mapping-flow">
+            <span class="flow-system" title="{{ mapping.source_format }}">
+                <i class="fas fa-sign-in-alt" style="color:#8b5cf6;"></i>
+                {{ mapping.source_system.name|default:"Internal" }}
+            </span>
+            <i class="fas fa-arrow-right flow-arrow"></i>
+            <span class="flow-system" title="{{ mapping.target_format }}">
+                <i class="fas fa-sign-out-alt" style="color:#3b82f6;"></i>
+                {{ mapping.target_system.name|default:"Internal" }}
+            </span>
+        </div>
+        <div class="mapping-formats">
+            <i class="fas fa-file-alt" style="color:#94a3b8;margin-right:4px;"></i>
+            {{ mapping.source_format }} → {{ mapping.target_format }}
+        </div>
+        <div class="mapping-footer">
+            <form method="post" action="{% url 'interoperability:test_data_mapping' mapping.id %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="test-btn"><i class="fas fa-play-circle"></i> Run Test</button>
+            </form>
+            {% if mapping.last_tested %}
+            <span class="last-tested">Tested {{ mapping.last_tested|date:"M d, H:i" }}</span>
+            {% else %}
+            <span class="last-tested">Never tested</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if mappings.has_other_pages %}
+<div style="display:flex;justify-content:center;gap:0.5rem;margin-top:1.5rem;">
+    {% if mappings.has_previous %}<a href="?page={{ mappings.previous_page_number }}" class="btn-filter btn-filter-secondary"><i class="fas fa-chevron-left"></i></a>{% endif %}
+    <span style="padding:6px 16px;background:white;border:1px solid #e2e8f0;border-radius:10px;font-size:0.875rem;color:#64748b;">Page {{ mappings.number }} of {{ mappings.paginator.num_pages }}</span>
+    {% if mappings.has_next %}<a href="?page={{ mappings.next_page_number }}" class="btn-filter"><i class="fas fa-chevron-right"></i></a>{% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-map-marked-alt"></i>
+    <h3>No data mappings found</h3>
+    <p>{% if mapping_type or active_only or search_query %}No mappings match your current filters.{% else %}No data transformation mappings have been configured yet.{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}

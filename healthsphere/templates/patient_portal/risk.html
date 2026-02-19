@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Health Risk Score - HealthSphere AI{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+<style>
+    .gradient-risk {
+        background: linear-gradient(135deg, #E89B87, #f0b097);
+    }
+
+    .gradient-safe {
+        background: linear-gradient(135deg, #A8C5A8, #b8d4b8);
+    }
+
+    .gradient-ai {
+        background: linear-gradient(135deg, #C8B4E8, #d8c4f8);
+    }
+
+    .risk-ring {
+        position: relative;
+        width: 180px;
+        height: 180px;
+        margin: 0 auto;
+    }
+
+    .risk-ring .score-label {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .risk-ring .score-number {
+        font-size: 42px;
+        font-weight: 700;
+    }
+
+    .risk-ring .score-text {
+        font-size: 14px;
+        color: #718096;
+    }
+
+    .factor-item {
+        padding: 14px;
+        background: rgba(232, 155, 135, 0.04);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+    }
+
+    .factor-item:hover {
+        transform: translateX(4px);
+    }
+
+    .factor-high {
+        border-color: #E89B87;
+    }
+
+    .factor-medium {
+        border-color: #F0C3A0;
+    }
+
+    .factor-low {
+        border-color: #A8C5A8;
+    }
+
+    .rec-item {
+        padding: 14px 16px;
+        background: rgba(168, 197, 232, 0.05);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bento-grid">
+    <div class="bento-card bento-wide" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <div class="metric-icon gradient-ai"><i class="fas fa-shield-alt"></i></div>
+                AI Health Risk Assessment
+            </div>
+            <a href="{% url 'patient_portal:dashboard' %}" class="bento-btn bento-btn-secondary"><i
+                    class="fas fa-arrow-left"></i> Back</a>
+        </div>
+        <p style="color: #718096; margin: 0;">AI-powered analysis of your health risk factors</p>
+    </div>
+
+    <!-- Risk Score Ring -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="risk-ring">
+            {% with score=risk_assessment.risk_score|default:25 %}
+            <svg viewBox="0 0 180 180">
+                <circle cx="90" cy="90" r="75" fill="none" stroke="#E8E4DB" stroke-width="12" />
+                <circle cx="90" cy="90" r="75" fill="none"
+                    stroke="{% if score > 70 %}#E89B87{% elif score > 40 %}#F0C3A0{% else %}#A8C5A8{% endif %}"
+                    stroke-width="12" stroke-dasharray="{{ score|floatformat:0 }}0, 4710" stroke-linecap="round"
+                    transform="rotate(-90 90 90)" />
+            </svg>
+            <div class="score-label">
+                <div class="score-number"
+                    style="color: {% if score > 70 %}#E89B87{% elif score > 40 %}#F0C3A0{% else %}#48bb78{% endif %};">
+                    {{ score }}</div>
+                <div class="score-text">Risk Score</div>
+            </div>
+            {% endwith %}
+        </div>
+        <div style="text-align: center; margin-top: 8px;">
+            <span
+                style="padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; background: rgba({% if risk_assessment.risk_level == 'high' %}232,155,135{% elif risk_assessment.risk_level == 'medium' %}240,195,160{% else %}168,197,168{% endif %},0.15); color: {% if risk_assessment.risk_level == 'high' %}#E89B87{% elif risk_assessment.risk_level == 'medium' %}#D69B6C{% else %}#48bb78{% endif %};">
+                {{ risk_assessment.risk_level|default:"Low"|capfirst }} Risk
+            </span>
+        </div>
+    </div>
+
+    <!-- Vitals -->
+    <div class="bento-card bento-small" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-title" style="font-size: 15px;"><i class="fas fa-heartbeat"></i> Latest Vitals</div>
+        {% if recent_vitals %}
+        <div style="margin-top: 12px;">
+            {% if recent_vitals.heart_rate %}<div
+                style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                <span style="color: #718096; font-size: 13px;">Heart Rate</span><span style="font-weight: 600;">{{
+                    recent_vitals.heart_rate }} bpm</span></div>{% endif %}
+            {% if recent_vitals.systolic_bp %}<div
+                style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                <span style="color: #718096; font-size: 13px;">Blood Pressure</span><span style="font-weight: 600;">{{
+                    recent_vitals.systolic_bp }}/{{ recent_vitals.diastolic_bp }}</span></div>{% endif %}
+            {% if recent_vitals.temperature %}<div
+                style="display: flex; justify-content: space-between; padding: 8px 0;"><span
+                    style="color: #718096; font-size: 13px;">Temperature</span><span style="font-weight: 600;">{{
+                    recent_vitals.temperature }}°F</span></div>{% endif %}
+        </div>
+        {% else %}
+        <div style="padding: 20px; text-align: center; color: #718096;">
+            <p>No vitals recorded</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Risk Factors -->
+    <div class="bento-card bento-featured" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-title"><i class="fas fa-exclamation-triangle"></i> Risk Factors</div>
+        <div style="margin-top: 16px;">
+            {% for factor in risk_factors %}
+            <div class="factor-item factor-{{ factor.level|default:'low' }}">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 700; color: #2D3748;">{{ factor.name }}</div>
+                        <div style="font-size: 13px; color: #718096; margin-top: 4px;">{{ factor.description }}</div>
+                    </div>
+                    <span
+                        style="font-weight: 700; font-size: 18px; color: {% if factor.level == 'high' %}#E89B87{% elif factor.level == 'medium' %}#D69B6C{% else %}#48bb78{% endif %};">{{
+                        factor.score|default:"--" }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 30px; color: #718096;">
+                <i class="fas fa-check-circle"
+                    style="font-size: 36px; color: #48bb78; opacity: 0.5; margin-bottom: 12px; display: block;"></i>
+                <p>No significant risk factors detected</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="bento-card bento-tall" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-title"><i class="fas fa-lightbulb" style="color: var(--color-peach);"></i> Recommendations
+        </div>
+        <div style="margin-top: 16px;">
+            {% for rec in recommendations %}
+            <div class="rec-item">
+                <i class="fas fa-check-circle" style="color: #48bb78; margin-top: 2px;"></i>
+                <span style="color: #4A5568;">{{ rec }}</span>
+            </div>
+            {% empty %}
+            <div class="rec-item"><i class="fas fa-lightbulb" style="color: var(--color-peach);"></i><span>Maintain
+                    regular health check-ups</span></div>
+            <div class="rec-item"><i class="fas fa-lightbulb" style="color: var(--color-peach);"></i><span>Stay
+                    physically active for 30 minutes daily</span></div>
+            <div class="rec-item"><i class="fas fa-lightbulb" style="color: var(--color-peach);"></i><span>Follow a
+                    balanced diet</span></div>
+            <div class="rec-item"><i class="fas fa-lightbulb" style="color: var(--color-peach);"></i><span>Get 7-9 hours
+                    of sleep</span></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

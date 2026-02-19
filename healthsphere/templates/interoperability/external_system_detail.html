@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load static %}
+{% block content %}
+<div style="max-width:900px;margin:24px auto;padding:0 24px">
+    <div style="background:white;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:32px">
+        <a href="{% url 'interoperability:external_systems_list' %}"
+            style="color:#A8C5E8;text-decoration:none;font-weight:500;font-size:14px"><i class="fas fa-arrow-left"></i>
+            Back to Systems</a>
+        <h2 style="font-size:24px;font-weight:700;color:#2D3748;margin:16px 0"><i class="fas fa-server"
+                style="color:#A8C5E8"></i> {{ system.name }}</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+            <div style="padding:16px;background:rgba(168,197,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096">Type</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ system.system_type|capfirst }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(168,197,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096">Status</div>
+                <div
+                    style="font-weight:600;margin-top:4px;color:{% if system.connection_status == 'connected' %}#48bb78{% else %}#E89B87{% endif %}">
+                    {{ system.connection_status|capfirst }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(168,197,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096">FHIR Version</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ system.fhir_version|default:"R4" }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(168,197,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096">Base URL</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px;word-break:break-all">{{
+                    system.base_url|default:"N/A" }}</div>
+            </div>
+        </div>
+        <div style="margin-top:24px"><a href="{% url 'interoperability:test_system_connection' system.id %}"
+                style="padding:12px 24px;background:#A8C5E8;color:white;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block"><i
+                    class="fas fa-plug"></i> Test Connection</a></div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ record.title }} — Record Detail | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'clinical_portal:records' %}" class="breadcrumb-link">Records</a></li>
+<li class="breadcrumb-item breadcrumb-current">{{ record.title }}</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 760px;">
+    <div style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: var(--radius-xl); padding: 1.75rem; margin-bottom: 1.5rem; color: white;">
+        <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: .5rem;">{{ record.title }}</div>
+        <div style="opacity: .7; font-size: .875rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <span><i class="fas fa-user" style="margin-right: .3rem;"></i>{{ record.patient.get_full_name|default:record.patient.username }}</span>
+            <span><i class="fas fa-calendar" style="margin-right: .3rem;"></i>{{ record.record_date|date:"F j, Y" }}</span>
+            <span><i class="fas fa-tag" style="margin-right: .3rem;"></i>{{ record.get_record_type_display }}</span>
+        </div>
+    </div>
+
+    <div style="background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 1.75rem; margin-bottom: 1.25rem;">
+        <h3 style="margin: 0 0 1rem; font-size: .875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--neutral-500); font-weight: 700;">Description</h3>
+        <p style="color: var(--neutral-800); line-height: 1.7; margin: 0;">{{ record.description|default:"No description provided." }}</p>
+    </div>
+
+    {% if record.treatment_notes %}
+    <div style="background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 1.75rem; margin-bottom: 1.25rem;">
+        <h3 style="margin: 0 0 1rem; font-size: .875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--neutral-500); font-weight: 700;">Treatment Notes</h3>
+        <p style="color: var(--neutral-800); line-height: 1.7; margin: 0;">{{ record.treatment_notes }}</p>
+    </div>
+    {% endif %}
+
+    <div style="background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 1.25rem; display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: space-between; font-size: .875rem; color: var(--neutral-600);">
+        <span>Created by: <strong style="color: var(--neutral-900);">{{ record.created_by.get_full_name|default:record.created_by.username }}</strong></span>
+        <span>Severity: <strong style="color: var(--neutral-900);">{{ record.get_severity_display }}</strong></span>
+    </div>
+
+    <div style="margin-top: 1.25rem;">
+        <a href="{% url 'clinical_portal:records' %}" style="color: var(--healthcare-primary); font-size: .875rem; font-weight: 500; text-decoration: none;">← Back to Records</a>
+    </div>
+</div>
+{% endblock %}

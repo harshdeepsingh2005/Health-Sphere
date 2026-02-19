@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% load static %}
+{% block content %}
+<div style="max-width:900px;margin:24px auto;padding:0 24px">
+    <div style="background:white;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:32px">
+        <a href="{% url 'analytics:reports_dashboard' %}"
+            style="color:#A8C5E8;text-decoration:none;font-weight:500;font-size:14px"><i class="fas fa-arrow-left"></i>
+            Back to Reports</a>
+        <h2 style="font-size:24px;font-weight:700;color:#2D3748;margin:16px 0"><i class="fas fa-file-alt"
+                style="color:#C8B4E8"></i> {{ report.name|default:"Analytics Report" }}</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+            <div style="padding:16px;background:rgba(200,180,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Report Type
+                </div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ report.get_report_type_display|default:"General" }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(200,180,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Generated</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ report.generated_at|date:"M d, Y g:i A" }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(200,180,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Status</div>
+                <div style="font-weight:600;color:#48bb78;margin-top:4px">{{ report.status|default:"Completed"|capfirst
+                    }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(200,180,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Created By
+                </div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ report.generated_by.get_full_name|default:"System" }}</div>
+            </div>
+        </div>
+        {% if report.summary %}<div style="margin-top:24px">
+            <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em;margin-bottom:8px">
+                Summary</div>
+            <div
+                style="padding:20px;background:rgba(200,180,232,0.04);border-radius:14px;border-left:4px solid #C8B4E8">
+                <p style="color:#4A5568;line-height:1.8">{{ report.summary }}</p>
+            </div>
+        </div>{% endif %}
+        <div style="margin-top:24px"><a href="{% url 'analytics:report_download' report.pk %}"
+                style="padding:12px 24px;background:#C8B4E8;color:white;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block"><i
+                    class="fas fa-download"></i> Download Report</a></div>
+    </div>
+</div>
+{% endblock %}

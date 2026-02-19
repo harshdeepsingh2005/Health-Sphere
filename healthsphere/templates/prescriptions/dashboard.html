@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}E-Prescriptions - HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+<style>
+    .rx-theme { padding: 28px 32px; }
+    .rx-theme .bento-card { background: white; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .gradient-rx { background: linear-gradient(135deg, #F0C3A0, #f5d4b8); }
+    .rx-item {
+        padding: 16px; border-radius: 14px; border-left: 4px solid #F0C3A0;
+        background: rgba(240,195,160,0.04); margin-bottom: 12px; transition: all 0.3s;
+    }
+    .rx-item:hover { background: rgba(240,195,160,0.1); transform: translateX(4px); }
+    .rx-badge {
+        display: inline-block; padding: 3px 10px; border-radius: 6px;
+        font-size: 11px; font-weight: 600; margin-top: 6px;
+    }
+    .st-approved, .st-filled { background: rgba(72,187,120,0.1); color: #48bb78; }
+    .st-transmitted { background: rgba(168,197,232,0.15); color: #4A90D9; }
+    .st-expired, .st-cancelled, .st-denied { background: rgba(232,155,135,0.1); color: #E89B87; }
+    .st-pending, .st-draft { background: rgba(240,195,160,0.15); color: #b07d4a; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rx-theme">
+    <div class="bento-grid">
+
+        <!-- Header -->
+        <div class="bento-card bento-featured" data-tilt>
+            <div class="card-glow"></div>
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="metric-icon gradient-rx"><i class="fas fa-prescription-bottle-medical"></i></div>
+                    E-Prescriptions Dashboard
+                </div>
+            </div>
+            <p style="color:#718096;">Manage electronic prescriptions, medications, and refill requests</p>
+        </div>
+
+        <!-- Active Prescriptions Count -->
+        <div class="bento-card bento-small interactive">
+            <div class="card-glow"></div>
+            <div class="metric-icon gradient-rx"><i class="fas fa-pills"></i></div>
+            <div class="metric-value">{{ active_count }}</div>
+            <div class="metric-label">Active Prescriptions</div>
+        </div>
+
+        <!-- Pending Refills -->
+        <div class="bento-card bento-small interactive">
+            <div class="card-glow"></div>
+            <div class="metric-icon" style="background:linear-gradient(135deg,#A8C5A8,#b8d4b8)">
+                <i class="fas fa-sync-alt"></i>
+            </div>
+            <div class="metric-value">{{ pending_refills }}</div>
+            <div class="metric-label">Pending Refills</div>
+        </div>
+
+        <!-- Medications in DB -->
+        <div class="bento-card bento-small interactive">
+            <div class="card-glow"></div>
+            <div class="metric-icon" style="background:linear-gradient(135deg,#A8C5E8,#b8d4f0)">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="metric-value">{{ medication_count }}</div>
+            <div class="metric-label">Medications in DB</div>
+        </div>
+
+        <!-- Recent Prescriptions List -->
+        <div class="bento-card bento-featured" data-hover-lift>
+            <div class="card-glow"></div>
+            <div class="card-title" style="margin-bottom:16px;">
+                <i class="fas fa-file-prescription"></i> Recent Prescriptions
+            </div>
+            {% for rx in recent_prescriptions %}
+            <div class="rx-item">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div style="font-weight:700; font-size:15px; color:#2D3748;">
+                            {{ rx.medication.generic_name }}
+                            {% if rx.medication.brand_name %}<span style="font-weight:400; color:#718096;">({{ rx.medication.brand_name }})</span>{% endif %}
+                        </div>
+                        <div style="font-size:13px; color:#4A5568; margin-top:3px;">
+                            {{ rx.dosage_instructions|truncatewords:12 }}
+                        </div>
+                        <div style="font-size:12px; color:#718096; margin-top:4px;">
+                            {% if user.is_patient %}
+                                Prescribed by Dr. {{ rx.prescriber.get_full_name|default:rx.prescriber.username }}
+                            {% else %}
+                                Patient: {{ rx.patient.get_full_name|default:rx.patient.username }}
+                            {% endif %}
+                            &bull; {{ rx.date_prescribed|date:"M d, Y" }}
+                        </div>
+                        <div style="font-size:12px; color:#718096; margin-top:2px;">
+                            Qty: {{ rx.quantity }} &bull; {{ rx.days_supply }} days supply
+                            &bull; {{ rx.refills_remaining }} refill{{ rx.refills_remaining|pluralize }} left
+                        </div>
+                    </div>
+                    <div>
+                        <span class="rx-badge st-{{ rx.status }}">{{ rx.get_status_display }}</span>
+                        {% if rx.pharmacy %}
+                        <div style="font-size:11px; color:#718096; margin-top:4px; text-align:right;">
+                            <i class="fas fa-pharmacy"></i> {{ rx.pharmacy.name }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align:center; padding:60px; color:#718096;">
+                <i class="fas fa-prescription" style="font-size:48px; opacity:0.3; margin-bottom:16px; display:block;"></i>
+                <p style="font-weight:600; font-size:16px;">No prescriptions yet</p>
+                <p>Prescriptions will appear here once doctors create them.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bento-card bento-tall" data-tilt>
+            <div class="card-glow"></div>
+            <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+            <div style="margin-top:16px; display:flex; flex-direction:column; gap:10px;">
+                <a href="{% url 'patient_portal:medications' %}" style="text-decoration:none;">
+                    <button style="width:100%; padding:14px; background:rgba(240,195,160,0.08); border:none; border-radius:12px; font-weight:600; color:#2D3748; cursor:pointer; text-align:left; transition:all 0.3s;"
+                        onmouseover="this.style.background='rgba(240,195,160,0.2)'" onmouseout="this.style.background='rgba(240,195,160,0.08)'">
+                        <i class="fas fa-pills" style="color:#F0C3A0; margin-right:8px;"></i> My Medications
+                    </button>
+                </a>
+                <button style="padding:14px; background:rgba(168,197,232,0.08); border:none; border-radius:12px; font-weight:600; color:#2D3748; cursor:pointer; text-align:left; transition:all 0.3s;"
+                    onmouseover="this.style.background='rgba(168,197,232,0.2)'" onmouseout="this.style.background='rgba(168,197,232,0.08)'">
+                    <i class="fas fa-sync" style="color:#A8C5E8; margin-right:8px;"></i> Request Refill
+                </button>
+                <a href="{% url 'patient_portal:lab_results' %}" style="text-decoration:none;">
+                    <button style="width:100%; padding:14px; background:rgba(168,197,168,0.08); border:none; border-radius:12px; font-weight:600; color:#2D3748; cursor:pointer; text-align:left; transition:all 0.3s;"
+                        onmouseover="this.style.background='rgba(168,197,168,0.2)'" onmouseout="this.style.background='rgba(168,197,168,0.08)'">
+                        <i class="fas fa-flask" style="color:#A8C5A8; margin-right:8px;"></i> View Lab Results
+                    </button>
+                </a>
+            </div>
+
+            {% if active_prescriptions %}
+            <div style="margin-top:24px;">
+                <div class="card-title" style="font-size:14px;"><i class="fas fa-check-circle"></i> Active Now</div>
+                {% for rx in active_prescriptions %}
+                <div style="padding:10px 0; border-bottom:1px solid #f0f0f0;">
+                    <div style="font-weight:600; font-size:13px; color:#2D3748;">{{ rx.medication.generic_name }}</div>
+                    <div style="font-size:12px; color:#718096;">{{ rx.medication.strength }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 40px auto; padding: 0 24px;">
+    <div
+        style="background: white; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 40px; text-align: center;">
+        <div
+            style="width: 72px; height: 72px; border-radius: 50%; background: rgba(232,155,135,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 32px; color: #E89B87;"></i>
+        </div>
+        <h2 style="font-size: 24px; font-weight: 700; color: #2D3748; margin-bottom: 12px;">Cancel Appointment</h2>
+        <p style="color: #718096; margin-bottom: 24px;">Are you sure you want to cancel this appointment?</p>
+
+        <div
+            style="background: rgba(232,155,135,0.05); border-radius: 14px; padding: 20px; text-align: left; margin-bottom: 24px; border-left: 4px solid #E89B87;">
+            <div style="font-weight: 700; color: #2D3748; font-size: 16px;">{{ object.reason|default:"Appointment" }}
+            </div>
+            <div style="color: #718096; font-size: 14px; margin-top: 6px;">
+                <i class="fas fa-user-md"></i> Dr. {{ object.doctor.get_full_name|default:"N/A" }}
+            </div>
+            <div style="color: #718096; font-size: 14px; margin-top: 4px;">
+                <i class="fas fa-calendar"></i> {{ object.scheduled_date|date:"l, M d, Y" }} at {{
+                object.scheduled_time|time:"g:i A" }}
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <a href="{% url 'appointments:detail' object.pk %}"
+                    style="padding: 12px 24px; background: #f5f5f5; border-radius: 10px; color: #4A5568; text-decoration: none; font-weight: 600;">Keep
+                    Appointment</a>
+                <button type="submit"
+                    style="padding: 12px 24px; background: #E89B87; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                    <i class="fas fa-times"></i> Yes, Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

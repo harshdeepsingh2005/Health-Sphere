@@ -12,6 +12,15 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+# Load environment variables from .env file (if present)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+except ImportError:
+    pass  # python-dotenv not installed — use OS environment variables directly
+
+
+
 # =============================================================================
 # BASE CONFIGURATION
 # =============================================================================
@@ -20,14 +29,18 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# In a real production environment, this should be stored in environment variables
-SECRET_KEY = 'django-insecure-healthsphere-ai-development-key-change-in-production'
+# Set SECRET_KEY in your .env file.
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-healthsphere-ai-development-key-change-in-production'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # Hosts that are allowed to serve the application
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+_allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(',') if h.strip()]
 
 
 # =============================================================================
@@ -218,3 +231,15 @@ APP_VERSION = '1.0.0'
 
 # Enable/disable AI features (for demo purposes)
 AI_FEATURES_ENABLED = True
+
+# =============================================================================
+# GEMINI AI CONFIGURATION
+# =============================================================================
+
+# Set your Gemini API key as an environment variable:
+#   export GEMINI_API_KEY="your-key-here"
+# Or hardcode it here for development (not recommended for production):
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+
+# Gemini model to use
+GEMINI_MODEL = os.environ.get('GEMINI_MODEL', 'gemini-2.0-flash')

@@ -1,27 +1,32 @@
 """
-HealthSphere AI - Advanced Diagnostic AI Services
-=================================================
+HealthSphere AI - Advanced Diagnostic AI Services (Ollama-powered)
+==================================================================
 
 Comprehensive AI-powered diagnostic assistance and clinical decision support.
-Integrates multiple AI models for enhanced patient care.
+Combines rule-based clinical pattern matching with Ollama LLM enrichment.
 
 Features:
-- Symptom-based diagnostic suggestions
-- Lab result interpretation
-- Imaging analysis assistance
+- Symptom-based differential diagnosis (rule-based, always runs)
+- Lab result interpretation with AI clinical narrative
+- Vital signs analysis
 - Drug interaction checking
 - Treatment recommendations
 - Risk assessment and stratification
-- Predictive analytics for patient outcomes
+- Ollama-powered clinical summaries, reasoning & next steps
 
 Author: HealthSphere AI Team
-Version: 2.0.0 (Enhanced AI/ML Integration)
+Version: 3.0.0 (Ollama Integration)
 """
 
+import logging
 import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Any
 import json
+
+from .gemini_client import generate_text, is_available
+
+logger = logging.getLogger(__name__)
 
 
 class DiagnosticAI:
@@ -107,26 +112,17 @@ class DiagnosticAI:
         lab_results = patient_data.get('lab_results', {})
         age = patient_data.get('age', 50)
         gender = patient_data.get('gender', 'unknown')
-        
-        # Generate differential diagnosis
+
+        # --- Rule-based pipeline (always runs, fast) ---
         differential_diagnosis = cls._generate_differential_diagnosis(symptoms, age, gender, medical_history)
-        
-        # Analyze vital signs
         vital_analysis = cls._analyze_vital_signs(vital_signs)
-        
-        # Interpret lab results
         lab_interpretation = cls._interpret_lab_results(lab_results)
-        
-        # Risk stratification
         risk_assessment = cls._assess_patient_risk(patient_data)
-        
-        # Treatment recommendations
         treatment_suggestions = cls._generate_treatment_recommendations(differential_diagnosis, patient_data)
-        
-        # Follow-up recommendations
         followup_plan = cls._generate_followup_plan(differential_diagnosis, risk_assessment)
-        
-        return {
+        red_flags = cls._identify_red_flags(patient_data)
+
+        result = {
             'differential_diagnosis': differential_diagnosis,
             'vital_signs_analysis': vital_analysis,
             'lab_interpretation': lab_interpretation,
@@ -134,10 +130,52 @@ class DiagnosticAI:
             'treatment_suggestions': treatment_suggestions,
             'followup_plan': followup_plan,
             'confidence_score': cls._calculate_confidence_score(patient_data),
-            'red_flags': cls._identify_red_flags(patient_data),
+            'red_flags': red_flags,
             'generated_at': datetime.now().isoformat(),
-            'ai_version': '2.0.0'
+            'ai_version': '3.0.0',
+            'ai_powered': False,
+            'ai_summary': None,
+            'ai_reasoning': None,
+            'ai_next_steps': [],
         }
+
+        # --- Ollama enrichment (additive, graceful fallback) ---
+        if is_available() and symptoms:
+            try:
+                top_dx = [d['diagnosis'] for d in differential_diagnosis[:3]]
+                vit_flags = vital_analysis.get('abnormalities', [])
+                lab_abnormals = [
+                    f"{a['test']} ({a['status']})"
+                    for a in lab_interpretation.get('abnormal_values', [])
+                ]
+                prompt = (
+                    f"You are a clinical decision-support AI. A {age}-year-old {gender} presents with:\n"
+                    f"Symptoms: {', '.join(symptoms) or 'none'}\n"
+                    f"Medical history: {', '.join(medical_history) or 'none'}\n"
+                    f"Vital sign concerns: {', '.join(vit_flags) or 'none'}\n"
+                    f"Abnormal labs: {', '.join(lab_abnormals) or 'none'}\n"
+                    f"Red flags: {', '.join(red_flags) or 'none'}\n"
+                    f"Top differential diagnoses (rule-based): {', '.join(top_dx) or 'none'}\n\n"
+                    f"Provide:\n"
+                    f"SUMMARY: A 2-3 sentence clinical overview of this patient's presentation.\n"
+                    f"REASONING: Why the top differentials are ranked as they are (2-3 sentences).\n"
+                    f"NEXT_STEPS:\n- <step 1>\n- <step 2>\n- <step 3>"
+                )
+                llm_text = generate_text(
+                    prompt=prompt,
+                    system_instruction=(
+                        "You are a board-certified internist providing clinical decision support. "
+                        "Be concise and actionable. Never diagnose definitively — support clinical reasoning."
+                    ),
+                )
+                if llm_text:
+                    result.update(cls._parse_diagnostic_llm_response(llm_text))
+                    result['ai_powered'] = True
+                    logger.info("Ollama diagnostic enrichment successful.")
+            except Exception as exc:
+                logger.error(f"Ollama diagnostic enrichment failed: {exc}")
+
+        return result
     
     @classmethod
     def _generate_differential_diagnosis(cls, symptoms: List[str], age: int, gender: str, medical_history: List[str]) -> List[Dict]:
@@ -194,18 +232,50 @@ class DiagnosticAI:
         ]
     
     @classmethod
+    def _parse_diagnostic_llm_response(cls, llm_text: str) -> Dict:
+        """Parse SUMMARY / REASONING / NEXT_STEPS from the LLM structured response."""
+        summary = ""
+        reasoning = ""
+        next_steps = []
+        in_steps = False
+
+        for line in llm_text.strip().split('\n'):
+            line = line.strip()
+            upper = line.upper()
+            if upper.startswith('SUMMARY:'):
+                summary = line[len('SUMMARY:'):].strip()
+                in_steps = False
+            elif upper.startswith('REASONING:'):
+                reasoning = line[len('REASONING:'):].strip()
+                in_steps = False
+            elif upper.startswith('NEXT_STEPS:'):
+                in_steps = True
+            elif in_steps and line.startswith('- '):
+                next_steps.append(line[2:].strip())
+            elif summary and not reasoning and not in_steps and line:
+                summary += ' ' + line   # multi-line summary
+            elif reasoning and not in_steps and line and not line.startswith('NEXT'):
+                reasoning += ' ' + line  # multi-line reasoning
+
+        return {
+            'ai_summary': summary or None,
+            'ai_reasoning': reasoning or None,
+            'ai_next_steps': next_steps,
+        }
+
+    @classmethod
     def _generate_diagnostic_reasoning(cls, diagnosis: str, data: Dict) -> str:
         """Generate human-readable reasoning for diagnostic suggestion."""
         base_reasoning = f"Based on presenting symptoms: {', '.join(data['supporting_evidence'])}"
-        
+
         if data['age_factor'] > 1.1:
-            base_reasoning += f". Age factor increases likelihood."
+            base_reasoning += ". Age factor increases likelihood."
         elif data['age_factor'] < 0.9:
-            base_reasoning += f". Age factor decreases likelihood."
-        
+            base_reasoning += ". Age factor decreases likelihood."
+
         if data['history_factor'] > 1.1:
-            base_reasoning += f". Medical history supports this diagnosis."
-        
+            base_reasoning += ". Medical history supports this diagnosis."
+
         return base_reasoning
     
     @classmethod
@@ -285,7 +355,7 @@ class DiagnosticAI:
         for lab_name, value in lab_results.items():
             if lab_name in cls.LAB_NORMAL_RANGES:
                 min_val, max_val, unit = cls.LAB_NORMAL_RANGES[lab_name]
-                
+
                 if value < min_val:
                     interpretation['abnormal_values'].append({
                         'test': lab_name,
@@ -302,15 +372,49 @@ class DiagnosticAI:
                         'status': 'High',
                         'significance': cls._get_lab_significance(lab_name, value, 'high')
                     })
-                
-                # Check for critical values
+
                 if cls._is_critical_value(lab_name, value):
                     interpretation['critical_values'].append({
                         'test': lab_name,
                         'value': value,
                         'action_needed': cls._get_critical_action(lab_name, value)
                     })
-        
+
+        # --- Ollama narrative enrichment ---
+        if is_available() and lab_results:
+            try:
+                abnormals_text = ', '.join(
+                    f"{a['test']} {a['status']} ({a['value']})"
+                    for a in interpretation['abnormal_values']
+                ) or 'All values within normal limits'
+                criticals_text = ', '.join(
+                    f"{c['test']} ({c['value']}) — {c['action_needed']}"
+                    for c in interpretation['critical_values']
+                ) or 'None'
+                prompt = (
+                    f"Lab results summary:\n"
+                    f"Abnormal values: {abnormals_text}\n"
+                    f"Critical values: {criticals_text}\n\n"
+                    f"Write a 2-3 sentence clinical narrative explaining the combined significance "
+                    f"of these lab results for the clinician, and suggest the most urgent action if any."
+                )
+                llm_text = generate_text(
+                    prompt=prompt,
+                    system_instruction=(
+                        "You are a clinical pathologist providing concise lab result interpretation. "
+                        "Be direct and actionable. Output plain text only."
+                    ),
+                )
+                interpretation['ai_narrative'] = llm_text.strip() if llm_text else None
+                interpretation['ai_powered'] = True
+            except Exception as exc:
+                logger.error(f"Ollama lab narrative failed: {exc}")
+                interpretation['ai_narrative'] = None
+                interpretation['ai_powered'] = False
+        else:
+            interpretation['ai_narrative'] = None
+            interpretation['ai_powered'] = False
+
         return interpretation
     
     @classmethod

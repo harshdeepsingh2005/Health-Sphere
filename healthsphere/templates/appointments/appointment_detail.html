@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 900px;
+        margin: 24px auto;
+        padding: 0 24px;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 32px;
+        margin-bottom: 20px;
+    }
+
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .info-item {
+        padding: 16px;
+        background: rgba(168, 197, 232, 0.04);
+        border-radius: 12px;
+    }
+
+    .info-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #718096;
+        margin-bottom: 6px;
+    }
+
+    .info-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #2D3748;
+    }
+
+    .action-btns {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .action-btns a,
+    .action-btns button {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s;
+    }
+
+    .btn-primary-action {
+        background: #A8C5E8;
+        color: white;
+    }
+
+    .btn-danger-action {
+        background: rgba(232, 155, 135, 0.1);
+        color: #E89B87;
+    }
+
+    .btn-secondary-action {
+        background: #f5f5f5;
+        color: #4A5568;
+    }
+
+    .btn-primary-action:hover,
+    .btn-danger-action:hover,
+    .btn-secondary-action:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-card">
+        <div class="detail-header">
+            <div>
+                <h2 style="font-size: 24px; font-weight: 700; color: #2D3748; margin-bottom: 8px;">Appointment Details
+                </h2>
+                <span
+                    style="padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: rgba(72,187,120,0.1); color: #48bb78;">{{
+                    appointment.status|capfirst }}</span>
+            </div>
+            <a href="{% url 'appointments:list' %}"
+                style="padding: 8px 16px; background: #f5f5f5; border-radius: 8px; color: #4A5568; text-decoration: none; font-weight: 500; font-size: 14px;">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-user-md"></i> Doctor</div>
+                <div class="info-value">Dr. {{ appointment.doctor.get_full_name|default:"N/A" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-user"></i> Patient</div>
+                <div class="info-value">{{ appointment.patient.get_full_name|default:"N/A" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-calendar"></i> Date</div>
+                <div class="info-value">{{ appointment.scheduled_date|date:"l, F d, Y" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-clock"></i> Time</div>
+                <div class="info-value">{{ appointment.scheduled_time|time:"g:i A" }}</div>
+            </div>
+            {% if appointment.appointment_type %}
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-tag"></i> Type</div>
+                <div class="info-value">{{ appointment.appointment_type }}</div>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-info-circle"></i> Status</div>
+                <div class="info-value">{{ appointment.get_status_display|default:appointment.status|capfirst }}</div>
+            </div>
+        </div>
+
+        {% if appointment.reason %}
+        <div style="margin-top: 24px;">
+            <div class="info-label">Reason for Visit</div>
+            <p style="color: #4A5568; line-height: 1.7; margin-top: 8px;">{{ appointment.reason }}</p>
+        </div>
+        {% endif %}
+
+        {% if appointment.notes %}
+        <div style="margin-top: 20px;">
+            <div class="info-label">Notes</div>
+            <p style="color: #4A5568; line-height: 1.7; margin-top: 8px;">{{ appointment.notes }}</p>
+        </div>
+        {% endif %}
+
+        <div class="action-btns">
+            {% if appointment.status == 'requested' or appointment.status == 'scheduled' %}
+            <a href="{% url 'appointments:update' appointment.pk %}" class="btn-primary-action"><i
+                    class="fas fa-edit"></i> Edit</a>
+            <a href="{% url 'appointments:cancel' appointment.pk %}" class="btn-danger-action"><i
+                    class="fas fa-times"></i> Cancel</a>
+            {% endif %}
+            <a href="{% url 'appointments:list' %}" class="btn-secondary-action"><i class="fas fa-list"></i> All
+                Appointments</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

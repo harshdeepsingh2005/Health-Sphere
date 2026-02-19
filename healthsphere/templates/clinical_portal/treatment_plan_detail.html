@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ plan.title }} — Treatment Plan | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'clinical_portal:treatment_plans' %}" class="breadcrumb-link">Treatment Plans</a></li>
+<li class="breadcrumb-item breadcrumb-current">{{ plan.title }}</li>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 780px;">
+    <div style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: var(--radius-xl); padding: 1.75rem; margin-bottom: 1.5rem; color: white;">
+        <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: .5rem;">{{ plan.title }}</div>
+        <div style="opacity: .7; font-size: .875rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <span><i class="fas fa-user" style="margin-right: .3rem;"></i>{{ plan.patient.get_full_name|default:plan.patient.username }}</span>
+            {% if plan.diagnosis %}<span><i class="fas fa-stethoscope" style="margin-right: .3rem;"></i>{{ plan.diagnosis }}</span>{% endif %}
+            <span><i class="fas fa-calendar" style="margin-right: .3rem;"></i>{{ plan.start_date }} → {{ plan.end_date|default:"Ongoing" }}</span>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+        <div style="background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 1.25rem; text-align: center;">
+            <div style="font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; color: var(--neutral-500); margin-bottom: .4rem;">Status</div>
+            <div style="font-size: 1.125rem; font-weight: 700; color: {% if plan.status == 'active' %}#059669{% elif plan.status == 'completed' %}#2563eb{% else %}var(--neutral-700){% endif %};">{{ plan.get_status_display }}</div>
+        </div>
+        {% if plan.next_review_date %}
+        <div style="background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 1.25rem; text-align: center;">
+            <div style="font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; color: var(--neutral-500); margin-bottom: .4rem;">Next Review</div>
+            <div style="font-size: 1.125rem; font-weight: 700; color: var(--neutral-900);">{{ plan.next_review_date|date:"M j, Y" }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if plan.notes %}
+    <div style="background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 1.75rem;">
+        <h3 style="margin: 0 0 1rem; font-size: .875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--neutral-500); font-weight: 700;">Notes</h3>
+        <p style="color: var(--neutral-800); line-height: 1.7; margin: 0;">{{ plan.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div style="margin-top: 1.25rem; display: flex; gap: 1rem;">
+        <a href="{% url 'clinical_portal:treatment_plans' %}" style="color: var(--healthcare-primary); font-size: .875rem; font-weight: 500; text-decoration: none;">← All Plans</a>
+        <a href="{% url 'clinical_portal:patient_detail' plan.patient.id %}" style="color: var(--neutral-500); font-size: .875rem; font-weight: 500; text-decoration: none;">View Patient →</a>
+    </div>
+</div>
+{% endblock %}

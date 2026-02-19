@@ -4,15 +4,14 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
 <style>
-/* Small tweaks for triage cards using theme variables */
-.triage-patient-card { padding: 14px; border-radius: var(--radius-lg); background: var(--color-card); box-shadow: var(--card-shadow); color: var(--text-primary); border: 1px solid var(--card-border); }
-.triage-badge { padding: 6px 10px; border-radius: var(--radius-base); font-weight: 700; font-size: 12px; display:inline-block; }
-.triage-critical { background: rgba(239,68,68,0.08); color: var(--error); }
-.triage-urgent { background: rgba(245,158,11,0.06); color: var(--warning); }
-.triage-standard { background: rgba(16,185,129,0.06); color: var(--success); }
-/* Theme wrapper */
-.triage-theme { 
-    padding: 28px 32px; 
+/* Triage page — theme-aware */
+.triage-patient-card { padding: 16px; border-radius: var(--radius-lg); background: var(--color-card); box-shadow: var(--card-shadow); color: var(--text-primary); border: 1px solid var(--card-border); }
+.triage-badge { padding: 6px 12px; border-radius: var(--radius-base); font-weight: 700; font-size: 12px; display:inline-block; }
+.triage-critical { background: rgba(239,68,68,0.08); color: var(--error); border: 1px solid rgba(239,68,68,0.2); }
+.triage-urgent   { background: rgba(245,158,11,0.06); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+.triage-standard { background: rgba(16,185,129,0.06); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+.triage-theme {
+    padding: 28px 32px;
     background: var(--color-bg);
     min-height: calc(100vh - var(--navbar-height));
 }
@@ -24,86 +23,159 @@
 .gradient-risk { background: linear-gradient(135deg,var(--color-secondary), #6ee7b7); }
 .gradient-high { background: linear-gradient(135deg,var(--info), var(--color-primary)); }
 .gradient-medium { background: linear-gradient(135deg,var(--warning), #fcd34d); }
-.triage-theme .bento-btn { background: linear-gradient(90deg,var(--color-primary), var(--info)); color: var(--color-card); border:none; padding:8px 12px; border-radius:8px; box-shadow: 0 6px 18px rgba(37,99,235,0.12); }
+.triage-theme .bento-btn { background: linear-gradient(90deg,var(--color-primary), var(--info)); color: var(--color-card); border:none; padding:8px 14px; border-radius:8px; box-shadow: 0 6px 18px rgba(37,99,235,0.12); cursor:pointer; }
 .triage-theme .bento-btn:hover { transform:translateY(-1px); }
+/* Ollama AI narrative block */
+.ai-narrative { margin-top:10px; padding:10px 14px; border-radius:var(--radius-base); background: rgba(99,102,241,0.06); border-left:3px solid var(--color-primary); color:var(--text-primary); font-size:13px; line-height:1.55; }
+.ai-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--color-primary); background:rgba(99,102,241,0.08); padding:3px 8px; border-radius:20px; margin-bottom:6px; }
+.red-flag-tag { display:inline-block; background:rgba(239,68,68,0.07); color:var(--error); font-size:11px; font-weight:600; padding:2px 8px; border-radius:12px; margin:2px 3px 0 0; }
+.action-list { margin: 6px 0 0 0; padding-left:18px; }
+.action-list li { font-size:13px; color:var(--text-secondary); padding:2px 0; }
+.esi-pill { font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; background:rgba(37,99,235,0.1); color:var(--color-primary); margin-left:6px; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="triage-theme">
-    <div class="bento-grid">
+  <div class="bento-grid">
+
+    <!-- Header card -->
     <div class="bento-card bento-featured" data-tilt>
-        <div class="card-glow"></div>
-        <div class="card-header">
-            <div class="card-title">
-                <div class="metric-icon gradient-risk"><i class="fas fa-procedures"></i></div>
-                AI Triage Dashboard
-            </div>
-            <div class="card-actions">
-                <button class="bento-btn">Refresh</button>
-            </div>
+      <div class="card-glow"></div>
+      <div class="card-header">
+        <div class="card-title">
+          <div class="metric-icon gradient-risk"><i class="fas fa-procedures"></i></div>
+          AI Triage Dashboard
+          <span style="font-size:12px; font-weight:500; color:var(--text-secondary); margin-left:auto;">Powered by Ollama</span>
         </div>
-        <p class="muted">Emergency triage prioritization and AI recommendations.</p>
-    </div>
-
-        <div class="bento-card bento-small interactive">
-        <div class="card-glow"></div>
-        <div class="metric-icon gradient-high"><i class="fas fa-procedural"></i></div>
-        <div class="metric-value">{{ stats.total_emergency }}</div>
-        <div class="metric-label">Total Emergency</div>
-    </div>
-
-    <div class="bento-card bento-small interactive">
-        <div class="card-glow"></div>
-        <div class="metric-icon gradient-high"><i class="fas fa-skull-crossbones"></i></div>
-        <div class="metric-value">{{ stats.critical }}</div>
-        <div class="metric-label">Critical</div>
-    </div>
-
-    <div class="bento-card bento-small interactive">
-        <div class="card-glow"></div>
-        <div class="metric-icon gradient-medium"><i class="fas fa-exclamation-triangle"></i></div>
-        <div class="metric-value">{{ stats.urgent }}</div>
-        <div class="metric-label">Urgent</div>
-    </div>
-
-        <div class="bento-card bento-featured">
-        <div class="card-glow"></div>
-        <div class="card-header">
-            <div class="card-title"><i class="fas fa-users"></i> Patient Queue</div>
+        <div class="card-actions">
+          <button class="bento-btn" onclick="location.reload()">↻ Refresh</button>
         </div>
-        <div class="triage-queue" style="margin-top:12px; display:grid; gap:10px;">
-            {% for item in triage_queue %}
-            <div class="triage-patient-card">
-                <div class="triage-row" style="display:flex; justify-content:space-between; align-items:flex-start">
-                    <div>
-                        <div style="font-weight:700">{{ item.patient.get_full_name|default:item.patient.username }}</div>
-                        <div style="color:var(--text-secondary); font-size:13px; margin-top:4px;">ID: {{ item.patient.id }} • {{ item.admission.admission_type|capfirst }}</div>
-                    </div>
-                    <div style="text-align:right">
-                        <div class="triage-badge {% if item.triage_level == 'Critical' %}triage-critical{% elif item.triage_level == 'Urgent' %}triage-urgent{% else %}triage-standard{% endif %}">{{ item.triage_level }}</div>
-                        <div style="font-weight:700; margin-top:8px">Score: {{ item.triage_score }}</div>
-                    </div>
-                </div>
-                <div style="margin-top:8px; color:var(--text-secondary)">{{ item.recommendation }}</div>
+      </div>
+      <p class="muted">Emergency triage prioritization with Ollama AI clinical narrative and recommendations.</p>
+    </div>
+
+    <!-- Stat: Total -->
+    <div class="bento-card bento-small interactive">
+      <div class="card-glow"></div>
+      <div class="metric-icon gradient-high"><i class="fas fa-hospital-user"></i></div>
+      <div class="metric-value">{{ stats.total_emergency }}</div>
+      <div class="metric-label">Total Emergency</div>
+    </div>
+
+    <!-- Stat: Critical -->
+    <div class="bento-card bento-small interactive">
+      <div class="card-glow"></div>
+      <div class="metric-icon gradient-high" style="background:linear-gradient(135deg,#ef4444,#f97316)"><i class="fas fa-skull-crossbones"></i></div>
+      <div class="metric-value" style="color:var(--error)">{{ stats.critical }}</div>
+      <div class="metric-label">Critical (ESI 1–2)</div>
+    </div>
+
+    <!-- Stat: Urgent -->
+    <div class="bento-card bento-small interactive">
+      <div class="card-glow"></div>
+      <div class="metric-icon gradient-medium"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="metric-value" style="color:var(--warning)">{{ stats.urgent }}</div>
+      <div class="metric-label">Urgent (ESI 3)</div>
+    </div>
+
+    <!-- Patient Queue -->
+    <div class="bento-card bento-featured">
+      <div class="card-glow"></div>
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-users"></i> Patient Queue</div>
+      </div>
+      <div class="triage-queue" style="margin-top:12px; display:grid; gap:12px;">
+        {% for item in triage_queue %}
+        <div class="triage-patient-card">
+          <!-- Row 1: name, ESI badge, score -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start">
+            <div>
+              <div style="font-weight:700">{{ item.patient.get_full_name|default:item.patient.username }}
+                <span class="esi-pill">ESI {{ item.esi_level }}</span>
+              </div>
+              <div style="color:var(--text-secondary); font-size:13px; margin-top:4px;">
+                ID: {{ item.patient.id }} &bull; {{ item.admission.admission_type|capfirst }}
+                {% if item.wait_time %}| Stay: {{ item.wait_time }}d{% endif %}
+              </div>
             </div>
-            {% empty %}
-            <div class="triage-patient-card">No patients in the triage queue.</div>
+            <div style="text-align:right">
+              <div class="triage-badge {% if item.triage_level == 'Critical' %}triage-critical{% elif item.triage_level == 'Emergent' %}triage-critical{% elif item.triage_level == 'Urgent' %}triage-urgent{% else %}triage-standard{% endif %}">
+                {{ item.triage_level }}
+              </div>
+              <div style="font-weight:700; margin-top:6px; font-size:15px">Score: {{ item.triage_score }}/100</div>
+            </div>
+          </div>
+
+          <!-- Red flags -->
+          {% if item.red_flags %}
+          <div style="margin-top:8px;">
+            {% for flag in item.red_flags %}
+            <span class="red-flag-tag">⚠ {{ flag }}</span>
             {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- AI Narrative (Ollama) -->
+          {% if item.ai_narrative %}
+          <div class="ai-narrative">
+            <div class="ai-badge"><i class="fas fa-robot"></i> Ollama Clinical Narrative</div>
+            {{ item.ai_narrative }}
+          </div>
+          {% endif %}
+
+          <!-- Recommended Actions -->
+          {% if item.recommended_actions %}
+          <div style="margin-top:10px;">
+            <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Recommended Actions</div>
+            <ul class="action-list">
+              {% for action in item.recommended_actions %}
+              <li>{{ action }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          {% if item.ai_powered %}
+          <div style="margin-top:8px; font-size:11px; color:var(--color-primary); opacity:0.7;"><i class="fas fa-check-circle"></i> Ollama AI enhanced</div>
+          {% endif %}
         </div>
+        {% empty %}
+        <div class="triage-patient-card" style="color:var(--text-secondary); text-align:center; padding:32px;">
+          <i class="fas fa-check-circle" style="font-size:32px; color:var(--success); margin-bottom:8px; display:block;"></i>
+          No patients in the emergency triage queue.
+        </div>
+        {% endfor %}
+      </div>
     </div>
 
+    <!-- AI Recommendations panel -->
     <div class="bento-card bento-tall">
-        <div class="card-glow"></div>
-        <div class="card-title"><i class="fas fa-lightbulb"></i> AI Recommendations</div>
-        <div style="margin-top:12px">
-            {% for item in triage_queue %}
-                <div style="padding:8px; border-bottom:1px solid #EDF2F7">{{ item.recommendation }}</div>
-            {% empty %}
-                <div style="padding:8px; color:#718096">No recommendations available.</div>
+      <div class="card-glow"></div>
+      <div class="card-title"><i class="fas fa-robot"></i> Ollama AI Recommendations</div>
+      <div style="margin-top:12px; display:grid; gap:8px;">
+        {% for item in triage_queue %}
+        <div style="padding:12px; border-radius:var(--radius-base); background:var(--color-bg); border:1px solid var(--card-border);">
+          <div style="font-weight:600; margin-bottom:4px; font-size:13px;">
+            {{ item.patient.get_full_name|default:item.patient.username }}
+            <span class="triage-badge {% if item.triage_level == 'Critical' or item.triage_level == 'Emergent' %}triage-critical{% elif item.triage_level == 'Urgent' %}triage-urgent{% else %}triage-standard{% endif %}" style="font-size:10px; padding:2px 6px; margin-left:4px;">ESI {{ item.esi_level }}</span>
+          </div>
+          {% if item.recommended_actions %}
+          <ul class="action-list" style="margin-top:4px;">
+            {% for action in item.recommended_actions|slice:":3" %}
+            <li>{{ action }}</li>
             {% endfor %}
+          </ul>
+          {% else %}
+          <span style="color:var(--text-secondary); font-size:13px;">Standard triage protocol.</span>
+          {% endif %}
         </div>
+        {% empty %}
+        <div style="padding:8px; color:var(--text-secondary);">No recommendations available.</div>
+        {% endfor %}
+      </div>
     </div>
-    </div>
+
+  </div>
 </div>
 {% endblock %}

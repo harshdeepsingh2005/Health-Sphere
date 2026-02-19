@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Integration Transactions — Interoperability | HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.75rem; flex-wrap:wrap; gap:1rem; }
+.page-title-group h1 { font-size:1.5rem; font-weight:700; color:#1e293b; margin:0 0 2px; }
+.page-title-group p { font-size:0.875rem; color:#64748b; margin:0; }
+.filter-bar { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; background:white; border:1px solid #e2e8f0; border-radius:14px; padding:1rem 1.25rem; margin-bottom:1.5rem; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+.filter-bar form { display:flex; gap:0.75rem; flex-wrap:wrap; width:100%; align-items:center; }
+.filter-search { flex:1; min-width:200px; display:flex; align-items:center; gap:0.5rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.5rem 0.875rem; }
+.filter-search i { color:#94a3b8; font-size:14px; }
+.filter-search input { border:none; background:transparent; outline:none; font-size:0.875rem; color:#1e293b; }
+.filter-select { padding:0.5rem 0.875rem; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; font-size:0.875rem; color:#1e293b; outline:none; cursor:pointer; }
+.btn-filter { display:inline-flex; align-items:center; gap:0.375rem; padding:0.5rem 1rem; background:#3b82f6; color:white; border:none; border-radius:10px; font-size:0.875rem; font-weight:600; cursor:pointer; text-decoration:none; transition:all 0.15s ease; }
+.btn-filter:hover { background:#2563eb; transform:translateY(-1px); }
+.btn-filter-secondary { background:white; color:#64748b; border:1px solid #e2e8f0; }
+.btn-filter-secondary:hover { background:#f8fafc; color:#1e293b; }
+
+.data-table-wrap { background:white; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+.data-table { width:100%; border-collapse:collapse; }
+.data-table thead th { padding:0.875rem 1.25rem; text-align:left; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#64748b; background:#f8fafc; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+.data-table tbody tr { border-bottom:1px solid #f1f5f9; transition:background 0.1s; }
+.data-table tbody tr:hover { background:#f8fafc; }
+.data-table tbody tr:last-child { border-bottom:none; }
+.data-table td { padding:0.875rem 1.25rem; font-size:0.875rem; color:#334155; vertical-align:middle; }
+
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:999px; font-size:0.75rem; font-weight:600; }
+.badge-initiated { background:rgba(6,182,212,0.1); color:#06b6d4; }
+.badge-in_progress { background:rgba(59,130,246,0.1); color:#3b82f6; }
+.badge-completed { background:rgba(16,185,129,0.1); color:#10b981; }
+.badge-failed { background:rgba(239,68,68,0.1); color:#ef4444; }
+.badge-cancelled { background:rgba(100,116,139,0.1); color:#64748b; }
+.badge-timeout { background:rgba(245,158,11,0.1); color:#f59e0b; }
+
+.duration-pill { display:inline-flex; align-items:center; padding:2px 8px; background:#f1f5f9; border-radius:6px; font-size:0.75rem; color:#64748b; font-family:monospace; }
+.tx-id { font-family:monospace; font-size:0.75rem; color:#94a3b8; }
+.http-method { display:inline-flex; align-items:center; padding:2px 6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; font-size:0.75rem; font-weight:700; color:#334155; font-family:monospace; }
+
+.empty-state { text-align:center; padding:4rem 2rem; }
+.empty-state i { font-size:3rem; color:#cbd5e1; margin-bottom:1rem; display:block; }
+.empty-state h3 { font-size:1.125rem; color:#334155; margin-bottom:0.5rem; }
+.empty-state p { color:#64748b; font-size:0.875rem; margin:0; }
+
+.summary-bar { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:1rem; margin-bottom:1.5rem; }
+.summary-card { background:white; border:1px solid #e2e8f0; border-radius:14px; padding:1rem 1.25rem; }
+.summary-card .value { font-size:1.5rem; font-weight:800; color:#1e293b; line-height:1; margin-bottom:4px; }
+.summary-card .label { font-size:0.75rem; color:#64748b; font-weight:500; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="{% url 'interoperability:dashboard' %}" class="breadcrumb-link"><i class="fas fa-exchange-alt"></i> Interoperability</a></li>
+        <li class="breadcrumb-item"><span class="breadcrumb-current">Transactions</span></li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header-bar">
+    <div class="page-title-group">
+        <h1><i class="fas fa-receipt" style="color:#06b6d4;margin-right:8px;"></i>Integration Transactions</h1>
+        <p>Audit trail of all FHIR and HL7 data exchange transactions</p>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" action="">
+        <select name="status" class="filter-select">
+            <option value="">All Statuses</option>
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="type" class="filter-select">
+            <option value="">All Transaction Types</option>
+            {% for value, label in transaction_type_choices %}
+            <option value="{{ value }}" {% if transaction_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="system" class="filter-select">
+            <option value="">All Systems</option>
+            {% for sys in systems %}
+            <option value="{{ sys.id }}" {% if system_id == sys.id|stringformat:'d' %}selected{% endif %}>{{ sys.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="date_from" class="filter-select" placeholder="From date" value="{{ date_from|default:'' }}">
+        <input type="date" name="date_to" class="filter-select" placeholder="To date" value="{{ date_to|default:'' }}">
+        <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+        {% if status or transaction_type or system_id or date_from or date_to %}
+        <a href="{% url 'interoperability:integration_transactions_list' %}" class="btn-filter btn-filter-secondary"><i class="fas fa-times"></i> Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if transactions %}
+<div class="data-table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Transaction</th>
+                <th>Type</th>
+                <th>System</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>HTTP</th>
+                <th>Started</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in transactions %}
+            <tr>
+                <td>
+                    <span class="tx-id">{{ tx.transaction_id|stringformat:'s'|slice:':8' }}…</span>
+                </td>
+                <td style="font-size:0.8125rem;">{{ tx.get_transaction_type_display }}</td>
+                <td>
+                    <a href="{% url 'interoperability:external_system_detail' tx.external_system.id %}" style="color:#3b82f6;text-decoration:none;font-size:0.875rem;">{{ tx.external_system.name }}</a>
+                </td>
+                <td><span class="http-method">{{ tx.http_method }}</span></td>
+                <td>
+                    <span class="badge badge-{{ tx.status }}">{{ tx.get_status_display }}</span>
+                </td>
+                <td>
+                    {% if tx.duration_ms is not None %}
+                    <span class="duration-pill">
+                        {% if tx.duration_ms < 1000 %}{{ tx.duration_ms }}ms{% else %}{{ tx.duration_ms|floatformat:'-1' }}ms{% endif %}
+                    </span>
+                    {% else %}<span style="color:#94a3b8;">—</span>{% endif %}
+                </td>
+                <td>
+                    {% if tx.status_code %}
+                    <span style="font-size:0.8125rem;font-weight:600;{% if tx.status_code < 300 %}color:#10b981;{% elif tx.status_code < 400 %}color:#f59e0b;{% else %}color:#ef4444;{% endif %}">{{ tx.status_code }}</span>
+                    {% else %}<span style="color:#94a3b8;">—</span>{% endif %}
+                </td>
+                <td style="font-size:0.8125rem;color:#64748b;">{{ tx.started_at|date:"M d, H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if transactions.has_other_pages %}
+<div style="display:flex;justify-content:center;gap:0.5rem;margin-top:1.5rem;">
+    {% if transactions.has_previous %}<a href="?page={{ transactions.previous_page_number }}" class="btn-filter btn-filter-secondary"><i class="fas fa-chevron-left"></i></a>{% endif %}
+    <span style="padding:6px 16px;background:white;border:1px solid #e2e8f0;border-radius:10px;font-size:0.875rem;color:#64748b;">Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}</span>
+    {% if transactions.has_next %}<a href="?page={{ transactions.next_page_number }}" class="btn-filter"><i class="fas fa-chevron-right"></i></a>{% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="data-table-wrap">
+    <div class="empty-state">
+        <i class="fas fa-receipt"></i>
+        <h3>No transactions found</h3>
+        <p>{% if status or transaction_type or system_id or date_from or date_to %}No transactions match your current filters.{% else %}No integration transactions have been recorded yet. They will appear here as systems exchange data.{% endif %}</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

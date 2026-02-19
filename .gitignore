@@ -1,1 +1,40 @@
 /mcp_servers
+
+# --- Environment / Secrets ---
+.env
+*.env
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# --- Django ---
+*.sqlite3
+staticfiles/
+media/
+nohup.out
+
+# --- Virtual Environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- macOS ---
+.DS_Store
+Thumbs.db

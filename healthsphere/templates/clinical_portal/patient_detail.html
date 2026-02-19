@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ patient.get_full_name }} — Clinical Portal | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'clinical_portal:dashboard' %}" class="breadcrumb-link">Dashboard</a></li>
+<li class="breadcrumb-item"><a href="{% url 'clinical_portal:patients' %}" class="breadcrumb-link">Patients</a></li>
+<li class="breadcrumb-item breadcrumb-current">{{ patient.get_full_name }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.patient-hero {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.75rem;
+    color: white;
+}
+.hero-avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.75rem; font-weight: 800; flex-shrink: 0;
+}
+.hero-name { font-size: 1.5rem; font-weight: 700; }
+.hero-meta { margin-top: .35rem; opacity: .7; font-size: .9rem; }
+.hero-cta { margin-left: auto; display: flex; gap: .75rem; flex-shrink: 0; }
+.hero-btn { padding: .55rem 1.125rem; border-radius: var(--radius-lg); font-size: .875rem; font-weight: 600; text-decoration: none; cursor: pointer; border: none; transition: all .2s; }
+.hero-btn-primary { background: var(--healthcare-primary); color: white; }
+.hero-btn-outline { background: rgba(255,255,255,.1); color: white; border: 1px solid rgba(255,255,255,.25); }
+.hero-btn:hover { opacity: .9; transform: translateY(-1px); }
+
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; }
+.info-card { background: white; border: 1px solid var(--neutral-100); border-radius: var(--radius-xl); padding: 1.25rem; box-shadow: 0 1px 5px rgba(0,0,0,.04); }
+.info-card h3 { font-size: .9375rem; font-weight: 700; color: var(--neutral-800); margin: 0 0 1rem; display: flex; align-items: center; gap: .5rem; }
+.info-card h3 i { color: var(--healthcare-primary); }
+
+.data-row { display: flex; justify-content: space-between; padding: .45rem 0; border-bottom: 1px solid var(--neutral-50); font-size: .875rem; }
+.data-row:last-child { border-bottom: none; }
+.data-row .key { color: var(--neutral-500); }
+.data-row .val { color: var(--neutral-800); font-weight: 500; }
+
+.empty-card { text-align: center; padding: 1.5rem; color: var(--neutral-400); font-size: .875rem; }
+
+.record-item, .plan-item, .vital-item {
+    padding: .6rem .75rem; border-radius: var(--radius-md);
+    border: 1px solid var(--neutral-100); margin-bottom: .35rem; display: flex; justify-content: space-between; align-items: center;
+}
+.record-item:hover, .plan-item:hover, .vital-item:hover { background: var(--neutral-50); }
+a.item-link { text-decoration: none; color: inherit; }
+
+.badge { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+.badge-admitted  { background: rgba(16,185,129,.12); color: #059669; }
+.badge-discharged{ background: rgba(100,116,139,.1);  color: #64748b; }
+.badge-active    { background: rgba(59,130,246,.12);  color: #2563eb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Patient Hero -->
+<div class="patient-hero">
+    <div class="hero-avatar">
+        {{ patient.first_name|first|upper }}{{ patient.last_name|first|upper }}
+    </div>
+    <div>
+        <div class="hero-name">{{ patient.get_full_name|default:patient.username }}</div>
+        <div class="hero-meta">{{ patient.email }} · {{ patient.phone|default:"No phone" }}</div>
+    </div>
+    <div class="hero-cta">
+        <a href="{% url 'clinical_portal:risk' %}?patient_id={{ patient.id }}" class="hero-btn hero-btn-primary">
+            <i class="fas fa-heartbeat"></i> Risk Assessment
+        </a>
+        <a href="{% url 'clinical_portal:patient_vitals' patient.id %}" class="hero-btn hero-btn-outline">
+            <i class="fas fa-chart-line"></i> Vitals
+        </a>
+    </div>
+</div>
+
+<!-- Info Grid -->
+<div class="info-grid">
+    <!-- Recent Records -->
+    <div class="info-card">
+        <h3><i class="fas fa-file-medical-alt"></i> Recent Medical Records</h3>
+        {% for record in records %}
+        <a href="{% url 'clinical_portal:record_detail' record.pk %}" class="item-link">
+            <div class="record-item">
+                <div>
+                    <div style="font-weight: 600; font-size: .875rem; color: var(--neutral-900);">{{ record.title }}</div>
+                    <div style="font-size: .75rem; color: var(--neutral-500);">{{ record.record_date|date:"M j, Y" }} · {{ record.get_record_type_display }}</div>
+                </div>
+                <span class="badge" style="background: rgba(100,116,139,.1); color: #64748b;">{{ record.get_severity_display }}</span>
+            </div>
+        </a>
+        {% empty %}
+        <div class="empty-card">No records yet</div>
+        {% endfor %}
+        <div style="margin-top: .75rem; text-align: right;">
+            <a href="{% url 'clinical_portal:records' %}?patient_id={{ patient.id }}" style="color: var(--healthcare-primary); font-size: .8125rem; font-weight: 500; text-decoration: none;">All records →</a>
+        </div>
+    </div>
+
+    <!-- Treatment Plans -->
+    <div class="info-card">
+        <h3><i class="fas fa-clipboard-list"></i> Treatment Plans</h3>
+        {% for plan in plans %}
+        <a href="{% url 'clinical_portal:treatment_plan_detail' plan.pk %}" class="item-link">
+            <div class="plan-item">
+                <div>
+                    <div style="font-weight: 600; font-size: .875rem; color: var(--neutral-900);">{{ plan.title }}</div>
+                    <div style="font-size: .75rem; color: var(--neutral-500);">{{ plan.start_date }} — {{ plan.end_date|default:"Ongoing" }}</div>
+                </div>
+                <span class="badge badge-{{ plan.status }}">{{ plan.get_status_display }}</span>
+            </div>
+        </a>
+        {% empty %}
+        <div class="empty-card">No active plans</div>
+        {% endfor %}
+        <div style="margin-top: .75rem; text-align: right;">
+            <a href="{% url 'clinical_portal:treatment_plans' %}?patient_id={{ patient.id }}" style="color: var(--healthcare-primary); font-size: .8125rem; font-weight: 500; text-decoration: none;">All plans →</a>
+        </div>
+    </div>
+
+    <!-- Vitals Summary -->
+    <div class="info-card">
+        <h3><i class="fas fa-heartbeat"></i> Recent Vitals</h3>
+        {% for vital in vitals %}
+        <div class="vital-item">
+            <div style="font-size: .8rem; color: var(--neutral-500);">{{ vital.recorded_at|date:"M j, g:i A" }}</div>
+            <div style="display: flex; gap: 1rem; font-size: .8rem;">
+                {% if vital.heart_rate %}<span><i class="fas fa-heart" style="color: var(--healthcare-danger); font-size: .65rem;"></i> {{ vital.heart_rate }}</span>{% endif %}
+                {% if vital.temperature %}<span><i class="fas fa-thermometer-half" style="color: var(--healthcare-warning); font-size: .65rem;"></i> {{ vital.temperature }}°C</span>{% endif %}
+                {% if vital.oxygen_saturation %}<span><i class="fas fa-lungs" style="color: var(--healthcare-primary); font-size: .65rem;"></i> {{ vital.oxygen_saturation }}%</span>{% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-card">No vitals recorded</div>
+        {% endfor %}
+        <div style="margin-top: .75rem; text-align: right;">
+            <a href="{% url 'clinical_portal:patient_vitals' patient.id %}" style="color: var(--healthcare-primary); font-size: .8125rem; font-weight: 500; text-decoration: none;">Full trend →</a>
+        </div>
+    </div>
+
+
+    <!-- Admissions -->
+    <div class="info-card">
+        <h3><i class="fas fa-hospital"></i> Admission History</h3>
+        {% for adm in admissions %}
+        <div class="vital-item">
+            <div>
+                <div style="font-weight: 600; font-size: .875rem; color: var(--neutral-900);">{{ adm.get_admission_type_display }}</div>
+                <div style="font-size: .75rem; color: var(--neutral-500);">{{ adm.admission_date }} → {{ adm.discharge_date|default:"Present" }}</div>
+            </div>
+            <span class="badge {% if adm.status == 'admitted' %}badge-admitted{% else %}badge-discharged{% endif %}">{{ adm.get_status_display }}</span>
+        </div>
+        {% empty %}
+        <div class="empty-card">No admissions</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ── Ollama Diagnostic AI Card (full width) ── -->
+{% if diagnostic_ai %}
+<div style="margin-top: 1.5rem;">
+  <div class="info-card" style="border-left: 4px solid #6366f1;">
+    <h3 style="gap:.75rem;">
+      <i class="fas fa-robot" style="color:#6366f1;"></i>
+      Ollama Diagnostic AI Assessment
+      {% if diagnostic_ai.ai_powered %}
+      <span style="margin-left:auto; font-size:.7rem; font-weight:600; color:#6366f1; background:rgba(99,102,241,.08); padding:3px 10px; border-radius:20px;">
+        <i class="fas fa-check-circle"></i> AI Enhanced
+      </span>
+      {% else %}
+      <span style="margin-left:auto; font-size:.7rem; color:var(--neutral-400); padding:3px 10px;">Rule-based only</span>
+      {% endif %}
+    </h3>
+
+    <!-- AI Summary -->
+    {% if diagnostic_ai.ai_summary %}
+    <div style="margin-bottom:1rem; padding:12px 16px; border-radius:8px; background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.15); font-size:.875rem; line-height:1.6; color:var(--neutral-700);">
+      <div style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6366f1; margin-bottom:5px;">Clinical Summary</div>
+      {{ diagnostic_ai.ai_summary }}
+    </div>
+    {% endif %}
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:1rem;">
+
+      <!-- Differential Diagnoses -->
+      <div>
+        <div style="font-size:.8rem; font-weight:700; color:var(--neutral-600); margin-bottom:.5rem; text-transform:uppercase; letter-spacing:.05em;">Differential Diagnoses</div>
+        {% for dx in diagnostic_ai.differential_diagnosis %}
+        <div style="padding:.5rem .75rem; border-radius:8px; border:1px solid var(--neutral-100); margin-bottom:.35rem; display:flex; justify-content:space-between; align-items:center; background:var(--neutral-50);">
+          <div>
+            <div style="font-weight:600; font-size:.85rem; color:var(--neutral-800);">{{ dx.diagnosis }}</div>
+            <div style="font-size:.7rem; color:var(--neutral-500);">{{ dx.confidence }} confidence · {{ dx.severity }}</div>
+          </div>
+          <span style="font-weight:700; font-size:.85rem; {% if dx.probability > 40 %}color:#ef4444;{% elif dx.probability > 20 %}color:#f59e0b;{% else %}color:#10b981;{% endif %}">
+            {{ dx.probability }}%
+          </span>
+        </div>
+        {% empty %}
+        <div class="empty-card">No differential diagnoses generated.</div>
+        {% endfor %}
+      </div>
+
+      <!-- Risk + AI Next Steps -->
+      <div>
+        <!-- Risk Level -->
+        {% if diagnostic_ai.risk_assessment %}
+        <div style="font-size:.8rem; font-weight:700; color:var(--neutral-600); margin-bottom:.5rem; text-transform:uppercase; letter-spacing:.05em;">Risk Assessment</div>
+        <div style="padding:.75rem; border-radius:8px; background:{% if diagnostic_ai.risk_assessment.risk_level == 'High' %}rgba(239,68,68,.06){% elif diagnostic_ai.risk_assessment.risk_level == 'Moderate' %}rgba(245,158,11,.06){% else %}rgba(16,185,129,.06){% endif %}; border:1px solid {% if diagnostic_ai.risk_assessment.risk_level == 'High' %}rgba(239,68,68,.2){% elif diagnostic_ai.risk_assessment.risk_level == 'Moderate' %}rgba(245,158,11,.2){% else %}rgba(16,185,129,.2){% endif %}; margin-bottom:.75rem;">
+          <div style="font-weight:700; font-size:1.1rem; {% if diagnostic_ai.risk_assessment.risk_level == 'High' %}color:#ef4444;{% elif diagnostic_ai.risk_assessment.risk_level == 'Moderate' %}color:#f59e0b;{% else %}color:#10b981;{% endif %}">
+            {{ diagnostic_ai.risk_assessment.risk_level }} Risk
+          </div>
+          <div style="font-size:.75rem; color:var(--neutral-500);">Score: {{ diagnostic_ai.risk_assessment.risk_score }} · {{ diagnostic_ai.risk_assessment.monitoring_frequency }}</div>
+        </div>
+        {% endif %}
+
+        <!-- AI Reasoning -->
+        {% if diagnostic_ai.ai_reasoning %}
+        <div style="font-size:.8rem; font-weight:700; color:var(--neutral-600); margin-bottom:.5rem; text-transform:uppercase; letter-spacing:.05em;">AI Reasoning</div>
+        <div style="padding:10px 14px; border-radius:8px; background:rgba(99,102,241,.04); border-left:3px solid #6366f1; font-size:.825rem; line-height:1.55; color:var(--neutral-700); margin-bottom:.75rem;">
+          {{ diagnostic_ai.ai_reasoning }}
+        </div>
+        {% endif %}
+
+        <!-- AI Next Steps -->
+        {% if diagnostic_ai.ai_next_steps %}
+        <div style="font-size:.8rem; font-weight:700; color:var(--neutral-600); margin-bottom:.5rem; text-transform:uppercase; letter-spacing:.05em;">Recommended Next Steps</div>
+        <ul style="margin:0; padding-left:1.1rem;">
+          {% for step in diagnostic_ai.ai_next_steps %}
+          <li style="font-size:.825rem; color:var(--neutral-700); padding:3px 0;">{{ step }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="margin-top:1rem; font-size:.7rem; color:var(--neutral-400);">
+      Generated by Ollama AI · {{ diagnostic_ai.generated_at }} · Version {{ diagnostic_ai.ai_version }}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+

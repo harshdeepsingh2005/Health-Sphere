@@ -78,8 +78,9 @@ class AppointmentCalendarView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         """Add appointment data for calendar."""
+        import calendar as cal_module
         context = super().get_context_data(**kwargs)
-        
+
         # Get appointments for current month
         today = timezone.now().date()
         start_date = today.replace(day=1)
@@ -87,19 +88,40 @@ class AppointmentCalendarView(LoginRequiredMixin, TemplateView):
             end_date = start_date.replace(year=start_date.year + 1, month=1)
         else:
             end_date = start_date.replace(month=start_date.month + 1)
-        
+
         user = self.request.user
         appointments = Appointment.objects.filter(
             scheduled_date__gte=start_date,
             scheduled_date__lt=end_date
         ).select_related('patient', 'doctor', 'appointment_type')
-        
+
         if user.is_patient:
             appointments = appointments.filter(patient=user)
         elif user.is_doctor:
             appointments = appointments.filter(doctor=user)
-        
-        # Convert appointments to calendar events format
+
+        # Build a set of day numbers that have appointments
+        apts_days = set(appointments.values_list('scheduled_date__day', flat=True))
+
+        # days_in_month and weekday of the 1st (0=Mon … 6=Sun → convert to Sun=0)
+        days_in_month = cal_module.monthrange(today.year, today.month)[1]
+        first_weekday_mon = cal_module.monthrange(today.year, today.month)[0]  # 0=Mon
+        # Convert Monday-based (0) to Sunday-based (0=Sun)
+        first_weekday_sun = (first_weekday_mon + 1) % 7
+
+        # Build the cell list: None for blanks, dict for real days
+        cells = [None] * first_weekday_sun
+        for d in range(1, days_in_month + 1):
+            cells.append({
+                'day': d,
+                'is_today': d == today.day,
+                'has_apts': d in apts_days,
+            })
+        # Pad to complete last week row
+        while len(cells) % 7 != 0:
+            cells.append(None)
+
+        # Convert appointments to calendar events format (for future JS use)
         events = []
         for appointment in appointments:
             events.append({
@@ -110,8 +132,14 @@ class AppointmentCalendarView(LoginRequiredMixin, TemplateView):
                 'color': appointment.appointment_type.color_code,
                 'url': f"/appointments/{appointment.id}/",
             })
-        
+
         context['events'] = json.dumps(events)
+        context['calendar_cells'] = cells
+        context['month_name'] = today.strftime('%B %Y')
+        context['today'] = today
+        context['total_appointments'] = appointments.count()
+        context['today_appointments'] = appointments.filter(scheduled_date=today).count()
+        context['appointments'] = appointments.order_by('scheduled_date', 'scheduled_time')[:20]
         return context
 
 

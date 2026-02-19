@@ -38,18 +38,23 @@ def create_appointment_reminders(sender, instance, created, **kwargs):
     if created or (instance.status == 'confirmed' and instance.send_reminder):
         # Clear existing reminders
         instance.reminders.filter(is_sent=False).delete()
-        
+
+        # Make sure scheduled_datetime is timezone-aware for comparisons
+        scheduled_dt = instance.scheduled_datetime
+        if timezone.is_naive(scheduled_dt):
+            scheduled_dt = timezone.make_aware(scheduled_dt)
+
         # Create 24-hour reminder
-        reminder_24h = instance.scheduled_datetime - timedelta(hours=24)
+        reminder_24h = scheduled_dt - timedelta(hours=24)
         if reminder_24h > timezone.now():
             AppointmentReminder.objects.create(
                 appointment=instance,
                 reminder_type='email',
                 scheduled_time=reminder_24h
             )
-        
+
         # Create 1-hour reminder
-        reminder_1h = instance.scheduled_datetime - timedelta(hours=1)
+        reminder_1h = scheduled_dt - timedelta(hours=1)
         if reminder_1h > timezone.now():
             AppointmentReminder.objects.create(
                 appointment=instance,

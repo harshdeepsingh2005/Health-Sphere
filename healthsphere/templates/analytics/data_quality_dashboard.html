@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Data Quality | HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.an-nav { display:flex; gap:.375rem; flex-wrap:wrap; background:white; border:1px solid #e2e8f0; border-radius:14px; padding:.75rem 1rem; margin-bottom:1.75rem; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+.an-pill { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:10px; text-decoration:none; font-weight:600; font-size:.8125rem; color:#64748b; transition:all .2s; }
+.an-pill:hover { background:#f1f5f9; color:#1e293b; }
+.an-pill.active { background:linear-gradient(135deg,#10b981,#34d399); color:white; }
+.panel { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; box-shadow:0 1px 4px rgba(0,0,0,.04); margin-bottom:1.25rem; }
+.panel-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.panel-title { font-size:1rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; }
+.score-badge { display:inline-flex; align-items:center; justify-content:center; width:54px; height:54px; border-radius:50%; font-size:1rem; font-weight:800; flex-shrink:0; }
+.metric-card { display:flex; align-items:center; gap:1rem; padding:1rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; margin-bottom:.75rem; }
+.metric-card:last-child { margin-bottom:0; }
+.metric-score { font-size:1.5rem; font-weight:800; min-width:56px; text-align:right; }
+.metric-info { flex:1; }
+.metric-name { font-size:.875rem; font-weight:600; color:#1e293b; }
+.metric-detail { font-size:.75rem; color:#64748b; margin-top:2px; }
+.metric-bar-wrap { height:6px; background:#e2e8f0; border-radius:99px; overflow:hidden; margin-top:.5rem; }
+.metric-bar-fill { height:100%; border-radius:99px; }
+.overall-score-ring { text-align:center; padding:2rem; }
+.score-ring-val { font-size:4rem; font-weight:900; line-height:1; }
+.score-ring-lbl { font-size:1rem; color:#64748b; margin-top:.5rem; }
+.content-grid { display:grid; grid-template-columns:280px 1fr; gap:1.25rem; }
+@media(max-width:768px){ .content-grid{ grid-template-columns:1fr; } }
+.empty-msg { text-align:center; padding:2rem; color:#94a3b8; font-size:.875rem; }
+.empty-msg i { display:block; font-size:2rem; margin-bottom:.5rem; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="{% url 'analytics:dashboard' %}" class="breadcrumb-link"><i class="fas fa-chart-pie"></i> Analytics</a></li>
+        <li class="breadcrumb-item"><span class="breadcrumb-current">Data Quality</span></li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="an-nav">
+    <a href="{% url 'analytics:dashboard' %}" class="an-pill"><i class="fas fa-th-large"></i> Overview</a>
+    <a href="{% url 'analytics:patient_flow_dashboard' %}" class="an-pill"><i class="fas fa-stream"></i> Patient Flow</a>
+    <a href="{% url 'analytics:clinical_outcomes_dashboard' %}" class="an-pill"><i class="fas fa-heartbeat"></i> Clinical Outcomes</a>
+    <a href="{% url 'analytics:reports_dashboard' %}" class="an-pill"><i class="fas fa-file-alt"></i> Reports</a>
+    <a href="{% url 'analytics:data_quality_dashboard' %}" class="an-pill active"><i class="fas fa-database"></i> Data Quality</a>
+    <a href="{% url 'analytics:models_list' %}" class="an-pill"><i class="fas fa-robot"></i> ML Models</a>
+</div>
+
+<div class="content-grid">
+    <!-- Overall Score -->
+    <div class="panel">
+        <div class="overall-score-ring">
+            <div class="score-ring-val" style="color:{% if overall_score >= 80 %}#10b981{% elif overall_score >= 60 %}#f59e0b{% else %}#ef4444{% endif %};">
+                {{ overall_score }}%
+            </div>
+            <div class="score-ring-lbl">Overall Data Quality Score</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:1rem;">
+            <div style="display:flex;align-items:center;gap:.5rem;font-size:.8125rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+                <span style="color:#64748b;">≥80% — Excellent</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem;font-size:.8125rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>
+                <span style="color:#64748b;">60–79% — Needs attention</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem;font-size:.8125rem;">
+                <span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
+                <span style="color:#64748b;">&lt;60% — Critical</span>
+            </div>
+        </div>
+
+        {% if active_alerts %}
+        <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #f1f5f9;">
+            <div style="font-size:.875rem;font-weight:700;color:#ef4444;margin-bottom:.5rem;"><i class="fas fa-exclamation-triangle"></i> System Alerts</div>
+            {% for alert in active_alerts %}
+            <div style="font-size:.75rem;color:#64748b;margin-bottom:4px;">{{ alert.data_source }} — {{ alert.metric_type }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Metrics Breakdown -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-list-check" style="color:#10b981;"></i> Field-Level Quality Checks</div>
+        </div>
+        {% for metric in metrics %}
+        <div class="metric-card">
+            <div>
+                <div class="metric-score" style="color:{% if metric.score >= 80 %}#10b981{% elif metric.score >= 60 %}#f59e0b{% else %}#ef4444{% endif %};">
+                    {{ metric.score }}%
+                </div>
+            </div>
+            <div class="metric-info">
+                <div class="metric-name">{{ metric.name }}</div>
+                <div class="metric-detail">
+                    {{ metric.missing }} missing out of {{ metric.total }} records
+                </div>
+                <div class="metric-bar-wrap">
+                    <div class="metric-bar-fill" style="width:{{ metric.score }}%;background:{% if metric.score >= 80 %}linear-gradient(90deg,#10b981,#34d399){% elif metric.score >= 60 %}linear-gradient(90deg,#f59e0b,#fcd34d){% else %}linear-gradient(90deg,#ef4444,#f87171){% endif %};"></div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-msg"><i class="fas fa-check-circle" style="color:#10b981;"></i>No metrics available</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Data coverage summary -->
+<div class="panel">
+    <div class="panel-hd">
+        <div class="panel-title"><i class="fas fa-database" style="color:#3b82f6;"></i> Data Coverage Summary</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
+        <div style="text-align:center;background:#f8fafc;border-radius:12px;padding:1.25rem;">
+            <div style="font-size:1.75rem;font-weight:800;color:#6366f1;">{{ patients_count }}</div>
+            <div style="font-size:.75rem;color:#64748b;margin-top:4px;">Patients</div>
+        </div>
+        <div style="text-align:center;background:#f8fafc;border-radius:12px;padding:1.25rem;">
+            <div style="font-size:1.75rem;font-weight:800;color:#3b82f6;">{{ total_appts }}</div>
+            <div style="font-size:.75rem;color:#64748b;margin-top:4px;">Appointments</div>
+        </div>
+        <div style="text-align:center;background:#f8fafc;border-radius:12px;padding:1.25rem;">
+            <div style="font-size:1.75rem;font-weight:800;color:#f59e0b;">{{ total_admissions }}</div>
+            <div style="font-size:.75rem;color:#64748b;margin-top:4px;">Admissions</div>
+        </div>
+        <div style="text-align:center;background:#f8fafc;border-radius:12px;padding:1.25rem;">
+            <div style="font-size:1.75rem;font-weight:800;color:#10b981;">{{ total_records }}</div>
+            <div style="font-size:.75rem;color:#64748b;margin-top:4px;">Medical Records</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .schedule-container {
+        max-width: 1200px;
+        margin: 24px auto;
+        padding: 0 24px;
+    }
+
+    .schedule-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 28px;
+        margin-bottom: 20px;
+    }
+
+    .schedule-item {
+        display: grid;
+        grid-template-columns: 120px 1fr 1fr 100px;
+        gap: 16px;
+        align-items: center;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        background: rgba(168, 197, 232, 0.04);
+        transition: all 0.3s;
+    }
+
+    .schedule-item:hover {
+        background: rgba(168, 197, 232, 0.1);
+        transform: translateX(4px);
+    }
+
+    .day-badge {
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        text-align: center;
+        background: linear-gradient(135deg, #A8C5E8, #b8d4f0);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="schedule-container">
+    <div class="schedule-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="font-size: 24px; font-weight: 700; color: #2D3748;">
+                <i class="fas fa-calendar-week" style="color: #A8C5E8;"></i> Doctor Schedules
+            </h2>
+            <a href="{% url 'appointments:schedule_create' %}"
+                style="padding: 10px 20px; background: #A8C5E8; color: white; border-radius: 10px; text-decoration: none; font-weight: 600;">
+                <i class="fas fa-plus"></i> Add Schedule
+            </a>
+        </div>
+
+        {% for schedule in schedules %}
+        <div class="schedule-item">
+            <div class="day-badge">{{ schedule.get_day_of_week_display|default:schedule.day_of_week }}</div>
+            <div>
+                <div style="font-weight: 600; color: #2D3748;">Dr. {{
+                    schedule.doctor.get_full_name|default:schedule.doctor.username }}</div>
+                <div style="font-size: 13px; color: #718096;">{{ schedule.doctor.email|default:"" }}</div>
+            </div>
+            <div>
+                <div style="font-size: 14px; color: #4A5568;">
+                    <i class="fas fa-clock"></i> {{ schedule.start_time|time:"g:i A" }} – {{ schedule.end_time|time:"g:i
+                    A" }}
+                </div>
+                <div style="font-size: 12px; color: #718096;">Max {{ schedule.max_appointments }} appointments</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <a href="{% url 'appointments:schedule_update' schedule.pk %}"
+                    style="padding: 6px 12px; background: rgba(168,197,232,0.1); border-radius: 6px; color: #4A90D9; text-decoration: none; font-size: 13px;"><i
+                        class="fas fa-edit"></i></a>
+                <a href="{% url 'appointments:schedule_delete' schedule.pk %}"
+                    style="padding: 6px 12px; background: rgba(232,155,135,0.1); border-radius: 6px; color: #E89B87; text-decoration: none; font-size: 13px;"><i
+                        class="fas fa-trash"></i></a>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; padding: 60px; color: #718096;">
+            <i class="fas fa-calendar-week"
+                style="font-size: 48px; opacity: 0.3; margin-bottom: 16px; display: block;"></i>
+            <p style="font-weight: 600;">No schedules configured</p>
+            <p>Add doctor schedules to enable appointment booking.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

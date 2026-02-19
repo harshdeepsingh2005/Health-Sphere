@@ -22,10 +22,15 @@ Glass Dashboard Components & Interactive Elements
     flex-direction: column;
     min-height: 100vh;
     transition: margin-left var(--transition-base);
+    overflow-x: hidden;
+    max-width: calc(100vw - var(--sidebar-width));
+    width: calc(100vw - var(--sidebar-width));
 }
 
 .app-main.sidebar-collapsed {
     margin-left: var(--sidebar-width-collapsed);
+    max-width: calc(100vw - var(--sidebar-width-collapsed));
+    width: calc(100vw - var(--sidebar-width-collapsed));
 }
 
 /* =============================================
@@ -144,6 +149,32 @@ Glass Dashboard Components & Interactive Elements
 .nav-item {
     margin-bottom: var(--spacing-1);
     position: relative;
+}
+
+/* Sidebar section divider with label */
+.nav-divider {
+    margin: var(--spacing-3) var(--spacing-2) var(--spacing-1);
+    list-style: none;
+}
+
+.nav-divider span {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--neutral-400);
+    padding: 0 var(--spacing-2);
+    line-height: 1;
+    position: relative;
+}
+
+.nav-divider span::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin-bottom: var(--spacing-2);
 }
 
 .nav-link {
@@ -358,8 +389,15 @@ Glass Dashboard Components & Interactive Elements
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
 }
 
 /* User Profile */
@@ -493,7 +531,7 @@ Glass Dashboard Components & Interactive Elements
     transform: translateX(0);
 }
 
-.app-sidebar.mobile-open + .sidebar-overlay {
+.app-sidebar.mobile-open+.sidebar-overlay {
     opacity: 1;
     visibility: visible;
 }
@@ -737,67 +775,490 @@ Glass Dashboard Components & Interactive Elements
     position: relative;
 }
 
-.action-btn {
-    display: flex;
+/* ===========================================
+   Topbar visible action buttons
+   =========================================== */
+.topbar-action-btn {
+    display: inline-flex;
     align-items: center;
-    gap: var(--spacing-2);
-    padding: var(--spacing-2) var(--spacing-3);
-    border: none;
-    background: var(--glass-light);
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--neutral-200);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
     color: var(--text-secondary);
-    border-radius: var(--radius-lg);
-    cursor: pointer;
-    transition: all var(--transition-fast);
     text-decoration: none;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
+    font-size: 13px;
+    font-weight: 500;
     white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    line-height: 1;
 }
 
-.action-btn:hover {
+.topbar-action-btn i {
+    font-size: 13px;
+}
+
+.topbar-action-btn:hover {
     background: var(--neutral-100);
     color: var(--text-primary);
+    border-color: var(--neutral-300);
     transform: translateY(-1px);
-    box-shadow: var(--glass-shadow-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
 }
 
-.ai-btn {
-    background: linear-gradient(135deg, var(--healthcare-accent) 0%, var(--healthcare-accent-light) 100%);
-    color: var(--neutral-white);
+.topbar-action-btn--ai {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-color: transparent;
+    color: #fff;
 }
 
-.ai-btn:hover {
-    background: linear-gradient(135deg, var(--healthcare-accent-dark) 0%, var(--healthcare-accent) 100%);
-    color: var(--neutral-white);
-    transform: translateY(-1px) scale(1.02);
+.topbar-action-btn--ai:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
 }
 
-/* Notification Badge */
-.notification-badge {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    background: var(--healthcare-danger);
-    color: var(--neutral-white);
-    font-size: 10px;
-    font-weight: var(--font-weight-bold);
-    min-width: 18px;
-    height: 18px;
-    border-radius: var(--radius-full);
+/* ===========================================
+   Notification Bell
+   =========================================== */
+.notif-bell-btn {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--neutral-white);
-    box-shadow: var(--shadow-sm);
+    width: 38px;
+    height: 38px;
+    border: 1.5px solid var(--neutral-200);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
 }
 
-/* User Menu Button */
-.user-menu-btn {
-    padding: var(--spacing-2);
-    gap: var(--spacing-3);
-    min-width: 200px;
-    justify-content: flex-start;
+.notif-bell-btn i {
+    font-size: 15px;
 }
+
+.notif-bell-btn:hover {
+    background: var(--neutral-100);
+    border-color: var(--neutral-300);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.notif-bell-btn[aria-expanded="true"] {
+    background: var(--healthcare-primary);
+    border-color: var(--healthcare-primary);
+    color: #fff;
+}
+
+.notif-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* ===========================================
+   Notification Panel
+   =========================================== */
+.notif-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 360px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--neutral-200);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14), 0 4px 16px rgba(0, 0, 0, 0.06);
+    z-index: 1030;
+    overflow: hidden;
+    /* enter animation */
+    animation: panelFadeIn 0.18s ease;
+}
+
+.notif-panel[hidden] {
+    display: none;
+}
+
+@keyframes panelFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.notif-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--neutral-100);
+}
+
+.notif-panel__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.notif-panel__mark-all {
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--healthcare-primary);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.notif-panel__mark-all:hover {
+    background: var(--neutral-100);
+}
+
+.notif-panel__list {
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    transition: background 0.15s;
+    cursor: pointer;
+}
+
+.notif-item:hover {
+    background: var(--neutral-50);
+}
+
+.notif-item--urgent {
+    background: #fef2f2;
+    border-left: 3px solid #ef4444;
+}
+
+.notif-item--urgent:hover {
+    background: #fee2e2;
+}
+
+.notif-item__icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    background: var(--neutral-100);
+    color: var(--text-secondary);
+    margin-top: 1px;
+}
+
+.notif-item--urgent .notif-item__icon {
+    background: #ef4444;
+    color: #fff;
+}
+
+.notif-item__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-item__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notif-item__msg {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin-bottom: 3px;
+}
+
+.notif-item__time {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.notif-item__close {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: all 0.15s;
+    opacity: 0;
+}
+
+.notif-item:hover .notif-item__close {
+    opacity: 1;
+}
+
+.notif-item__close:hover {
+    background: var(--neutral-200);
+    color: var(--text-primary);
+}
+
+.notif-panel__footer {
+    padding: 10px 20px;
+    border-top: 1px solid var(--neutral-100);
+    text-align: center;
+}
+
+.notif-panel__view-all {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--healthcare-primary);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.notif-panel__view-all:hover {
+    color: var(--healthcare-primary-dark);
+}
+
+/* ===========================================
+   User Menu Button (Navbar Top-Right)
+   =========================================== */
+.user-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px 6px 6px;
+    border: 1.5px solid var(--neutral-200);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.user-menu-btn:hover {
+    background: var(--neutral-50);
+    border-color: #93c5fd;
+    box-shadow: 0 3px 12px rgba(59, 130, 246, 0.14);
+    transform: translateY(-1px);
+}
+
+.user-menu-btn[aria-expanded="true"] {
+    border-color: var(--healthcare-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    background: white;
+}
+
+.user-avatar-initials {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+}
+
+.user-menu-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    gap: 1px;
+}
+
+.user-menu-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+    line-height: 1.25;
+}
+
+.user-menu-role {
+    font-size: 10px;
+    color: #64748b;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 500;
+}
+
+.user-menu-chevron {
+    font-size: 10px;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 2px;
+}
+
+.user-menu-btn[aria-expanded="true"] .user-menu-chevron {
+    transform: rotate(180deg);
+}
+
+/* ===========================================
+   User Menu Panel
+   =========================================== */
+.user-menu-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 260px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--neutral-200);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14), 0 4px 16px rgba(0, 0, 0, 0.06);
+    z-index: 1030;
+    overflow: hidden;
+    animation: panelFadeIn 0.18s ease;
+}
+
+.user-menu-panel[hidden] {
+    display: none;
+}
+
+.user-menu-panel__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.06) 0%, rgba(99, 102, 241, 0.06) 100%);
+    border-bottom: 1px solid var(--neutral-100);
+}
+
+.user-menu-panel__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--healthcare-primary) 0%, #6366f1 100%);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.user-menu-panel__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.user-menu-panel__email {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+
+.user-menu-panel__items {
+    padding: 8px;
+}
+
+.user-menu-panel__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    cursor: pointer;
+}
+
+.user-menu-panel__item:hover {
+    background: var(--neutral-100);
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.user-menu-panel__item i {
+    width: 16px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.user-menu-panel__item--danger {
+    color: #ef4444;
+}
+
+.user-menu-panel__item--danger:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.user-menu-panel__divider {
+    height: 1px;
+    background: var(--neutral-100);
+    margin: 6px 4px;
+}
+
+
 
 .user-avatar-container {
     position: relative;
@@ -863,76 +1324,7 @@ Glass Dashboard Components & Interactive Elements
     transition: transform var(--transition-fast);
 }
 
-/* =============================================
-   Dropdown Panels
-   ============================================= */
-.dropdown-panel-base {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: var(--glass-white);
-    border: 1px solid var(--neutral-200);
-    border-radius: var(--radius-xl);
-    backdrop-filter: blur(20px);
-    box-shadow: var(--glass-shadow-xl);
-    z-index: var(--z-dropdown);
-    min-width: 280px;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: all var(--transition-fast);
-    pointer-events: none;
-}
 
-.dropdown-panel-base[style*="block"] {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-}
-
-.notifications-panel,
-.quick-actions-panel,
-.user-menu-panel {
-    @extend .dropdown-panel-base;
-}
-
-.notifications-panel {
-    width: 360px;
-}
-
-.quick-actions-panel {
-    width: 320px;
-}
-
-.user-menu-panel {
-    width: 280px;
-}
-
-/* Dropdown Headers */
-.dropdown-header {
-    padding: var(--spacing-4) var(--spacing-6);
-    border-bottom: 1px solid var(--neutral-200);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.notifications-header,
-.quick-actions-header,
-.user-menu-header {
-    @extend .dropdown-header;
-}
-
-.dropdown-title {
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.notifications-title,
-.quick-actions-title {
-    @extend .dropdown-title;
-}
 
 /* Notifications */
 .notifications-mark-all {
@@ -1084,98 +1476,7 @@ Glass Dashboard Components & Interactive Elements
     line-height: 1.2;
 }
 
-/* User Menu */
-.user-menu-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-3);
-}
 
-.user-menu-avatar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.menu-avatar-img,
-.menu-avatar-placeholder {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-full);
-}
-
-.menu-avatar-placeholder {
-    background: var(--healthcare-primary);
-    color: var(--neutral-white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-medium);
-}
-
-.user-menu-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-1);
-}
-
-.menu-user-name {
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
-    color: var(--text-primary);
-    line-height: 1.2;
-}
-
-.menu-user-email {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-
-.menu-user-role {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    background: var(--neutral-100);
-    padding: var(--spacing-0-5) var(--spacing-2);
-    border-radius: var(--radius-sm);
-    align-self: flex-start;
-}
-
-.user-menu-items {
-    padding: var(--spacing-2);
-}
-
-.user-menu-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-3);
-    padding: var(--spacing-3) var(--spacing-4);
-    color: var(--text-primary);
-    text-decoration: none;
-    border-radius: var(--radius-lg);
-    transition: all var(--transition-fast);
-    font-size: var(--font-size-sm);
-}
-
-.user-menu-item:hover {
-    background: var(--neutral-50);
-    color: var(--healthcare-primary);
-}
-
-.user-menu-item.logout-item {
-    color: var(--healthcare-danger);
-}
-
-.user-menu-item.logout-item:hover {
-    background: var(--healthcare-danger-bg);
-    color: var(--healthcare-danger);
-}
-
-.menu-divider {
-    height: 1px;
-    background: var(--neutral-200);
-    margin: var(--spacing-2) 0;
-}
 
 /* =============================================
    System Status Bar
@@ -1230,12 +1531,16 @@ Glass Dashboard Components & Interactive Elements
     flex: 1;
     padding: var(--spacing-6);
     overflow-y: auto;
+    overflow-x: hidden;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .content-container {
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     width: 100%;
+    box-sizing: border-box;
 }
 
 /* =============================================
@@ -1438,19 +1743,19 @@ Glass Dashboard Components & Interactive Elements
         max-width: 300px;
         margin: 0 var(--spacing-4);
     }
-    
+
     .search-container {
         max-width: 280px;
     }
-    
+
     .user-menu-btn {
         min-width: 120px;
     }
-    
+
     .user-info {
         display: none;
     }
-    
+
     .dropdown-chevron {
         display: none;
     }
@@ -1459,66 +1764,65 @@ Glass Dashboard Components & Interactive Elements
 @media (max-width: 768px) {
     .app-main {
         margin-left: 0;
+        max-width: 100vw;
+        width: 100vw;
     }
-    
+
     .app-main.sidebar-collapsed {
         margin-left: 0;
+        max-width: 100vw;
+        width: 100vw;
     }
-    
+
     .mobile-menu-btn {
         display: flex;
     }
-    
+
     .navbar-left {
         gap: var(--spacing-3);
     }
-    
+
     .page-title {
         margin-left: 0;
     }
-    
+
     .breadcrumb {
         display: none;
     }
-    
+
     .navbar-center {
         flex: 1;
         margin: 0 var(--spacing-2);
         max-width: none;
     }
-    
+
     .search-container {
         max-width: none;
     }
-    
+
     .navbar-actions {
         gap: var(--spacing-1);
     }
-    
+
     .action-btn .btn-label {
         display: none;
     }
-    
+
     .user-menu-btn {
         min-width: 40px;
         padding: var(--spacing-2);
     }
-    
+
     .page-content {
         padding: var(--spacing-4);
     }
-    
-    .notifications-panel,
-    .quick-actions-panel,
+
+    .notif-panel,
     .user-menu-panel {
         right: var(--spacing-2);
         left: var(--spacing-2);
         width: auto;
         min-width: auto;
-    }
-    
-    .quick-actions-grid {
-        grid-template-columns: 1fr;
     }
 }
 
@@ -1526,17 +1830,17 @@ Glass Dashboard Components & Interactive Elements
     .app-navbar {
         padding: 0 var(--spacing-4);
     }
-    
+
     .page-content {
         padding: var(--spacing-3);
     }
-    
+
     .footer-container {
         flex-direction: column;
         gap: var(--spacing-2);
         text-align: center;
     }
-    
+
     .footer-right {
         flex-direction: column;
         gap: var(--spacing-1);
@@ -1562,7 +1866,7 @@ Glass Dashboard Components & Interactive Elements
     content: '';
     position: absolute;
     inset: 0;
-    background: 
+    background:
         radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.3) 0%, transparent 50%);
     pointer-events: none;
@@ -1721,7 +2025,9 @@ Glass Dashboard Components & Interactive Elements
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Security Notice */
@@ -1877,4 +2183,195 @@ Glass Dashboard Components & Interactive Elements
 
 .form-divider::after {
     margin-left: var(--spacing-3);
+}
+
+/* =================================================
+   Navbar Right: Notification Bell
+   ================================================= */
+.notif-bell-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1.5px solid var(--neutral-200);
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    backdrop-filter: blur(8px);
+}
+
+.notif-bell-btn:hover {
+    background: var(--neutral-50);
+    border-color: var(--healthcare-primary);
+    color: var(--healthcare-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--glass-shadow-sm);
+}
+
+.notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    background: var(--healthcare-danger);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid white;
+    line-height: 1;
+}
+
+/* Notification Panel */
+.notif-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 360px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-2xl);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(20px);
+    z-index: var(--z-dropdown);
+    overflow: hidden;
+}
+
+.notif-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--neutral-100);
+}
+
+.notif-panel__title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+}
+
+.notif-panel__mark-all {
+    background: none;
+    border: none;
+    color: var(--healthcare-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.notif-panel__mark-all:hover {
+    text-decoration: underline;
+}
+
+.notif-panel__list {
+    padding: 0.5rem 0;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    transition: background var(--transition-fast);
+}
+
+.notif-item:hover {
+    background: var(--neutral-50);
+}
+
+.notif-item--urgent .notif-item__icon {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--healthcare-danger);
+}
+
+.notif-item__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-xl);
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--healthcare-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.notif-item__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-item__title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--neutral-800);
+    line-height: 1.3;
+}
+
+.notif-item__msg {
+    font-size: 0.7812rem;
+    color: var(--neutral-500);
+    margin-top: 2px;
+}
+
+.notif-item__time {
+    font-size: 0.75rem;
+    color: var(--neutral-400);
+    margin-top: 2px;
+}
+
+.notif-item__close {
+    background: none;
+    border: none;
+    color: var(--neutral-400);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: var(--radius-sm);
+    line-height: 1;
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+.notif-item__close:hover {
+    background: var(--neutral-100);
+    color: var(--neutral-700);
+}
+
+.notif-panel__footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--neutral-100);
+    text-align: center;
+}
+
+.notif-panel__view-all {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--healthcare-primary);
+    text-decoration: none;
+}
+
+.notif-panel__view-all:hover {
+    text-decoration: underline;
+}
+
+/* =================================================
+   Breadcrumb current item
+   ================================================= */
+.breadcrumb-current {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
 }

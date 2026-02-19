@@ -15,28 +15,44 @@ urlpatterns = [
     # ==========================================================================
     # DASHBOARD
     # ==========================================================================
-    
-    # Main clinical dashboard
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
-    
+
+    # ==========================================================================
+    # PATIENT LIST (P1)
+    # ==========================================================================
+    path('patients/', views.PatientListView.as_view(), name='patients'),
+    path('patients/<int:patient_id>/', views.PatientDetailView.as_view(), name='patient_detail'),
+
+    # ==========================================================================
+    # MEDICAL RECORDS (P1)
+    # ==========================================================================
+    path('records/', views.MedicalRecordsView.as_view(), name='records'),
+    path('records/<int:pk>/', views.RecordDetailView.as_view(), name='record_detail'),
+
+    # ==========================================================================
+    # TREATMENT PLANS (P1)
+    # ==========================================================================
+    path('treatment-plans/', views.TreatmentPlansView.as_view(), name='treatment_plans'),
+    path('treatment-plans/<int:pk>/', views.TreatmentPlanDetailView.as_view(), name='treatment_plan_detail'),
+
+    # ==========================================================================
+    # VITALS (P1)
+    # ==========================================================================
+    path('vitals/', views.VitalsView.as_view(), name='vitals'),
+    path('vitals/<int:patient_id>/', views.PatientVitalsView.as_view(), name='patient_vitals'),
+
     # ==========================================================================
     # RISK INSIGHTS
     # ==========================================================================
-    
-    # AI-powered risk assessment
     path('risk/', views.RiskInsightsView.as_view(), name='risk'),
-    
+
     # ==========================================================================
     # TREATMENT JOURNEY
     # ==========================================================================
-    
-    # Patient treatment journey visualization
     path('journey/', views.TreatmentJourneyView.as_view(), name='journey'),
-    
+
     # ==========================================================================
     # TRIAGE
     # ==========================================================================
-    
-    # Emergency triage dashboard
     path('triage/', views.TriageDashboardView.as_view(), name='triage'),
 ]

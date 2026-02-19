@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Treatment Plans — Clinical Portal | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'clinical_portal:dashboard' %}" class="breadcrumb-link">Dashboard</a></li>
+<li class="breadcrumb-item breadcrumb-current">Treatment Plans</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header { margin-bottom: 1.5rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.page-header p { color: var(--neutral-500); margin: .25rem 0 0; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card {
+    background: white; border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-xl); padding: 1.25rem;
+    text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,.04);
+}
+.stat-card .stat-value { font-size: 2rem; font-weight: 800; color: var(--neutral-900); }
+.stat-card .stat-label { font-size: .8125rem; color: var(--neutral-500); margin-top: .25rem; }
+.stat-card.danger .stat-value { color: var(--healthcare-danger); }
+.stat-card.success .stat-value { color: var(--healthcare-success); }
+.stat-card.warning .stat-value { color: var(--healthcare-warning); }
+
+.filter-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.filter-select { padding: .5rem .875rem; border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); background: white; color: var(--neutral-700); font-size: .875rem; }
+.search-box { display: flex; align-items: center; gap: .5rem; background: white; border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); padding: .5rem 1rem; flex: 1; min-width: 220px; }
+.search-box input { border: none; outline: none; width: 100%; font-size: .875rem; }
+.btn-filter { padding: .5rem 1rem; border-radius: var(--radius-lg); border: none; cursor: pointer; font-size: .875rem; font-weight: 500; }
+.btn-apply { background: var(--healthcare-primary); color: white; }
+.btn-clear { background: var(--neutral-100); color: var(--neutral-700); text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; }
+
+.plans-list { display: flex; flex-direction: column; gap: .875rem; }
+.plan-card {
+    background: white; border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-xl); padding: 1.25rem;
+    display: flex; align-items: flex-start; gap: 1rem;
+    box-shadow: 0 1px 5px rgba(0,0,0,.04);
+    transition: all .2s;
+}
+.plan-card:hover { transform: translateX(3px); box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.plan-icon {
+    width: 44px; height: 44px; border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--healthcare-primary), var(--healthcare-accent));
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.1rem; flex-shrink: 0;
+}
+.plan-body { flex: 1; min-width: 0; }
+.plan-title { font-size: .9375rem; font-weight: 600; color: var(--neutral-900); }
+.plan-patient { font-size: .8125rem; color: var(--neutral-500); margin-top: .15rem; }
+.plan-diagnosis { font-size: .8125rem; color: var(--neutral-600); margin-top: .4rem; }
+.plan-meta { display: flex; gap: 1rem; margin-top: .5rem; flex-wrap: wrap; }
+.plan-meta-item { font-size: .75rem; color: var(--neutral-500); display: flex; align-items: center; gap: .3rem; }
+
+.status-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .7rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+.status-active    { background: rgba(16,185,129,.12); color: #059669; }
+.status-completed { background: rgba(59,130,246,.12);  color: #2563eb; }
+.status-draft     { background: rgba(100,116,139,.1);  color: #64748b; }
+.status-cancelled { background: rgba(239,68,68,.1);    color: #dc2626; }
+
+a.view-link { color: var(--healthcare-primary); font-size: .8125rem; font-weight: 500; text-decoration: none; white-space: nowrap; }
+a.view-link:hover { text-decoration: underline; }
+
+.empty-state { text-align: center; padding: 3rem; color: var(--neutral-500); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-clipboard-list" style="color: var(--healthcare-success); margin-right: .5rem;"></i>Treatment Plans</h1>
+    <p>Review and manage all patient treatment plans and care protocols</p>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card success">
+        <div class="stat-value">{{ stats.active }}</div>
+        <div class="stat-label">Active Plans</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.completed }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-value">{{ stats.pending_review }}</div>
+        <div class="stat-label">Pending Review</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filter-row">
+    <div class="search-box">
+        <i class="fas fa-search" style="color: var(--neutral-400);"></i>
+        <input type="text" name="search" placeholder="Search plans…" value="{{ search_query }}">
+    </div>
+    <select name="status" class="filter-select">
+        <option value="">All statuses</option>
+        {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="patient_id" class="filter-select">
+        <option value="">All patients</option>
+        {% for p in patients %}
+        <option value="{{ p.id }}" {% if selected_patient == p.id|stringformat:"s" %}selected{% endif %}>
+            {{ p.get_full_name|default:p.username }}
+        </option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter btn-apply"><i class="fas fa-filter"></i> Filter</button>
+    <a href="{% url 'clinical_portal:treatment_plans' %}" class="btn-filter btn-clear"><i class="fas fa-times"></i> Clear</a>
+</form>
+
+<!-- Plans -->
+{% if plans %}
+<div class="plans-list">
+    {% for plan in plans %}
+    <div class="plan-card">
+        <div class="plan-icon"><i class="fas fa-clipboard-list"></i></div>
+        <div class="plan-body">
+            <div class="plan-title">{{ plan.title }}</div>
+            <div class="plan-patient">
+                <i class="fas fa-user" style="font-size:.65rem;"></i>
+                {{ plan.patient.get_full_name|default:plan.patient.username }}
+            </div>
+            {% if plan.diagnosis %}
+            <div class="plan-diagnosis">{{ plan.diagnosis }}</div>
+            {% endif %}
+            <div class="plan-meta">
+                <span class="plan-meta-item"><i class="fas fa-calendar"></i> {{ plan.start_date }}</span>
+                {% if plan.end_date %}<span class="plan-meta-item"><i class="fas fa-calendar-check"></i> Ends {{ plan.end_date }}</span>{% endif %}
+                {% if plan.next_review_date %}<span class="plan-meta-item"><i class="fas fa-clock"></i> Review {{ plan.next_review_date }}</span>{% endif %}
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: .5rem; flex-shrink: 0;">
+            <span class="status-badge status-{{ plan.status }}">{{ plan.get_status_display }}</span>
+            <a href="{% url 'clinical_portal:treatment_plan_detail' plan.pk %}" class="view-link">View →</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-clipboard" style="font-size: 2.5rem; color: var(--neutral-300); display: block; margin-bottom: 1rem;"></i>
+    <p>No treatment plans found.</p>
+</div>
+{% endif %}
+{% endblock %}

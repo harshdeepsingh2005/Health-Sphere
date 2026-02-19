@@ -1,19 +1,411 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}AI Health Insights — HealthSphere{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+<style>
+    :root {
+        --ai-purple: #8B5CF6;
+        --ai-pink: #EC4899;
+        --ai-blue: #3B82F6;
+        --ai-green: #10B981;
+        --ai-orange: #F59E0B;
+    }
+
+    .ai-header-bg {
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        border-radius: 24px;
+        padding: 40px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    .ai-header-bg::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .ai-header-bg::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(236,72,153,0.2) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .gemini-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(236,72,153,0.2));
+        border: 1px solid rgba(139,92,246,0.4);
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #c4b5fd;
+        margin-bottom: 16px;
+    }
+    .gemini-badge .dot {
+        width: 8px; height: 8px;
+        background: #8B5CF6;
+        border-radius: 50%;
+        animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .insight-card {
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 12px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .insight-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+    .insight-card.positive { background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02)); border-left: 4px solid var(--ai-green); }
+    .insight-card.warning { background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.02)); border-left: 4px solid var(--ai-orange); }
+    .insight-card.info { background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02)); border-left: 4px solid var(--ai-blue); }
+    .insight-card.tip { background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(139,92,246,0.02)); border-left: 4px solid var(--ai-purple); }
+
+    .risk-ring-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .risk-ring {
+        position: relative;
+        width: 160px;
+        height: 160px;
+    }
+    .risk-ring svg { transform: rotate(-90deg); }
+    .risk-ring-label {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    .risk-score-big { font-size: 36px; font-weight: 800; }
+    .risk-level-text { font-size: 13px; font-weight: 600; color: #718096; }
+
+    .factor-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: #eee;
+        overflow: hidden;
+        margin-top: 6px;
+    }
+    .factor-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+    .journey-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+        position: relative;
+    }
+    .journey-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 11px;
+        top: 34px;
+        bottom: -10px;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    .step-dot {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        color: white;
+    }
+    .step-dot.completed { background: var(--ai-green); }
+    .step-dot.current { background: var(--ai-purple); animation: pulse-ring 2s infinite; }
+    .step-dot.upcoming { background: #CBD5E0; }
+    @keyframes pulse-ring {
+        0% { box-shadow: 0 0 0 0 rgba(139,92,246,0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(139,92,246,0); }
+        100% { box-shadow: 0 0 0 0 rgba(139,92,246,0); }
+    }
+
+    .ai-sparkle { animation: sparkle 3s ease-in-out infinite; }
+    @keyframes sparkle {
+        0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        50% { opacity: 0.7; transform: scale(1.05) rotate(5deg); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="bento-grid">
-    <div class="bento-featured">
-        <h2>AI Insights Dashboard</h2>
-        <p>Explore AI-powered clinical recommendations and analytics.</p>
+<div style="padding: 28px 32px;">
+
+    <!-- Header -->
+    <div class="ai-header-bg" style="margin-bottom: 28px;">
+        <div style="position: relative; z-index: 1;">
+            <div class="gemini-badge">
+                <div class="dot"></div>
+                {% if gemini_quota_exhausted %}
+                    <i class="fas fa-robot"></i> Gemini Connected · Free Tier Quota Reached
+                {% elif gemini_available %}
+                    <i class="fas fa-robot"></i> Powered by Google Gemini AI · Live
+                {% else %}
+                    <i class="fas fa-robot"></i> AI Insights Mode — Configure Gemini API Key to enable
+                {% endif %}
+            </div>
+            <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 8px;">
+                <span class="ai-sparkle">✨</span> Your AI Health Insights
+            </h1>
+            <p style="color: rgba(255,255,255,0.7); font-size: 16px; max-width: 500px;">
+                Real-time, personalised health analysis powered by Google Gemini.
+                Understanding your health has never been easier.
+            </p>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <a href="{% url 'ai:assistant' %}" style="
+                    display: inline-flex; align-items: center; gap: 8px;
+                    background: white; color: #302b63;
+                    padding: 10px 20px; border-radius: 12px;
+                    font-weight: 700; font-size: 14px; text-decoration: none;
+                    transition: transform 0.2s ease;
+                " onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                    <i class="fas fa-comments"></i> Chat with AI Assistant
+                </a>
+                <a href="{% url 'patient_portal:dashboard' %}" style="
+                    display: inline-flex; align-items: center; gap: 8px;
+                    background: rgba(255,255,255,0.1); color: white;
+                    padding: 10px 20px; border-radius: 12px;
+                    font-weight: 600; font-size: 14px; text-decoration: none;
+                    border: 1px solid rgba(255,255,255,0.2);
+                ">
+                    <i class="fas fa-home"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
     </div>
-    <div class="bento-tall">
-        <h3>Insights</h3>
-        <ul>
-            {% for insight in insights %}
-                <li>{{ insight }}</li>
+
+    <div class="bento-grid">
+
+        <!-- Risk Assessment Ring -->
+        <div class="bento-card bento-small" style="text-align: center;">
+            <div class="card-glow"></div>
+            <div class="card-title" style="justify-content: center; margin-bottom: 16px;">
+                <i class="fas fa-shield-alt" style="color: var(--ai-purple);"></i>
+                Health Risk Score
+            </div>
+            <div class="risk-ring-container">
+                <div class="risk-ring">
+                    <svg width="160" height="160">
+                        <circle cx="80" cy="80" r="70" fill="none" stroke="#f0f0f0" stroke-width="12"/>
+                        <circle cx="80" cy="80" r="70" fill="none"
+                            stroke="{{ risk_data.color }}" stroke-width="12"
+                            stroke-dasharray="{{ risk_data.risk_score|default:30 }} 100"
+                            stroke-dasharray="{% widthratio risk_data.risk_score|default:30 100 440 %} 440"
+                            stroke-linecap="round"/>
+                    </svg>
+                    <div class="risk-ring-label">
+                        <div class="risk-score-big" style="color: {{ risk_data.color }}">{{ risk_data.risk_score|floatformat:0 }}</div>
+                        <div class="risk-level-text">{{ risk_data.risk_level }}</div>
+                    </div>
+                </div>
+            </div>
+            <div style="font-size: 12px; color: #718096; margin-top: 8px;">
+                Confidence: {{ risk_data.confidence }}
+                {% if risk_data.ai_powered %}<span style="color: var(--ai-purple);"> · Gemini</span>{% endif %}
+            </div>
+        </div>
+
+        <!-- AI Health Insights -->
+        <div class="bento-card bento-featured">
+            <div class="card-glow"></div>
+            <div class="card-title" style="margin-bottom: 20px;">
+                <i class="fas fa-lightbulb" style="color: var(--ai-orange);"></i>
+                Personalised Insights
+                {% if gemini_available %}<span class="gemini-badge" style="margin: 0; padding: 2px 8px; font-size: 10px;">Live AI</span>{% endif %}
+            </div>
+            {% for insight in ai_insights %}
+            <div class="insight-card {{ insight.type }}">
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background:
+                        {% if insight.type == 'positive' %}rgba(16,185,129,0.15)
+                        {% elif insight.type == 'warning' %}rgba(245,158,11,0.15)
+                        {% elif insight.type == 'info' %}rgba(59,130,246,0.15)
+                        {% else %}rgba(139,92,246,0.15){% endif %};
+                        display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="{{ insight.icon|default:'fas fa-star' }}" style="color:
+                            {% if insight.type == 'positive' %}var(--ai-green)
+                            {% elif insight.type == 'warning' %}var(--ai-orange)
+                            {% elif insight.type == 'info' %}var(--ai-blue)
+                            {% else %}var(--ai-purple){% endif %};"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: #2D3748; font-size: 14px;">{{ insight.title }}</div>
+                        <div style="font-size: 13px; color: #4A5568; margin-top: 4px; line-height: 1.5;">{{ insight.message }}</div>
+                    </div>
+                </div>
+            </div>
             {% empty %}
-                <li>No insights available.</li>
+            <div style="text-align: center; padding: 40px; color: #718096;">
+                <i class="fas fa-brain" style="font-size: 40px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+                <p>Insights loading...</p>
+            </div>
             {% endfor %}
-        </ul>
+        </div>
+
+        <!-- Journey Status -->
+        <div class="bento-card bento-small">
+            <div class="card-glow"></div>
+            <div class="card-title" style="margin-bottom: 16px;">
+                <i class="fas fa-route" style="color: var(--ai-blue);"></i>
+                Care Journey
+            </div>
+            {% if journey %}
+            <div style="text-align: center; padding: 12px 0;">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background:
+                    linear-gradient(135deg, {{ journey.status_color|default:'#28a745' }}, {{ journey.status_color|default:'#28a745' }}88);
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 24px; margin: 0 auto 12px; color: white;">
+                    {{ journey.status_icon|default:'✓' }}
+                </div>
+                <div style="font-weight: 700; font-size: 16px; color: #2D3748;">{{ journey.journey_status|default:'On Track' }}</div>
+                <div style="font-size: 13px; color: #718096; margin-top: 8px;">{{ journey.primary_focus|default:'General Health Management' }}</div>
+                {% if journey.adherence_score %}
+                <div style="margin-top: 16px;">
+                    <div style="font-size: 12px; color: #718096; margin-bottom: 6px;">Adherence Score</div>
+                    <div style="font-size: 28px; font-weight: 800; color: {{ journey.status_color|default:'#28a745' }};">{{ journey.adherence_score }}%</div>
+                </div>
+                {% endif %}
+                {% if journey.summary_message %}
+                <div style="font-size: 12px; color: #4A5568; margin-top: 12px; line-height: 1.5; padding: 8px; background: #f8f9fa; border-radius: 8px;">
+                    {{ journey.summary_message }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Risk Factors -->
+        <div class="bento-card bento-tall">
+            <div class="card-glow"></div>
+            <div class="card-title" style="margin-bottom: 20px;">
+                <i class="fas fa-chart-bar" style="color: var(--ai-pink);"></i> Risk Factors
+            </div>
+            {% for category in risk_factors %}
+            <div style="margin-bottom: 20px;">
+                <div style="font-weight: 700; font-size: 13px; color: #718096; text-transform: uppercase;
+                    letter-spacing: 0.5px; margin-bottom: 10px;">{{ category.category }}</div>
+                {% for factor in category.factors %}
+                <div style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                        <span style="font-weight: 600; color: #2D3748;">{{ factor.name }}</span>
+                        <span style="color: #718096;">{{ factor.score }}</span>
+                    </div>
+                    <div class="factor-bar">
+                        <div class="factor-bar-fill" style="width: {{ factor.score }}%;
+                            background: linear-gradient(90deg,
+                            {% if factor.score < 30 %}var(--ai-green){% elif factor.score < 60 %}var(--ai-orange){% else %}#dc3545{% endif %},
+                            {% if factor.score < 30 %}#34d399{% elif factor.score < 60 %}#fbbf24{% else %}#f87171{% endif %});"></div>
+                    </div>
+                    <div style="font-size: 11px; color: #718096; margin-top: 3px;">{{ factor.description }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% empty %}
+            <div style="color: #718096; text-align: center; padding: 20px;">No risk factors data</div>
+            {% endfor %}
+        </div>
+
+        <!-- Recommendations -->
+        <div class="bento-card bento-wide">
+            <div class="card-glow"></div>
+            <div class="card-title" style="margin-bottom: 20px;">
+                <i class="fas fa-clipboard-check" style="color: var(--ai-green);"></i>
+                AI Recommendations
+                {% if risk_data.ai_powered %}<span class="gemini-badge" style="margin: 0; padding: 2px 8px; font-size: 10px;">Gemini</span>{% endif %}
+            </div>
+            {% if risk_data.explanation %}
+            <div style="background: linear-gradient(135deg, rgba(139,92,246,0.05), rgba(236,72,153,0.05));
+                border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid rgba(139,92,246,0.1);">
+                <div style="font-size: 13px; color: #4A5568; line-height: 1.6;">
+                    <i class="fas fa-robot" style="color: var(--ai-purple); margin-right: 6px;"></i>
+                    {{ risk_data.explanation }}
+                </div>
+            </div>
+            {% endif %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                {% for rec in risk_data.recommendations %}
+                <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px;
+                    background: rgba(16,185,129,0.04); border-radius: 10px; border: 1px solid rgba(16,185,129,0.1);">
+                    <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(16,185,129,0.1);
+                        display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-check" style="font-size: 10px; color: var(--ai-green);"></i>
+                    </div>
+                    <span style="font-size: 13px; color: #4A5568; line-height: 1.4;">{{ rec }}</span>
+                </div>
+                {% empty %}
+                <div style="grid-column: span 2; text-align: center; color: #718096; padding: 20px;">
+                    No recommendations available.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="bento-card bento-wide">
+            <div class="card-glow"></div>
+            <div class="card-title" style="margin-bottom: 16px;">
+                <i class="fas fa-bolt" style="color: var(--ai-orange);"></i> AI-Powered Features
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                <a href="{% url 'ai:assistant' %}" style="text-decoration: none;">
+                    <div style="padding: 20px; background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(139,92,246,0.02));
+                        border-radius: 14px; border: 1px solid rgba(139,92,246,0.15); text-align: center;
+                        transition: all 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="fas fa-comments" style="font-size: 28px; color: var(--ai-purple); margin-bottom: 10px; display: block;"></i>
+                        <div style="font-weight: 700; color: #2D3748;">AI Chat</div>
+                        <div style="font-size: 12px; color: #718096; margin-top: 4px;">Ask health questions</div>
+                    </div>
+                </a>
+                <a href="{% url 'patient_portal:lab_results' %}" style="text-decoration: none;">
+                    <div style="padding: 20px; background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02));
+                        border-radius: 14px; border: 1px solid rgba(59,130,246,0.15); text-align: center;
+                        transition: all 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="fas fa-flask" style="font-size: 28px; color: var(--ai-blue); margin-bottom: 10px; display: block;"></i>
+                        <div style="font-weight: 700; color: #2D3748;">Report AI</div>
+                        <div style="font-size: 12px; color: #718096; margin-top: 4px;">Explain lab results</div>
+                    </div>
+                </a>
+                <a href="{% url 'patient_portal:dashboard' %}" style="text-decoration: none;">
+                    <div style="padding: 20px; background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02));
+                        border-radius: 14px; border: 1px solid rgba(16,185,129,0.15); text-align: center;
+                        transition: all 0.3s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <i class="fas fa-heartbeat" style="font-size: 28px; color: var(--ai-green); margin-bottom: 10px; display: block;"></i>
+                        <div style="font-weight: 700; color: #2D3748;">Health Dashboard</div>
+                        <div style="font-size: 12px; color: #718096; margin-top: 4px;">View all vitals</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}

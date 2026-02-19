@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load static %}
+{% block content %}
+<div style="max-width:900px;margin:24px auto;padding:0 24px">
+    <div style="background:white;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:32px">
+        <a href="{% url 'analytics:models_list' %}"
+            style="color:#A8C5E8;text-decoration:none;font-weight:500;font-size:14px"><i class="fas fa-arrow-left"></i>
+            Back to Models</a>
+        <h2 style="font-size:24px;font-weight:700;color:#2D3748;margin:16px 0"><i class="fas fa-robot"
+                style="color:#C8B4E8"></i> {{ model.name }}</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+            <div style="padding:16px;background:rgba(200,180,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Type</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ model.model_type|default:"Machine Learning"
+                    }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(200,180,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Version</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ model.version|default:"1.0" }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(200,180,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Accuracy</div>
+                <div style="font-weight:600;color:#48bb78;margin-top:4px">{{ model.accuracy|default:"--" }}%</div>
+            </div>
+            <div style="padding:16px;background:rgba(200,180,232,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Status</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ model.status|default:"Active"|capfirst }}
+                </div>
+            </div>
+        </div>
+        {% if model.description %}<div style="margin-top:20px">
+            <div style="font-size:12px;text-transform:uppercase;color:#718096;letter-spacing:0.05em">Description</div>
+            <p style="color:#4A5568;line-height:1.8;margin-top:8px">{{ model.description }}</p>
+        </div>{% endif %}
+    </div>
+</div>
+{% endblock %}

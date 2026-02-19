@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Medical Records — Clinical Portal | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'clinical_portal:dashboard' %}" class="breadcrumb-link">Dashboard</a></li>
+<li class="breadcrumb-item breadcrumb-current">Records</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header { margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.page-header p { color: var(--neutral-500); margin: .25rem 0 0; }
+
+.btn-primary {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: var(--healthcare-primary); color: white;
+    border: none; border-radius: var(--radius-lg);
+    padding: .65rem 1.25rem; font-size: .9rem; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: background .2s, transform .15s;
+}
+.btn-primary:hover { background: #1a6fb3; transform: translateY(-1px); }
+
+.filter-row {
+    display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+}
+.filter-select {
+    padding: .5rem .875rem; border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-lg); background: white; color: var(--neutral-700);
+    font-size: .875rem; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.search-box {
+    display: flex; align-items: center; gap: .5rem;
+    background: white; border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-lg); padding: .5rem 1rem; flex: 1; min-width: 220px;
+}
+.search-box input { border: none; outline: none; width: 100%; font-size: .875rem; }
+.btn-filter { padding: .5rem 1rem; border-radius: var(--radius-lg); border: none; cursor: pointer; font-size: .875rem; font-weight: 500; }
+.btn-apply { background: var(--healthcare-primary); color: white; }
+.btn-clear { background: var(--neutral-100); color: var(--neutral-700); text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; }
+
+.records-table-wrap {
+    background: white; border-radius: var(--radius-xl); border: 1px solid var(--neutral-100);
+    overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.04);
+}
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--neutral-50); }
+th { padding: .875rem 1.25rem; text-align: left; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--neutral-500); border-bottom: 1px solid var(--neutral-100); }
+td { padding: 1rem 1.25rem; border-bottom: 1px solid var(--neutral-50); font-size: .875rem; color: var(--neutral-700); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--neutral-50); }
+
+.severity-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .625rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+.sev-low      { background: rgba(16,185,129,.1); color: #059669; }
+.sev-medium   { background: rgba(245,158,11,.1); color: #d97706; }
+.sev-high     { background: rgba(239,68,68,.1);  color: #dc2626; }
+.sev-critical { background: rgba(220,38,38,.2);  color: #991b1b; }
+
+.type-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .625rem; border-radius: 999px; font-size: .7rem; font-weight: 600; background: var(--neutral-100); color: var(--neutral-600); }
+
+a.view-link { color: var(--healthcare-primary); text-decoration: none; font-weight: 500; }
+a.view-link:hover { text-decoration: underline; }
+
+.empty-state { text-align: center; padding: 3rem; color: var(--neutral-500); }
+
+.alert-msg { padding: .875rem 1.25rem; border-radius: var(--radius-lg); font-size: .875rem; font-weight: 500; margin-bottom: 1rem; border-left: 4px solid; }
+.alert-success { background: rgba(16,185,129,.1); color: #059669; border-color: #059669; }
+.alert-error   { background: rgba(239,68,68,.1);  color: #dc2626; border-color: #dc2626; }
+
+/* ---- Modal ---- */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 1000;
+    align-items: flex-start; justify-content: center; padding-top: 60px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+    background: white; border-radius: 20px; padding: 2rem;
+    width: 100%; max-width: 640px; max-height: 86vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    animation: slideDown .25s ease;
+}
+@keyframes slideDown { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform:none; } }
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--neutral-100);
+}
+.modal-header h2 { font-size: 1.2rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--neutral-400); line-height: 1; padding: 0; }
+.modal-close:hover { color: var(--neutral-700); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: .35rem; }
+.form-group.full { grid-column: 1/-1; }
+.form-label { font-size: .8125rem; font-weight: 600; color: var(--neutral-700); }
+.form-label span { color: #ef4444; }
+.form-control {
+    padding: .6rem .875rem; border: 1.5px solid var(--neutral-200);
+    border-radius: var(--radius-lg); font-size: .875rem; color: var(--neutral-800);
+    transition: border-color .2s; width: 100%; box-sizing: border-box;
+}
+.form-control:focus { outline: none; border-color: var(--healthcare-primary); }
+.checkbox-row { display: flex; align-items: center; gap: .5rem; font-size: .875rem; color: var(--neutral-700); }
+.checkbox-row input[type="checkbox"] { width: 1rem; height: 1rem; cursor: pointer; }
+.form-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; }
+.btn-cancel {
+    padding: .65rem 1.25rem; border-radius: var(--radius-lg);
+    border: 1.5px solid var(--neutral-200); background: white;
+    color: var(--neutral-700); font-weight: 600; cursor: pointer;
+}
+.btn-submit {
+    padding: .65rem 1.5rem; border-radius: var(--radius-lg);
+    border: none; background: var(--healthcare-primary); color: white;
+    font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem;
+}
+.btn-submit:hover { background: #1a6fb3; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Flash messages -->
+{% if messages %}
+  {% for msg in messages %}
+    <div class="alert-msg {% if msg.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
+      <i class="fas {% if msg.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+      {{ msg }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Header -->
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-file-medical-alt" style="color: var(--healthcare-primary); margin-right: .5rem;"></i>Medical Records</h1>
+        <p>Browse, filter, and review all patient medical records</p>
+    </div>
+    <button class="btn-primary" id="openRecordModal">
+        <i class="fas fa-plus"></i> Add Record
+    </button>
+</div>
+
+<!-- Filters -->
+<form method="get" class="filter-row">
+    <div class="search-box">
+        <i class="fas fa-search" style="color: var(--neutral-400);"></i>
+        <input type="text" name="search" placeholder="Search by title or description…" value="{{ search_query }}">
+    </div>
+    <select name="patient_id" class="filter-select">
+        <option value="">All patients</option>
+        {% for p in patients %}
+        <option value="{{ p.id }}" {% if selected_patient == p.id|stringformat:"s" %}selected{% endif %}>
+            {{ p.get_full_name|default:p.username }}
+        </option>
+        {% endfor %}
+    </select>
+    <select name="type" class="filter-select">
+        <option value="">All types</option>
+        {% for val, label in record_types %}
+        <option value="{{ val }}" {% if selected_type == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="severity" class="filter-select">
+        <option value="">All severities</option>
+        {% for val, label in severity_choices %}
+        <option value="{{ val }}" {% if selected_severity == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter btn-apply"><i class="fas fa-filter"></i> Filter</button>
+    <a href="{% url 'clinical_portal:records' %}" class="btn-filter btn-clear">
+        <i class="fas fa-times"></i> Clear
+    </a>
+</form>
+
+<!-- Records Table -->
+<div class="records-table-wrap">
+    {% if records %}
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Patient</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Date</th>
+                <th>Created By</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td><strong>{{ record.title }}</strong></td>
+                <td>{{ record.patient.get_full_name|default:record.patient.username }}</td>
+                <td><span class="type-badge">{{ record.get_record_type_display }}</span></td>
+                <td>
+                    <span class="severity-badge sev-{{ record.severity }}">
+                        {% if record.severity == 'critical' %}<i class="fas fa-exclamation-circle"></i>{% elif record.severity == 'high' %}<i class="fas fa-exclamation"></i>{% endif %}
+                        {{ record.get_severity_display }}
+                    </span>
+                </td>
+                <td>{{ record.record_date|date:"M j, Y" }}</td>
+                <td>{{ record.created_by.get_full_name|default:record.created_by.username }}</td>
+                <td><a href="{% url 'clinical_portal:record_detail' record.pk %}" class="view-link">View →</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-folder-open" style="font-size: 2.5rem; color: var(--neutral-300); display: block; margin-bottom: 1rem;"></i>
+        <p>No records found matching your filters.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ===== ADD MEDICAL RECORD MODAL ===== -->
+<div class="modal-overlay" id="recordModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2><i class="fas fa-file-medical" style="color:var(--healthcare-primary);margin-right:.5rem;"></i>Add Medical Record</h2>
+            <button class="modal-close" id="closeRecordModal">&times;</button>
+        </div>
+        <form method="post" action="{% url 'clinical_portal:records' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label">Patient <span>*</span></label>
+                    <select name="patient" class="form-control" required>
+                        <option value="">— Select patient —</option>
+                        {% for p in patients %}
+                        <option value="{{ p.id }}">{{ p.get_full_name|default:p.username }} ({{ p.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Record Type <span>*</span></label>
+                    <select name="record_type" class="form-control" required>
+                        {% for val, label in record_types %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Severity <span>*</span></label>
+                    <select name="severity" class="form-control" required>
+                        {% for val, label in severity_choices %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Title / Summary <span>*</span></label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Chest X-Ray — Normal findings" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Description / Clinical Notes <span>*</span></label>
+                    <textarea name="description" class="form-control" rows="4"
+                        placeholder="Detailed findings, observations, diagnosis, treatment plan…" style="resize:vertical;" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ICD-10 Diagnosis Code</label>
+                    <input type="text" name="diagnosis_code" class="form-control" placeholder="e.g. J06.9, I10">
+                </div>
+                <div class="form-group" style="justify-content:flex-end;">
+                    <label class="checkbox-row" style="margin-top:auto;">
+                        <input type="checkbox" name="is_confidential">
+                        Mark as Confidential
+                    </label>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" id="cancelRecordModal">Cancel</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const recordModal = document.getElementById('recordModal');
+document.getElementById('openRecordModal').addEventListener('click', () => recordModal.classList.add('open'));
+document.getElementById('closeRecordModal').addEventListener('click', () => recordModal.classList.remove('open'));
+document.getElementById('cancelRecordModal').addEventListener('click', () => recordModal.classList.remove('open'));
+recordModal.addEventListener('click', (e) => { if (e.target === recordModal) recordModal.classList.remove('open'); });
+</script>
+{% endblock %}

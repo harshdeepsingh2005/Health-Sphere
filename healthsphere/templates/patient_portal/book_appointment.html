@@ -1,14 +1,13 @@
-{% extends "base_simple.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Book Appointment - HealthSphere AI{% endblock %}
-
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
 <style>
 .gradient-booking { background: linear-gradient(135deg, #A8C5A8, #b8d4b8); }
-.gradient-doctor { background: linear-gradient(135deg, #A8C5E8, #b8d4f0); }
-.gradient-calendar { background: linear-gradient(135deg, #F0C3A0, #f8d3b0); }
+.gradient-doctor  { background: linear-gradient(135deg, #A8C5E8, #b8d4f0); }
+.gradient-calendar{ background: linear-gradient(135deg, #F0C3A0, #f8d3b0); }
 
 .doctor-selector {
     display: grid;
@@ -27,27 +26,14 @@
     text-align: center;
 }
 
-.doctor-option:hover {
-    border-color: var(--color-blue);
-    background: rgba(168, 197, 232, 0.05);
-}
-
-.doctor-option.selected {
-    border-color: var(--color-blue);
-    background: rgba(168, 197, 232, 0.1);
-}
+.doctor-option:hover   { border-color: var(--color-blue); background: rgba(168,197,232,0.05); }
+.doctor-option.selected{ border-color: var(--color-blue); background: rgba(168,197,232,0.15); box-shadow: 0 0 0 3px rgba(168,197,232,.25); }
 
 .doctor-avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
+    width: 64px; height: 64px; border-radius: 50%;
     background: linear-gradient(135deg, var(--color-blue), var(--color-green));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: white;
-    margin: 0 auto 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; color: white; margin: 0 auto 12px;
 }
 
 .time-slots {
@@ -65,40 +51,24 @@
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 14px; font-weight: 600;
 }
 
-.time-slot:hover:not(.disabled) {
-    border-color: var(--color-blue);
-    background: rgba(168, 197, 232, 0.05);
-}
-
-.time-slot.selected {
-    background: var(--color-blue);
-    border-color: var(--color-blue);
-    color: white;
-}
-
-.time-slot.disabled {
-    background: #F7FAFC;
-    color: #CBD5E0;
-    cursor: not-allowed;
-}
-
-.specialty-chip {
-    display: inline-block;
-    padding: 6px 12px;
-    background: rgba(168, 197, 232, 0.1);
-    border-radius: 16px;
-    font-size: 12px;
-    color: var(--color-blue);
-    margin: 4px;
-}
+.time-slot:hover:not(.disabled) { border-color: var(--color-blue); background: rgba(168,197,232,0.05); }
+.time-slot.selected { background: var(--color-blue); border-color: var(--color-blue); color: white; }
+.time-slot.disabled { background: #F7FAFC; color: #CBD5E0; cursor: not-allowed; }
 </style>
 {% endblock %}
 
 {% block content %}
+<form method="post" action="{% url 'patient_portal:book_appointment' %}" id="booking-form">
+{% csrf_token %}
+{# Hidden fields updated by JS as user interacts with the UI #}
+<input type="hidden" name="doctor"           id="hf-doctor"   value="{{ form.doctor.value|default:'' }}">
+<input type="hidden" name="appointment_date" id="hf-date"     value="{{ form.appointment_date.value|default:'' }}">
+<input type="hidden" name="appointment_time" id="hf-time"     value="{{ form.appointment_time.value|default:'' }}">
+<input type="hidden" name="appointment_type" id="hf-type"     value="consultation">
+
 <div class="bento-grid">
     <!-- Page Header -->
     <div class="bento-card bento-wide" data-hover-lift>
@@ -110,33 +80,41 @@
                 </div>
                 Book Appointment
             </div>
-            <a href="{% url 'patient_portal:dashboard' %}" class="bento-btn bento-btn-secondary">
+            <a href="{% url 'patient_portal:appointments' %}" class="bento-btn bento-btn-secondary">
                 <i class="fas fa-arrow-left"></i>
                 Back
             </a>
         </div>
-        <p style="color: #718096; margin: 0;">Schedule a visit with our medical professionals</p>
+        <p style="color:#718096;margin:0;">Schedule a visit with our medical professionals</p>
     </div>
+
+    <!-- Error messages -->
+    {% if messages %}
+    <div class="bento-card bento-wide">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" style="margin:0;padding:12px 16px;border-radius:10px;background:{% if message.tags == 'error' %}#FFF5F5;border:1px solid #FC8181{% else %}#F0FFF4;border:1px solid #68D391{% endif %};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Booking Steps -->
     <div class="bento-card bento-wide" data-tilt>
         <div class="card-glow"></div>
-        <div class="card-title">
-            <i class="fas fa-list-ol"></i>
-            Booking Steps
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
-            <div style="text-align: center; padding: 12px; background: rgba(168, 197, 232, 0.1); border-radius: 12px;">
-                <div style="font-size: 24px; color: var(--color-blue); margin-bottom: 4px;">1</div>
-                <div style="font-size: 13px; font-weight: 600; color: #2D3748;">Select Doctor</div>
+        <div class="card-title"><i class="fas fa-list-ol"></i> Booking Steps</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;">
+            <div id="step-1" style="text-align:center;padding:12px;background:rgba(168,197,232,0.12);border-radius:12px;border:2px solid rgba(168,197,232,0.4);">
+                <div style="font-size:20px;color:var(--color-blue);margin-bottom:4px;">1</div>
+                <div style="font-size:13px;font-weight:600;color:#2D3748;">Select Doctor</div>
             </div>
-            <div style="text-align: center; padding: 12px; background: rgba(168, 197, 232, 0.05); border-radius: 12px;">
-                <div style="font-size: 24px; color: #CBD5E0; margin-bottom: 4px;">2</div>
-                <div style="font-size: 13px; font-weight: 600; color: #718096;">Choose Date & Time</div>
+            <div id="step-2" style="text-align:center;padding:12px;background:rgba(168,197,232,0.05);border-radius:12px;">
+                <div style="font-size:20px;color:#CBD5E0;margin-bottom:4px;">2</div>
+                <div style="font-size:13px;font-weight:600;color:#718096;">Choose Date &amp; Time</div>
             </div>
-            <div style="text-align: center; padding: 12px; background: rgba(168, 197, 232, 0.05); border-radius: 12px;">
-                <div style="font-size: 24px; color: #CBD5E0; margin-bottom: 4px;">3</div>
-                <div style="font-size: 13px; font-weight: 600; color: #718096;">Confirm Details</div>
+            <div id="step-3" style="text-align:center;padding:12px;background:rgba(168,197,232,0.05);border-radius:12px;">
+                <div style="font-size:20px;color:#CBD5E0;margin-bottom:4px;">3</div>
+                <div style="font-size:13px;font-weight:600;color:#718096;">Confirm &amp; Book</div>
             </div>
         </div>
     </div>
@@ -145,99 +123,54 @@
     <div class="bento-card bento-full" data-tilt>
         <div class="card-glow"></div>
         <div class="card-header">
-            <div class="card-title">
-                <i class="fas fa-user-md"></i>
-                Select Doctor
-            </div>
-            <div style="display: flex; gap: 8px;">
-                <button class="bento-btn bento-btn-secondary" style="font-size: 13px;">
-                    All Specialties
-                </button>
-            </div>
+            <div class="card-title"><i class="fas fa-user-md"></i> Select Doctor</div>
         </div>
-        
+
+        {% if doctors %}
         <div class="doctor-selector">
-            <div class="doctor-option selected">
-                <div class="doctor-avatar">
-                    <i class="fas fa-user-md"></i>
-                </div>
-                <div style="font-weight: 600; color: #2D3748; margin-bottom: 4px;">Dr. Sarah Johnson</div>
-                <div style="font-size: 12px; color: #718096; margin-bottom: 8px;">Cardiology</div>
-                <div style="font-size: 11px; color: #48bb78; font-weight: 600;">⭐ 4.9 (127 reviews)</div>
+            {% for doctor in doctors %}
+            <div class="doctor-option" data-doctor-id="{{ doctor.id }}" onclick="selectDoctor(this, '{{ doctor.id }}', '{{ doctor.get_full_name }}')">
+                <div class="doctor-avatar"><i class="fas fa-user-md"></i></div>
+                <div style="font-weight:600;color:#2D3748;margin-bottom:4px;">Dr. {{ doctor.get_full_name }}</div>
+                <div style="font-size:12px;color:#718096;margin-bottom:8px;">{{ doctor.profile.specialization|default:"General Practice" }}</div>
+                <div style="font-size:11px;color:#48bb78;font-weight:600;">⭐ Available</div>
             </div>
-
-            <div class="doctor-option">
-                <div class="doctor-avatar">
-                    <i class="fas fa-user-md"></i>
-                </div>
-                <div style="font-weight: 600; color: #2D3748; margin-bottom: 4px;">Dr. Michael Chen</div>
-                <div style="font-size: 12px; color: #718096; margin-bottom: 8px;">General Practice</div>
-                <div style="font-size: 11px; color: #48bb78; font-weight: 600;">⭐ 4.8 (95 reviews)</div>
-            </div>
-
-            <div class="doctor-option">
-                <div class="doctor-avatar">
-                    <i class="fas fa-user-md"></i>
-                </div>
-                <div style="font-weight: 600; color: #2D3748; margin-bottom: 4px;">Dr. Emily Rodriguez</div>
-                <div style="font-size: 12px; color: #718096; margin-bottom: 8px;">Pediatrics</div>
-                <div style="font-size: 11px; color: #48bb78; font-weight: 600;">⭐ 5.0 (143 reviews)</div>
-            </div>
-
-            <div class="doctor-option">
-                <div class="doctor-avatar">
-                    <i class="fas fa-user-md"></i>
-                </div>
-                <div style="font-weight: 600; color: #2D3748; margin-bottom: 4px;">Dr. David Kim</div>
-                <div style="font-size: 12px; color: #718096; margin-bottom: 8px;">Orthopedics</div>
-                <div style="font-size: 11px; color: #48bb78; font-weight: 600;">⭐ 4.7 (88 reviews)</div>
-            </div>
-
-            <div class="doctor-option">
-                <div class="doctor-avatar">
-                    <i class="fas fa-user-md"></i>
-                </div>
-                <div style="font-weight: 600; color: #2D3748; margin-bottom: 4px;">Dr. Lisa Anderson</div>
-                <div style="font-size: 12px; color: #718096; margin-bottom: 8px;">Dermatology</div>
-                <div style="font-size: 11px; color: #48bb78; font-weight: 600;">⭐ 4.9 (112 reviews)</div>
-            </div>
-
-            <div class="doctor-option">
-                <div class="doctor-avatar">
-                    <i class="fas fa-user-md"></i>
-                </div>
-                <div style="font-weight: 600; color: #2D3748; margin-bottom: 4px;">Dr. James Wilson</div>
-                <div style="font-size: 12px; color: #718096; margin-bottom: 8px;">Neurology</div>
-                <div style="font-size: 11px; color: #48bb78; font-weight: 600;">⭐ 4.8 (76 reviews)</div>
-            </div>
+            {% endfor %}
         </div>
+        {% else %}
+        {# Fallback: show info card when no doctors exist in DB #}
+        <div style="text-align:center;padding:30px;color:#718096;">
+            <i class="fas fa-user-md" style="font-size:40px;opacity:0.25;display:block;margin-bottom:12px;"></i>
+            <p style="font-weight:600;color:#2D3748;margin-bottom:4px;">No doctors found</p>
+            <p style="font-size:13px;">Please <a href="/django-admin/" style="color:var(--color-blue);">add doctor accounts in the admin panel</a> to enable appointment booking.</p>
+        </div>
+        {% endif %}
+
     </div>
 
     <!-- Select Date -->
     <div class="bento-card bento-wide" data-hover-lift>
         <div class="card-glow"></div>
-        <div class="card-title">
-            <i class="fas fa-calendar"></i>
-            Select Date
-        </div>
+        <div class="card-title"><i class="fas fa-calendar"></i> Select Date</div>
         <div class="bento-form-group">
-            <input type="date" class="bento-input" value="2026-02-20">
+            <input type="date" class="bento-input" id="date-picker"
+                   min="{{ today|date:'Y-m-d' }}"
+                   value="{{ form.appointment_date.value|default:'' }}"
+                   onchange="selectDate(this.value)">
         </div>
     </div>
 
     <!-- Appointment Type -->
     <div class="bento-card bento-wide" data-hover-lift>
         <div class="card-glow"></div>
-        <div class="card-title">
-            <i class="fas fa-clipboard-list"></i>
-            Appointment Type
-        </div>
+        <div class="card-title"><i class="fas fa-clipboard-list"></i> Appointment Type</div>
         <div class="bento-form-group">
-            <select class="bento-select">
-                <option>General Consultation</option>
-                <option>Follow-up Visit</option>
-                <option>Routine Checkup</option>
-                <option>Emergency</option>
+            <select class="bento-select" id="type-select" onchange="document.getElementById('hf-type').value=this.value">
+                <option value="consultation">General Consultation</option>
+                <option value="follow_up">Follow-up Visit</option>
+                <option value="checkup">Routine Checkup</option>
+                <option value="emergency">Emergency</option>
+                <option value="telemedicine">Telemedicine</option>
             </select>
         </div>
     </div>
@@ -246,28 +179,24 @@
     <div class="bento-card bento-full" data-tilt>
         <div class="card-glow"></div>
         <div class="card-header">
-            <div class="card-title">
-                <i class="fas fa-clock"></i>
-                Available Time Slots
-            </div>
-            <span class="card-badge">Thursday, Feb 20, 2026</span>
+            <div class="card-title"><i class="fas fa-clock"></i> Available Time Slots</div>
+            <span class="card-badge" id="date-display">Select a date above</span>
         </div>
-        
-        <div style="margin-top: 16px;">
-            <div style="font-weight: 600; color: #2D3748; margin-bottom: 8px;">Morning</div>
-            <div class="time-slots">
-                <div class="time-slot">9:00 AM</div>
-                <div class="time-slot selected">10:00 AM</div>
-                <div class="time-slot">11:00 AM</div>
-                <div class="time-slot disabled">12:00 PM</div>
-            </div>
 
-            <div style="font-weight: 600; color: #2D3748; margin: 16px 0 8px;">Afternoon</div>
+        <div style="margin-top:16px;">
+            <div style="font-weight:600;color:#2D3748;margin-bottom:8px;">Morning</div>
             <div class="time-slots">
-                <div class="time-slot">2:00 PM</div>
-                <div class="time-slot">3:00 PM</div>
-                <div class="time-slot">4:00 PM</div>
-                <div class="time-slot disabled">5:00 PM</div>
+                <div class="time-slot" data-time="09:00" onclick="selectTime(this, '09:00')">9:00 AM</div>
+                <div class="time-slot" data-time="10:00" onclick="selectTime(this, '10:00')">10:00 AM</div>
+                <div class="time-slot" data-time="11:00" onclick="selectTime(this, '11:00')">11:00 AM</div>
+                <div class="time-slot disabled"           >12:00 PM</div>
+            </div>
+            <div style="font-weight:600;color:#2D3748;margin:16px 0 8px;">Afternoon</div>
+            <div class="time-slots">
+                <div class="time-slot" data-time="14:00" onclick="selectTime(this, '14:00')">2:00 PM</div>
+                <div class="time-slot" data-time="15:00" onclick="selectTime(this, '15:00')">3:00 PM</div>
+                <div class="time-slot" data-time="16:00" onclick="selectTime(this, '16:00')">4:00 PM</div>
+                <div class="time-slot disabled"           >5:00 PM</div>
             </div>
         </div>
     </div>
@@ -275,66 +204,120 @@
     <!-- Reason for Visit -->
     <div class="bento-card bento-wide" data-hover-lift>
         <div class="card-glow"></div>
-        <div class="card-title">
-            <i class="fas fa-notes-medical"></i>
-            Reason for Visit
-        </div>
+        <div class="card-title"><i class="fas fa-notes-medical"></i> Reason for Visit</div>
         <div class="bento-form-group">
-            <textarea class="bento-textarea" placeholder="Please describe your symptoms or reason for visit..."></textarea>
+            <textarea class="bento-textarea" name="reason" id="reason-input"
+                      placeholder="Please describe your symptoms or reason for visit...">{{ form.reason.value|default:'' }}</textarea>
         </div>
     </div>
 
-    <!-- Appointment Summary -->
+    <!-- Appointment Summary + Submit -->
     <div class="bento-card bento-wide" data-tilt>
         <div class="card-glow"></div>
         <div class="card-header">
-            <div class="card-title">
-                <i class="fas fa-file-alt"></i>
-                Appointment Summary
+            <div class="card-title"><i class="fas fa-file-alt"></i> Appointment Summary</div>
+        </div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(168,197,232,0.05);border-radius:8px;">
+                <span style="color:#718096;font-size:14px;">Doctor:</span>
+                <span style="font-weight:600;color:#2D3748;" id="sum-doctor">— not selected —</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(168,197,232,0.05);border-radius:8px;">
+                <span style="color:#718096;font-size:14px;">Date:</span>
+                <span style="font-weight:600;color:#2D3748;" id="sum-date">— not selected —</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(168,197,232,0.05);border-radius:8px;">
+                <span style="color:#718096;font-size:14px;">Time:</span>
+                <span style="font-weight:600;color:#2D3748;" id="sum-time">— not selected —</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(168,197,232,0.05);border-radius:8px;">
+                <span style="color:#718096;font-size:14px;">Type:</span>
+                <span style="font-weight:600;color:#2D3748;" id="sum-type">General Consultation</span>
             </div>
         </div>
-        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;">
-            <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(168, 197, 232, 0.05); border-radius: 8px;">
-                <span style="color: #718096; font-size: 14px;">Doctor:</span>
-                <span style="font-weight: 600; color: #2D3748;">Dr. Sarah Johnson</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(168, 197, 232, 0.05); border-radius: 8px;">
-                <span style="color: #718096; font-size: 14px;">Date:</span>
-                <span style="font-weight: 600; color: #2D3748;">Feb 20, 2026</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(168, 197, 232, 0.05); border-radius: 8px;">
-                <span style="color: #718096; font-size: 14px;">Time:</span>
-                <span style="font-weight: 600; color: #2D3748;">10:00 AM</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(168, 197, 232, 0.05); border-radius: 8px;">
-                <span style="color: #718096; font-size: 14px;">Type:</span>
-                <span style="font-weight: 600; color: #2D3748;">General Consultation</span>
-            </div>
-        </div>
-        <button class="bento-btn bento-btn-success" style="width: 100%; margin-top: 16px; padding: 14px;">
+        <button type="submit" class="bento-btn bento-btn-success" id="confirm-btn"
+                style="width:100%;margin-top:16px;padding:14px;opacity:.5;cursor:not-allowed;" disabled>
             <i class="fas fa-check"></i>
             Confirm Appointment
         </button>
+        <p style="font-size:12px;color:#718096;text-align:center;margin-top:8px;" id="confirm-hint">
+            Please select a doctor, date, and time to enable booking.
+        </p>
     </div>
-</div>
 
+</div><!-- /.bento-grid -->
+</form>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Doctor selection
-    document.querySelectorAll('.doctor-option').forEach(option => {
-        option.addEventListener('click', function() {
-            document.querySelectorAll('.doctor-option').forEach(o => o.classList.remove('selected'));
-            this.classList.add('selected');
-        });
+(function () {
+    var state = { doctorId: '', doctorName: '', date: '', time: '', type: 'General Consultation' };
+
+    function refresh() {
+        document.getElementById('sum-doctor').textContent = state.doctorName  || '— not selected —';
+        document.getElementById('sum-date').textContent   = state.date       ? formatDate(state.date) : '— not selected —';
+        document.getElementById('sum-time').textContent   = state.time       ? formatTime(state.time) : '— not selected —';
+        document.getElementById('sum-type').textContent   = state.type;
+
+        var ready = state.doctorId && state.date && state.time;
+        var btn   = document.getElementById('confirm-btn');
+        var hint  = document.getElementById('confirm-hint');
+        btn.disabled     = !ready;
+        btn.style.opacity  = ready ? '1' : '.5';
+        btn.style.cursor   = ready ? 'pointer' : 'not-allowed';
+        hint.textContent   = ready ? '✓ All details complete – click to confirm.' : 'Please select a doctor, date, and time to enable booking.';
+        hint.style.color   = ready ? '#48bb78' : '#718096';
+    }
+
+    function formatDate(d) {
+        var dt = new Date(d + 'T00:00:00');
+        return dt.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    }
+    function formatTime(t) {
+        var [h, m] = t.split(':').map(Number);
+        var ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return h + ':' + String(m).padStart(2,'0') + ' ' + ampm;
+    }
+
+    window.selectDoctor = function(el, id, name) {
+        document.querySelectorAll('.doctor-option').forEach(d => d.classList.remove('selected'));
+        el.classList.add('selected');
+        state.doctorId   = id;
+        state.doctorName = 'Dr. ' + name;
+        document.getElementById('hf-doctor').value = id;
+        refresh();
+    };
+
+    window.selectDate = function(val) {
+        state.date = val;
+        document.getElementById('hf-date').value = val;
+        document.getElementById('date-display').textContent = val ? formatDate(val) : 'Select a date above';
+        refresh();
+    };
+
+    window.selectTime = function(el, t) {
+        document.querySelectorAll('.time-slot:not(.disabled)').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        state.time = t;
+        document.getElementById('hf-time').value = t + ':00';
+        refresh();
+    };
+
+    // Type select → update summary
+    document.getElementById('type-select').addEventListener('change', function() {
+        state.type = this.options[this.selectedIndex].text;
+        document.getElementById('sum-type').textContent = state.type;
     });
 
-    // Time slot selection
-    document.querySelectorAll('.time-slot:not(.disabled)').forEach(slot => {
-        slot.addEventListener('click', function() {
-            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-            this.classList.add('selected');
-        });
-    });
-});
+    // Set today as minimum date and default
+    var today = new Date().toISOString().slice(0,10);
+    var dp = document.getElementById('date-picker');
+    dp.min = today;
+    if (!dp.value) { dp.value = today; selectDate(today); }
+
+    refresh();
+})();
 </script>
 {% endblock %}

@@ -1,17 +1,559 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}AI Assistant — HealthSphere{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --ai-purple: #8B5CF6;
+        --ai-pink: #EC4899;
+        --ai-blue: #3B82F6;
+        --ai-green: #10B981;
+    }
+
+    .chat-layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 24px;
+        padding: 24px 32px;
+        height: calc(100vh - 90px);
+        max-height: 900px;
+    }
+
+    /* Sidebar */
+    .chat-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .sidebar-header {
+        padding: 24px;
+        background: linear-gradient(135deg, #0f0c29, #302b63);
+        border-radius: 20px;
+        color: white;
+        text-align: center;
+    }
+    .bot-avatar {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, var(--ai-purple), var(--ai-pink));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 12px;
+        box-shadow: 0 0 30px rgba(139,92,246,0.4);
+        animation: bot-pulse 3s ease-in-out infinite;
+    }
+    @keyframes bot-pulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        50% { box-shadow: 0 0 40px rgba(139,92,246,0.7); }
+    }
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.7);
+        margin-top: 8px;
+    }
+    .status-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--ai-green);
+        animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .feature-card {
+        background: white;
+        border-radius: 14px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #f0f0f0;
+        text-decoration: none;
+        color: inherit;
+    }
+    .feature-card:hover { transform: translateX(4px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-color: var(--ai-purple); }
+    .feature-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 16px;
+    }
+
+    /* Chat area */
+    .chat-main {
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 4px 30px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+    .chat-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: white;
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        background: #fafafa;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+
+    .message {
+        display: flex;
+        gap: 12px;
+        max-width: 80%;
+        animation: slide-in 0.3s ease;
+    }
+    @keyframes slide-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.bot { align-self: flex-start; }
+
+    .message-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 15px;
+        color: white;
+    }
+    .message.bot .message-avatar { background: linear-gradient(135deg, var(--ai-purple), var(--ai-pink)); }
+    .message.user .message-avatar { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.6;
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+    .message.bot .message-bubble {
+        background: white;
+        color: #2D3748;
+        border: 1px solid #f0f0f0;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .message.user .message-bubble {
+        background: linear-gradient(135deg, var(--ai-purple), var(--ai-pink));
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    .message-bubble p { margin: 0 0 8px; }
+    .message-bubble p:last-child { margin-bottom: 0; }
+    .message-bubble ul { margin: 8px 0; padding-left: 16px; }
+    .message-bubble li { margin-bottom: 4px; }
+
+    .typing-indicator {
+        display: flex;
+        gap: 4px;
+        padding: 12px 16px;
+        background: white;
+        border-radius: 18px;
+        border-bottom-left-radius: 4px;
+        border: 1px solid #f0f0f0;
+        width: fit-content;
+    }
+    .typing-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--ai-purple);
+        animation: typing 1.4s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-8px); opacity: 1; } }
+
+    .chat-input-area {
+        padding: 16px 24px;
+        border-top: 1px solid #f0f0f0;
+        background: white;
+    }
+    .input-row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+    }
+    .chat-textarea {
+        flex: 1;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 12px 16px;
+        font-size: 14px;
+        resize: none;
+        outline: none;
+        max-height: 120px;
+        min-height: 48px;
+        transition: border-color 0.2s;
+        font-family: inherit;
+    }
+    .chat-textarea:focus { border-color: var(--ai-purple); }
+    .send-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--ai-purple), var(--ai-pink));
+        border: none;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+        flex-shrink: 0;
+    }
+    .send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(139,92,246,0.4); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .suggested-prompts {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+    .prompt-chip {
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        font-size: 12px;
+        color: #718096;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+    }
+    .prompt-chip:hover { border-color: var(--ai-purple); color: var(--ai-purple); background: rgba(139,92,246,0.05); }
+
+    .demo-warning {
+        background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.02));
+        border: 1px solid rgba(245,158,11,0.2);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        color: #92400e;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="bento-grid">
-    <div class="bento-featured">
-        <h2>AI Assistant</h2>
-        <p>Interactive assistant: symptom checks, triage help, and guidance.</p>
+<div class="chat-layout">
+
+    <!-- Sidebar -->
+    <div class="chat-sidebar">
+        <div class="sidebar-header">
+            <div class="bot-avatar">🤖</div>
+            <div style="font-weight: 700; font-size: 16px;">HealthSphere AI</div>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 4px;">Your Health Companion</div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                {% if gemini_available %}Online · Gemini 2.0{% else %}Demo Mode{% endif %}
+            </div>
+        </div>
+
+        {% if not gemini_available %}
+        <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; padding: 12px; font-size: 12px; color: #92400e;">
+            <i class="fas fa-exclamation-triangle" style="margin-right: 6px;"></i>
+            <strong>Demo Mode:</strong> Set the <code>GEMINI_API_KEY</code> environment variable to enable live AI responses.
+        </div>
+        {% endif %}
+
+        <div style="font-size: 11px; font-weight: 700; color: #A0AEC0; text-transform: uppercase; letter-spacing: 0.8px; padding-left: 4px;">Capabilities</div>
+        {% for feature in assistant_features %}
+        <div class="feature-card" onclick="useFeature('{{ feature.title }}')" style="cursor: pointer;">
+            <div class="feature-icon" style="background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(236,72,153,0.1));">
+                <i class="{{ feature.icon }}" style="color: var(--ai-purple);"></i>
+            </div>
+            <div>
+                <div style="font-weight: 600; font-size: 13px; color: #2D3748;">{{ feature.title }}</div>
+                <div style="font-size: 12px; color: #718096;">{{ feature.desc }}</div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <a href="{% url 'ai:insights' %}" style="text-decoration: none;">
+            <div class="feature-card" style="margin-top: auto; background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.08)); border-color: rgba(139,92,246,0.2);">
+                <div class="feature-icon" style="background: linear-gradient(135deg, var(--ai-purple), var(--ai-pink));">
+                    <i class="fas fa-chart-line" style="color: white;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; font-size: 13px; color: #2D3748;">AI Insights Dashboard</div>
+                    <div style="font-size: 12px; color: #718096;">Full health analysis</div>
+                </div>
+            </div>
+        </a>
     </div>
-    <div class="bento-tall">
-        <h3>Features</h3>
-        <ul>
-            {% for f in assistant_features %}
-                <li>{{ f }}</li>
-            {% endfor %}
-        </ul>
+
+    <!-- Chat Area -->
+    <div class="chat-main">
+        <div class="chat-header">
+            <div class="bot-avatar" style="width: 44px; height: 44px; font-size: 18px;">🤖</div>
+            <div>
+                <div style="font-weight: 700; color: #2D3748;">HealthSphere AI Assistant</div>
+                <div style="font-size: 12px; color: var(--ai-green);">
+                    <i class="fas fa-circle" style="font-size: 8px;"></i>
+                    {% if gemini_available %}Powered by Google Gemini{% else %}Demo Mode{% endif %}
+                </div>
+            </div>
+            <div style="margin-left: auto; display: flex; gap: 10px;">
+                <button onclick="clearChat()" title="Clear chat"
+                    style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e2e8f0;
+                    background: white; cursor: pointer; color: #718096; transition: all 0.2s;"
+                    onmouseover="this.style.borderColor='#fc8181'; this.style.color='#fc8181'"
+                    onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#718096'">
+                    <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome message -->
+            <div class="message bot">
+                <div class="message-avatar">🤖</div>
+                <div>
+                    <div class="message-bubble">
+                        <p>👋 Hello! I'm your <strong>HealthSphere AI Assistant</strong>, powered by Google Gemini.</p>
+                        <p>I can help you with:</p>
+                        <ul>
+                            <li>Understanding symptoms and general health guidance</li>
+                            <li>Explaining medical terms and reports</li>
+                            <li>Wellness tips and lifestyle advice</li>
+                            <li>Preparing questions for your doctor</li>
+                        </ul>
+                        <p style="font-size: 12px; color: #718096; margin-top: 8px; padding: 8px; background: #f9fafb; border-radius: 8px;">
+                            ⚠️ I provide general health information only — always consult your doctor for medical advice.
+                        </p>
+                    </div>
+                    <div style="font-size: 11px; color: #A0AEC0; margin-top: 4px; padding-left: 4px;">Just now</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="suggested-prompts" id="suggestedPrompts">
+                <div class="prompt-chip" onclick="sendSuggested(this)">💊 What is Metformin used for?</div>
+                <div class="prompt-chip" onclick="sendSuggested(this)">🩺 I have a headache, what could cause it?</div>
+                <div class="prompt-chip" onclick="sendSuggested(this)">📋 How do I prepare for a blood test?</div>
+                <div class="prompt-chip" onclick="sendSuggested(this)">❤️ How can I improve my heart health?</div>
+            </div>
+            <div class="input-row" style="margin-top: 10px;">
+                <textarea
+                    class="chat-textarea"
+                    id="chatInput"
+                    placeholder="Ask me anything about your health..."
+                    rows="1"
+                    onkeydown="handleKeydown(event)"
+                    oninput="autoResize(this)"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
     </div>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const CHAT_API_URL = "{% url 'ai:chat_api' %}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
+    let conversationHistory = [];
+    let isTyping = false;
+
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    }
+
+    function handleKeydown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function sendSuggested(el) {
+        const text = el.textContent.replace(/^[^\w]+/, '').trim();
+        document.getElementById('chatInput').value = text;
+        // Hide suggested prompts after first use
+        document.getElementById('suggestedPrompts').style.display = 'none';
+        sendMessage();
+    }
+
+    function useFeature(featureName) {
+        const prompts = {
+            'Symptom Guidance': 'I have some symptoms I want to understand. Can you help me?',
+            'Medication Info': 'Can you explain what my medications do and when I should take them?',
+            'Report Explanation': 'Can you help me understand a medical report or lab result?',
+            'Health Tips': 'What are the most important health tips for staying healthy?',
+            'Appointment Prep': 'Help me prepare questions to ask my doctor at my next appointment.',
+            'Risk Insights': "What factors most affect heart disease risk and how can I improve mine?",
+        };
+        const prompt = prompts[featureName] || `Tell me about ${featureName}`;
+        document.getElementById('chatInput').value = prompt;
+        document.getElementById('chatInput').focus();
+    }
+
+    async function sendMessage() {
+        if (isTyping) return;
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        input.value = '';
+        input.style.height = 'auto';
+        document.getElementById('suggestedPrompts').style.display = 'none';
+
+        appendMessage('user', message);
+        conversationHistory.push({ role: 'user', text: message });
+
+        showTyping();
+        document.getElementById('sendBtn').disabled = true;
+        isTyping = true;
+
+        try {
+            const response = await fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                },
+                body: JSON.stringify({
+                    message: message,
+                    history: conversationHistory.slice(-10),
+                }),
+            });
+            const data = await response.json();
+            hideTyping();
+
+            if (data.reply) {
+                appendMessage('bot', data.reply, data.ai_powered);
+                conversationHistory.push({ role: 'bot', text: data.reply });
+            } else if (data.error) {
+                appendMessage('bot', `❌ Error: ${data.error}`);
+            }
+        } catch (err) {
+            hideTyping();
+            appendMessage('bot', '❌ Could not connect to the AI service. Please try again.');
+            console.error('Chat error:', err);
+        } finally {
+            isTyping = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('chatInput').focus();
+        }
+    }
+
+    function appendMessage(role, text, aiPowered = false) {
+        const container = document.getElementById('chatMessages');
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.textContent = role === 'bot' ? '🤖' : '👤';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        // Convert newlines and markdown-ish formatting
+        const formatted = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/^• (.+)$/gm, '<li>$1</li>')
+            .replace(/^- (.+)$/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+        bubble.innerHTML = `<p>${formatted}</p>`;
+
+        const meta = document.createElement('div');
+        meta.style.cssText = 'font-size: 11px; color: #A0AEC0; margin-top: 4px; padding-left: 4px;';
+        meta.textContent = now + (aiPowered ? ' · Gemini AI' : '');
+
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(meta);
+
+        if (role === 'user') {
+            div.appendChild(wrapper);
+            div.appendChild(avatar);
+        } else {
+            div.appendChild(avatar);
+            div.appendChild(wrapper);
+        }
+
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    let typingEl = null;
+    function showTyping() {
+        const container = document.getElementById('chatMessages');
+        typingEl = document.createElement('div');
+        typingEl.className = 'message bot';
+        typingEl.id = 'typingIndicator';
+        typingEl.innerHTML = `
+            <div class="message-avatar">🤖</div>
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>`;
+        container.appendChild(typingEl);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function hideTyping() {
+        const el = document.getElementById('typingIndicator');
+        if (el) el.remove();
+    }
+
+    function clearChat() {
+        if (!confirm('Clear the conversation?')) return;
+        const container = document.getElementById('chatMessages');
+        // Keep only the welcome message (first child)
+        while (container.children.length > 1) {
+            container.removeChild(container.lastChild);
+        }
+        conversationHistory = [];
+        document.getElementById('suggestedPrompts').style.display = 'flex';
+    }
+
+    // Focus input on load
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('chatInput').focus();
+    });
+</script>
 {% endblock %}

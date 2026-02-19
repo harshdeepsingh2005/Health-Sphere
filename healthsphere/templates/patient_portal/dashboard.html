@@ -1,458 +1,459 @@
-{% extends "base_simple.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Patient Dashboard - HealthSphere AI{% endblock %}
-
-{% block sidebar_nav %}
-<!-- Patient Navigation -->
-<div class="nav-section">
-    <div class="nav-section-title">Dashboard</div>
-    <div class="nav-item">
-        <a href="{% url 'patient_portal:dashboard' %}" class="nav-link active">
-            <i class="fas fa-home"></i>
-            <span class="nav-link-text">Overview</span>
-        </a>
-    </div>
-    <div class="nav-item">
-        <a href="{% url 'patient_portal:book_appointment' %}" class="nav-link">
-            <i class="fas fa-calendar-plus"></i>
-            <span class="nav-link-text">Book Appointment</span>
-        </a>
-    </div>
-</div>
-
-<div class="nav-section">
-    <div class="nav-section-title">Health</div>
-    <div class="nav-item">
-        <a href="{% url 'patient_portal:health_details' %}" class="nav-link">
-            <i class="fas fa-heartbeat"></i>
-            <span class="nav-link-text">Vitals & Health</span>
-        </a>
-    </div>
-    <div class="nav-item">
-        <a href="{% url 'patient_portal:lab_results' %}" class="nav-link">
-            <i class="fas fa-flask"></i>
-            <span class="nav-link-text">Lab Results</span>
-        </a>
-    </div>
-    <div class="nav-item">
-        <a href="{% url 'patient_portal:assistant' %}" class="nav-link">
-            <i class="fas fa-robot"></i>
-            <span class="nav-link-text">AI Assistant</span>
-        </a>
-    </div>
-</div>
-{% endblock %}
-
 {% block extra_css %}
 <style>
-/* ===== BENTO GRID LAYOUT ===== */
-.bento-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    padding: 24px;
-    max-width: 1600px;
-    margin: 0 auto;
-}
-
-.bento-small { grid-column: span 1; grid-row: span 1; }
-.bento-wide { grid-column: span 2; grid-row: span 1; }
-.bento-tall { grid-column: span 1; grid-row: span 2; }
-.bento-large { grid-column: span 2; grid-row: span 1; }
-.bento-featured { grid-column: span 2; grid-row: span 2; }
-
-/* ===== INTERACTIVE CARDS ===== */
-.bento-card {
-    background: white;
-    border-radius: 20px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    cursor: pointer;
-}
-
-.bento-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-}
-
-[data-hover-lift]:hover {
-    transform: translateY(-8px) scale(1.02);
-}
-
-[data-tilt]:hover {
-    transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) scale(1.01);
-}
-
-.card-glow {
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(168, 197, 232, 0.15) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    pointer-events: none;
-}
-
-.bento-card:hover .card-glow {
-    opacity: 1;
-}
-
-/* ===== GREETING CARD ===== */
-.greeting-content {
-    position: relative;
-    z-index: 2;
-}
-
-.greeting-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-.greeting-content h1 {
-    font-size: 32px;
-    font-weight: 700;
-    color: #2D3748;
-    margin-bottom: 8px;
-}
-
-.greeting-subtitle {
-    font-size: 16px;
-    color: #718096;
-    margin-bottom: 20px;
-}
-
-.health-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(72, 187, 120, 0.1);
-    padding: 8px 16px;
-    border-radius: 12px;
-    font-size: 14px;
-    color: #48bb78;
-    font-weight: 600;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #48bb78;
-    animation: pulseDot 2s ease-in-out infinite;
-}
-
-@keyframes pulseDot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; transform: scale(1.2); }
-}
-
-/* ===== METRIC CARDS ===== */
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-}
-
-.metric-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: white;
-    transition: transform 0.3s ease;
-}
-
-.bento-card:hover .metric-icon {
-    transform: scale(1.1) rotate(5deg);
-}
-
-.metric-value {
-    font-size: 48px;
-    font-weight: 700;
-    color: #2D3748;
-    line-height: 1;
-    margin-bottom: 8px;
-}
-
-.metric-label {
-    font-size: 14px;
-    color: #718096;
-    font-weight: 500;
-    margin-bottom: 16px;
-}
-
-.metric-trend {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #48bb78;
-}
-
-.trend-down {
-    color: #f56565;
-}
-
-/* ===== APPOINTMENT CARD ===== */
-.appointment-item {
-    padding: 16px;
-    background: rgba(168, 197, 232, 0.05);
-    border-radius: 12px;
-    border-left: 4px solid var(--color-blue);
-    margin-bottom: 12px;
-    transition: all 0.3s ease;
-}
-
-.appointment-item:hover {
-    background: rgba(168, 197, 232, 0.1);
-    transform: translateX(4px);
-}
-
-.apt-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.apt-time {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-blue);
-}
-
-.apt-status {
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    background: rgba(72, 187, 120, 0.1);
-    color: #48bb78;
-}
-
-.apt-doctor {
-    font-size: 15px;
-    font-weight: 600;
-    color: #2D3748;
-    margin-bottom: 4px;
-}
-
-.apt-department {
-    font-size: 13px;
-    color: #718096;
-}
-
-/* ===== VITALS GRID ===== */
-.vitals-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.vital-item {
-    padding: 12px;
-    background: linear-gradient(135deg, rgba(168, 197, 232, 0.05) 0%, rgba(168, 197, 232, 0.02) 100%);
-    border-radius: 10px;
-}
-
-.vital-label {
-    font-size: 11px;
-    color: #718096;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 6px;
-}
-
-.vital-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: #2D3748;
-}
-
-.vital-unit {
-    font-size: 12px;
-    color: #A0AEC0;
-    font-weight: 400;
-}
-
-/* ===== MEDICATION CARD ===== */
-.medication-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.med-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: rgba(240, 195, 160, 0.05);
-    border-radius: 10px;
-}
-
-.med-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #F0C3A0, #f5d4b8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 18px;
-}
-
-.med-info {
-    flex: 1;
-}
-
-.med-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: #2D3748;
-    margin-bottom: 2px;
-}
-
-.med-dosage {
-    font-size: 12px;
-    color: #718096;
-}
-
-.med-badge {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 600;
-    background: rgba(232, 155, 135, 0.1);
-    color: var(--color-coral);
-}
-
-/* ===== QUICK ACTIONS ===== */
-.actions-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.action-btn {
-    padding: 16px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(168, 197, 232, 0.1) 0%, rgba(168, 197, 232, 0.05) 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.action-btn:hover {
-    background: linear-gradient(135deg, var(--color-blue), #b8d4f0);
-    color: white;
-    transform: scale(1.05);
-}
-
-.action-btn i {
-    font-size: 24px;
-    color: var(--color-blue);
-    transition: color 0.3s ease;
-}
-
-.action-btn:hover i {
-    color: white;
-}
-
-.action-btn span {
-    font-size: 12px;
-    font-weight: 600;
-    color: #4A5568;
-    transition: color 0.3s ease;
-}
-
-.action-btn:hover span {
-    color: white;
-}
-
-/* ===== HEALTH SCORE RING ===== */
-.score-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 0;
-}
-
-.circular-score {
-    position: relative;
-    width: 140px;
-    height: 140px;
-}
-
-.score-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-}
-
-.score-number {
-    font-size: 36px;
-    font-weight: 700;
-    color: #2D3748;
-}
-
-.score-text {
-    font-size: 12px;
-    color: #718096;
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 1400px) {
+    /* ===== BENTO GRID LAYOUT ===== */
     .bento-grid {
-        grid-template-columns: repeat(3, 1fr);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        padding: 24px;
+        max-width: 1600px;
+        margin: 0 auto;
     }
-    .bento-featured {
-        grid-column: span 3;
-    }
-}
 
-@media (max-width: 1024px) {
-    .bento-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .bento-wide, .bento-large, .bento-featured {
-        grid-column: span 2;
-    }
-}
-
-@media (max-width: 768px) {
-    .bento-grid {
-        grid-template-columns: 1fr;
-    }
-    .bento-small, .bento-wide, .bento-large, .bento-tall, .bento-featured {
+    .bento-small {
         grid-column: span 1;
         grid-row: span 1;
     }
-}
+
+    .bento-wide {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+
+    .bento-tall {
+        grid-column: span 1;
+        grid-row: span 2;
+    }
+
+    .bento-large {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+
+    .bento-featured {
+        grid-column: span 2;
+        grid-row: span 2;
+    }
+
+    /* ===== INTERACTIVE CARDS ===== */
+    .bento-card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+    }
+
+    .bento-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    [data-hover-lift]:hover {
+        transform: translateY(-8px) scale(1.02);
+    }
+
+    [data-tilt]:hover {
+        transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) scale(1.01);
+    }
+
+    .card-glow {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(168, 197, 232, 0.15) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    }
+
+    .bento-card:hover .card-glow {
+        opacity: 1;
+    }
+
+    /* ===== GREETING CARD ===== */
+    .greeting-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .greeting-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .greeting-content h1 {
+        font-size: 32px;
+        font-weight: 700;
+        color: #2D3748;
+        margin-bottom: 8px;
+    }
+
+    .greeting-subtitle {
+        font-size: 16px;
+        color: #718096;
+        margin-bottom: 20px;
+    }
+
+    .health-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(72, 187, 120, 0.1);
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        color: #48bb78;
+        font-weight: 600;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #48bb78;
+        animation: pulseDot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulseDot {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+        }
+    }
+
+    /* ===== METRIC CARDS ===== */
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .metric-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        transition: transform 0.3s ease;
+    }
+
+    .bento-card:hover .metric-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .metric-value {
+        font-size: 48px;
+        font-weight: 700;
+        color: #2D3748;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    .metric-label {
+        font-size: 14px;
+        color: #718096;
+        font-weight: 500;
+        margin-bottom: 16px;
+    }
+
+    .metric-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #48bb78;
+    }
+
+    .trend-down {
+        color: #f56565;
+    }
+
+    /* ===== APPOINTMENT CARD ===== */
+    .appointment-item {
+        padding: 16px;
+        background: rgba(168, 197, 232, 0.05);
+        border-radius: 12px;
+        border-left: 4px solid var(--color-blue);
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .appointment-item:hover {
+        background: rgba(168, 197, 232, 0.1);
+        transform: translateX(4px);
+    }
+
+    .apt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .apt-time {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--color-blue);
+    }
+
+    .apt-status {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(72, 187, 120, 0.1);
+        color: #48bb78;
+    }
+
+    .apt-doctor {
+        font-size: 15px;
+        font-weight: 600;
+        color: #2D3748;
+        margin-bottom: 4px;
+    }
+
+    .apt-department {
+        font-size: 13px;
+        color: #718096;
+    }
+
+    /* ===== VITALS GRID ===== */
+    .vitals-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .vital-item {
+        padding: 12px;
+        background: linear-gradient(135deg, rgba(168, 197, 232, 0.05) 0%, rgba(168, 197, 232, 0.02) 100%);
+        border-radius: 10px;
+    }
+
+    .vital-label {
+        font-size: 11px;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+    }
+
+    .vital-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2D3748;
+    }
+
+    .vital-unit {
+        font-size: 12px;
+        color: #A0AEC0;
+        font-weight: 400;
+    }
+
+    /* ===== MEDICATION CARD ===== */
+    .medication-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .med-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: rgba(240, 195, 160, 0.05);
+        border-radius: 10px;
+    }
+
+    .med-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #F0C3A0, #f5d4b8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+    }
+
+    .med-info {
+        flex: 1;
+    }
+
+    .med-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2D3748;
+        margin-bottom: 2px;
+    }
+
+    .med-dosage {
+        font-size: 12px;
+        color: #718096;
+    }
+
+    .med-badge {
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 600;
+        background: rgba(232, 155, 135, 0.1);
+        color: var(--color-coral);
+    }
+
+    /* ===== QUICK ACTIONS ===== */
+    .actions-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .action-btn {
+        padding: 16px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(168, 197, 232, 0.1) 0%, rgba(168, 197, 232, 0.05) 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+        background: linear-gradient(135deg, var(--color-blue), #b8d4f0);
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .action-btn i {
+        font-size: 24px;
+        color: var(--color-blue);
+        transition: color 0.3s ease;
+    }
+
+    .action-btn:hover i {
+        color: white;
+    }
+
+    .action-btn span {
+        font-size: 12px;
+        font-weight: 600;
+        color: #4A5568;
+        transition: color 0.3s ease;
+    }
+
+    .action-btn:hover span {
+        color: white;
+    }
+
+    /* ===== HEALTH SCORE RING ===== */
+    .score-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px 0;
+    }
+
+    .circular-score {
+        position: relative;
+        width: 140px;
+        height: 140px;
+    }
+
+    .score-label {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .score-number {
+        font-size: 36px;
+        font-weight: 700;
+        color: #2D3748;
+    }
+
+    .score-text {
+        font-size: 12px;
+        color: #718096;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1400px) {
+        .bento-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .bento-featured {
+            grid-column: span 3;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .bento-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .bento-wide,
+        .bento-large,
+        .bento-featured {
+            grid-column: span 2;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .bento-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .bento-small,
+        .bento-wide,
+        .bento-large,
+        .bento-tall,
+        .bento-featured {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -482,10 +483,9 @@
         <div class="score-container">
             <div class="circular-score">
                 <svg viewBox="0 0 140 140">
-                    <circle cx="70" cy="70" r="60" fill="none" stroke="#E8E4DB" stroke-width="10"/>
-                    <circle cx="70" cy="70" r="60" fill="none" stroke="#48bb78" 
-                            stroke-width="10" stroke-dasharray="330, 377" 
-                            stroke-linecap="round" transform="rotate(-90 70 70)"/>
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="#E8E4DB" stroke-width="10" />
+                    <circle cx="70" cy="70" r="60" fill="none" stroke="#48bb78" stroke-width="10"
+                        stroke-dasharray="330, 377" stroke-linecap="round" transform="rotate(-90 70 70)" />
                 </svg>
                 <div class="score-label">
                     <div class="score-number">87</div>
@@ -495,7 +495,7 @@
         </div>
     </div>
 
-    <!-- Next Appointment (1x1) -->
+    <!-- Next Appointment (1x1) — real data -->
     <div class="bento-card bento-small" data-hover-lift>
         <div class="card-header">
             <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5E8, #b8d4f0);">
@@ -503,114 +503,137 @@
             </div>
         </div>
         <div class="metric-label">Next Appointment</div>
-        <div class="metric-value" style="font-size: 24px;">Tomorrow</div>
+        {% if next_appointment %}
+        <div class="metric-value" style="font-size: 18px;">{{ next_appointment.scheduled_date|date:"M d" }}</div>
         <div style="margin-top: 12px;">
-            <div style="font-size: 14px; font-weight: 600; color: #2D3748; margin-bottom: 4px;">Dr. Sarah Wilson</div>
-            <div style="font-size: 13px; color: #718096;">10:30 AM • Cardiology</div>
+            <div style="font-size: 14px; font-weight: 600; color: #2D3748; margin-bottom: 4px;">
+                Dr. {{ next_appointment.doctor.get_full_name|default:next_appointment.doctor.username }}
+            </div>
+            <div style="font-size: 13px; color: #718096;">
+                {{ next_appointment.scheduled_time|time:"g:i A" }}
+                {% if next_appointment.appointment_type %} &bull; {{ next_appointment.appointment_type }}{% endif %}
+            </div>
         </div>
+        {% else %}
+        <div class="metric-value" style="font-size: 20px; color: #A0AEC0;">None</div>
+        <div style="margin-top:12px;">
+            <a href="{% url 'patient_portal:book_appointment' %}" style="color: var(--color-blue); font-weight:600; font-size:13px;">Book one now →</a>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Upcoming Appointments (1x2 tall) -->
+    <!-- Upcoming Appointments (1x2 tall) — real data -->
     <div class="bento-card bento-tall" data-hover-lift>
         <h3 style="font-size: 18px; font-weight: 700; color: #2D3748; margin-bottom: 20px;">
             <i class="fas fa-calendar-alt" style="color: var(--color-blue); margin-right: 8px;"></i>
             Upcoming Appointments
         </h3>
         <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for apt in upcoming_appointments %}
             <div class="appointment-item">
                 <div class="apt-header">
-                    <span class="apt-time">Tomorrow, 10:30 AM</span>
-                    <span class="apt-status">Confirmed</span>
+                    <span class="apt-time">{{ apt.scheduled_date|date:"M d" }}, {{ apt.scheduled_time|time:"g:i A" }}</span>
+                    <span class="apt-status">{{ apt.status|capfirst }}</span>
                 </div>
-                <div class="apt-doctor">Dr. Sarah Wilson</div>
-                <div class="apt-department">Cardiology - Regular Checkup</div>
-            </div>
-            <div class="appointment-item">
-                <div class="apt-header">
-                    <span class="apt-time">Feb 25, 2:00 PM</span>
-                    <span class="apt-status">Confirmed</span>
+                <div class="apt-doctor">Dr. {{ apt.doctor.get_full_name|default:apt.doctor.username }}</div>
+                <div class="apt-department">
+                    {% if apt.appointment_type %}{{ apt.appointment_type }}{% endif %}
+                    {% if apt.reason %}&bull; {{ apt.reason|truncatewords:6 }}{% endif %}
                 </div>
-                <div class="apt-doctor">Dr. Michael Chen</div>
-                <div class="apt-department">Lab Work - Blood Test</div>
             </div>
-            <div class="appointment-item">
-                <div class="apt-header">
-                    <span class="apt-time">Mar 2, 11:00 AM</span>
-                    <span class="apt-status" style="background: rgba(168, 197, 232, 0.1); color: var(--color-blue);">Pending</span>
-                </div>
-                <div class="apt-doctor">Dr. Emily Davis</div>
-                <div class="apt-department">Ophthalmology - Eye Exam</div>
+            {% empty %}
+            <div style="text-align:center; padding:30px; color:#718096;">
+                <i class="fas fa-calendar-plus" style="font-size:32px; opacity:0.3; display:block; margin-bottom:12px;"></i>
+                <p style="font-weight:600;">No upcoming appointments</p>
+                <a href="{% url 'patient_portal:book_appointment' %}" style="color:var(--color-blue); font-weight:600;">Book one now →</a>
             </div>
+            {% endfor %}
         </div>
+        {% if upcoming_appointments %}
+        <a href="{% url 'patient_portal:appointments' %}" style="display:block; text-align:center; margin-top:16px; color:var(--color-blue); font-weight:600; font-size:13px;">View all →</a>
+        {% endif %}
     </div>
 
-    <!-- Vital Signs (2x1) -->
+    <!-- Vital Signs (2x1) — real data -->
     <div class="bento-card bento-wide" data-tilt>
         <h3 style="font-size: 18px; font-weight: 700; color: #2D3748; margin-bottom: 20px;">
             <i class="fas fa-heartbeat" style="color: var(--color-coral); margin-right: 8px;"></i>
             Latest Vitals
         </h3>
+        {% if latest_vitals %}
         <div class="vitals-grid">
+            {% if latest_vitals.systolic_bp %}
             <div class="vital-item">
                 <div class="vital-label">Blood Pressure</div>
-                <div class="vital-value">120<span class="vital-unit">/80 mmHg</span></div>
+                <div class="vital-value">{{ latest_vitals.systolic_bp }}<span class="vital-unit">/{{ latest_vitals.diastolic_bp }} mmHg</span></div>
             </div>
+            {% endif %}
+            {% if latest_vitals.heart_rate %}
             <div class="vital-item">
                 <div class="vital-label">Heart Rate</div>
-                <div class="vital-value">72<span class="vital-unit"> bpm</span></div>
+                <div class="vital-value">{{ latest_vitals.heart_rate }}<span class="vital-unit"> bpm</span></div>
             </div>
+            {% endif %}
+            {% if latest_vitals.temperature %}
             <div class="vital-item">
                 <div class="vital-label">Temperature</div>
-                <div class="vital-value">98.6<span class="vital-unit">°F</span></div>
+                <div class="vital-value">{{ latest_vitals.temperature }}<span class="vital-unit"> °F</span></div>
             </div>
+            {% endif %}
+            {% if latest_vitals.blood_glucose %}
             <div class="vital-item">
                 <div class="vital-label">Blood Sugar</div>
-                <div class="vital-value">95<span class="vital-unit"> mg/dL</span></div>
+                <div class="vital-value">{{ latest_vitals.blood_glucose }}<span class="vital-unit"> mg/dL</span></div>
             </div>
+            {% endif %}
+            {% if latest_vitals.oxygen_saturation %}
+            <div class="vital-item">
+                <div class="vital-label">O₂ Saturation</div>
+                <div class="vital-value">{{ latest_vitals.oxygen_saturation }}<span class="vital-unit"> %</span></div>
+            </div>
+            {% endif %}
+            {% if latest_vitals.weight %}
+            <div class="vital-item">
+                <div class="vital-label">Weight</div>
+                <div class="vital-value">{{ latest_vitals.weight }}<span class="vital-unit"> kg</span></div>
+            </div>
+            {% endif %}
         </div>
-        <div style="margin-top: 16px; text-align: center;">
-            <span class="metric-trend"><i class="fas fa-check-circle"></i> All vitals normal</span>
+        <div style="margin-top: 16px; text-align: center; font-size:12px; color:#718096;">
+            Recorded {{ latest_vitals.recorded_at|date:"M d, Y" }}
         </div>
+        {% else %}
+        <div style="text-align:center; padding:30px; color:#718096;">
+            <i class="fas fa-heartbeat" style="font-size:40px; opacity:0.3; display:block; margin-bottom:12px;"></i>
+            <p>No vitals recorded yet</p>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Medications (2x1) -->
+    <!-- Medications (2x1) — real prescriptions data -->
     <div class="bento-card bento-wide" data-hover-lift>
         <h3 style="font-size: 18px; font-weight: 700; color: #2D3748; margin-bottom: 20px;">
             <i class="fas fa-pills" style="color: var(--color-peach); margin-right: 8px;"></i>
             Current Medications
         </h3>
         <div class="medication-list">
+            {% for rx in active_prescriptions %}
             <div class="med-item">
-                <div class="med-icon">
-                    <i class="fas fa-capsules"></i>
-                </div>
+                <div class="med-icon"><i class="fas fa-capsules"></i></div>
                 <div class="med-info">
-                    <div class="med-name">Lisinopril</div>
-                    <div class="med-dosage">10mg • Once daily</div>
+                    <div class="med-name">{{ rx.medication.generic_name }}</div>
+                    <div class="med-dosage">{{ rx.medication.strength }} &bull; {{ rx.days_supply }} days</div>
                 </div>
-                <div class="med-badge">Due Today</div>
+                <div class="med-badge">{{ rx.get_status_display }}</div>
             </div>
-            <div class="med-item">
-                <div class="med-icon">
-                    <i class="fas fa-tablets"></i>
-                </div>
-                <div class="med-info">
-                    <div class="med-name">Metformin</div>
-                    <div class="med-dosage">500mg • Twice daily</div>
-                </div>
-                <div class="med-badge" style="background: rgba(72, 187, 120, 0.1); color: #48bb78;">Taken</div>
+            {% empty %}
+            <div style="text-align:center; padding:24px; color:#718096;">
+                <i class="fas fa-pills" style="font-size:32px; opacity:0.3; display:block; margin-bottom:12px;"></i>
+                <p>No active prescriptions</p>
             </div>
-            <div class="med-item">
-                <div class="med-icon">
-                    <i class="fas fa-pills"></i>
-                </div>
-                <div class="med-info">
-                    <div class="med-name">Atorvastatin</div>
-                    <div class="med-dosage">20mg • At bedtime</div>
-                </div>
-                <div class="med-badge" style="background: rgba(168, 197, 232, 0.1); color: var(--color-blue);">Pending</div>
-            </div>
+            {% endfor %}
         </div>
+        <a href="{% url 'patient_portal:medications' %}" style="display:block; text-align:center; margin-top:16px; color:var(--color-peach); font-weight:600; font-size:13px;">View all medications →</a>
     </div>
 
     <!-- Quick Actions (1x1) -->
@@ -636,47 +659,49 @@
         </div>
     </div>
 
-    <!-- Recent Lab Results (1x1) -->
+    <!-- Lab Results (1x1) — real count -->
     <div class="bento-card bento-small" data-hover-lift>
         <div class="card-header">
             <div class="metric-icon" style="background: linear-gradient(135deg, #A8C5A8, #b8d4b8);">
                 <i class="fas fa-flask"></i>
             </div>
         </div>
-        <div class="metric-value" style="font-size: 32px;">3</div>
-        <div class="metric-label">New Lab Results</div>
+        <div class="metric-value" style="font-size: 32px;">{{ lab_count }}</div>
+        <div class="metric-label">Lab Records</div>
         <div class="metric-trend">
-            <i class="fas fa-arrow-up"></i>
+            <i class="fas fa-check-circle"></i>
             Available to view
         </div>
-        <button style="width: 100%; margin-top: 16px; padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg, #A8C5A8, #b8d4b8); color: white; font-weight: 600; cursor: pointer;" onclick="window.location.href='{% url 'patient_portal:lab_results' %}'">
+        <button
+            style="width: 100%; margin-top: 16px; padding: 10px; border: none; border-radius: 10px; background: linear-gradient(135deg, #A8C5A8, #b8d4b8); color: white; font-weight: 600; cursor: pointer;"
+            onclick="window.location.href='{% url 'patient_portal:lab_results' %}'">
             View Results
         </button>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add tilt effect
-    document.querySelectorAll('[data-tilt]').forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            
-            const rotateX = (y - centerY) / 20;
-            const rotateY = (centerX - x) / 20;
-            
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
-        });
-        
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+    document.addEventListener('DOMContentLoaded', function () {
+        // Add tilt effect
+        document.querySelectorAll('[data-tilt]').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            });
         });
     });
-});
 </script>
 {% endblock %}

@@ -31,5 +31,5 @@ Pillow>=10.2.0
 # Time Zone Support
 pytz>=2024.1
 
-# Environment Variables (optional)
-# python-dotenv>=1.0.0
+# Environment Variables
+python-dotenv>=1.0.0
