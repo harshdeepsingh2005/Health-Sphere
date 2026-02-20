@@ -186,6 +186,12 @@ def patient_dashboard(request):
         record_type__in=['lab_result', 'imaging']
     ).count()
 
+    # --- Active admission status ---
+    from admin_portal.models import AdmissionRecord as AR
+    active_admission = AR.objects.filter(
+        patient=request.user, status='admitted'
+    ).order_by('-admission_date').first()
+
     context = {
         'patient_profile': patient_profile,
         'greeting': greeting,
@@ -206,6 +212,7 @@ def patient_dashboard(request):
         'health_journey': health_journey,
         'lab_count': lab_count,
         'current_time': current_time,
+        'active_admission': active_admission,
         'page_title': 'My Health Dashboard',
     }
 
@@ -507,7 +514,7 @@ def medications_view(request):
 
     past_treatments = TreatmentPlan.objects.filter(
         patient=request.user,
-        status__in=['completed', 'discontinued']
+        status__in=['completed', 'cancelled']
     ).select_related('created_by').order_by('-created_at')[:10]
 
     context = {

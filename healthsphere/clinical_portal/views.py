@@ -17,6 +17,7 @@ from django.utils import timezone
 from .models import MedicalRecord, TreatmentPlan, VitalRecord
 from admin_portal.models import AdmissionRecord
 from users.models import User, Role
+from appointments.models import Appointment
 
 # Import AI services for risk prediction, triage, and diagnostic support
 from ai_services.risk_service import predict_risk, get_risk_factors
@@ -101,6 +102,23 @@ class DashboardView(View):
             severity__in=['high', 'critical']
         ).select_related('patient').order_by('-record_date')[:5]
         
+        # Today's appointments for the logged-in doctor
+        today = timezone.now().date()
+        todays_appointments = Appointment.objects.filter(
+            doctor=user,
+            scheduled_date=today,
+        ).exclude(status__in=['cancelled', 'no_show']).select_related(
+            'patient', 'appointment_type'
+        ).order_by('scheduled_time')
+
+        # Critical alerts — high/critical severity records created today
+        critical_alerts = MedicalRecord.objects.filter(
+            severity__in=['high', 'critical'],
+            record_date__date=today,
+        ).select_related('patient').order_by('-record_date')[:5]
+
+        stats['appointments_today'] = todays_appointments.count()
+
         context = {
             'my_patients': my_patients[:10],
             'other_patients': other_patients[:5],
@@ -109,9 +127,8 @@ class DashboardView(View):
             'recent_vitals': recent_vitals,
             'stats': stats,
             'high_risk_patients': high_risk_patients,
-            # Template expects these variables
-            'critical_alerts': [],
-            'todays_appointments_list': [],
+            'critical_alerts': critical_alerts,
+            'todays_appointments_list': todays_appointments,
         }
         
         return render(request, self.template_name, context)

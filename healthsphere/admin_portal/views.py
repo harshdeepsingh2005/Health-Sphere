@@ -58,17 +58,17 @@ class DashboardView(View):
         
         # Today's metrics
         today_admissions = AdmissionRecord.objects.filter(
-            admission_date=today
+            admission_date__date=today
         ).count()
         
         # Monthly metrics
-        monthly_admissions = AdmissionRecord.objects.filter(
-            admission_date__gte=this_month
+        monthly_admissions_count = AdmissionRecord.objects.filter(
+            admission_date__date__gte=this_month
         ).count()
         
-        # Active admissions (not discharged)
+        # Active admissions (currently in hospital)
         active_admissions = AdmissionRecord.objects.filter(
-            discharge_date__isnull=True
+            status='admitted'
         ).count()
         
         # Resource availability
@@ -114,12 +114,17 @@ class DashboardView(View):
             })
         weekly_admissions.reverse()
         
+        total_doctors = User.objects.filter(role__name=Role.DOCTOR).count()
+        total_nurses  = User.objects.filter(role__name=Role.NURSE).count()
+
         context = {
             'total_patients': total_patients,
             'total_staff': total_staff,
+            'total_doctors': total_doctors,
+            'total_nurses': total_nurses,
             'total_admissions': total_admissions,
             'today_admissions': today_admissions,
-            'monthly_admissions': monthly_admissions,
+            'monthly_admissions': monthly_admissions_count,
             'active_admissions': active_admissions,
             'available_beds': available_beds,
             'total_beds': total_beds,
@@ -316,25 +321,40 @@ class AnalyticsView(View):
             status='scheduled'
         ).count()
         
-        # Placeholder data for charts
-        # In a real application, this would come from actual data
-        monthly_admissions = [
-            {'month': 'Jan', 'count': 45},
-            {'month': 'Feb', 'count': 52},
-            {'month': 'Mar', 'count': 48},
-            {'month': 'Apr', 'count': 61},
-            {'month': 'May', 'count': 55},
-            {'month': 'Jun', 'count': 67},
+        # Real monthly admissions over last 6 months
+        from django.db.models.functions import TruncMonth
+        from django.db.models import Count as DbCount
+        import json
+        monthly_data = (
+            AdmissionRecord.objects
+            .filter(admission_date__date__gte=today - timezone.timedelta(days=180))
+            .annotate(month=TruncMonth('admission_date'))
+            .values('month')
+            .annotate(count=DbCount('id'))
+            .order_by('month')
+        )
+        monthly_admissions_chart = [
+            {
+                'month': row['month'].strftime('%b %Y') if row.get('month') else '—',
+                'count': row['count'],
+            }
+            for row in monthly_data
         ]
-        
-        department_stats = [
-            {'department': 'Emergency', 'patients': 120},
-            {'department': 'Cardiology', 'patients': 85},
-            {'department': 'Orthopedics', 'patients': 65},
-            {'department': 'Pediatrics', 'patients': 95},
-            {'department': 'General', 'patients': 150},
+
+        # Real department stats from admissions ward field
+        ward_stats = (
+            AdmissionRecord.objects
+            .filter(admission_date__date__gte=start_date)
+            .exclude(ward='')
+            .values('ward')
+            .annotate(patients=DbCount('id'))
+            .order_by('-patients')[:8]
+        )
+        department_stats_chart = [
+            {'department': row['ward'], 'patients': row['patients']}
+            for row in ward_stats
         ]
-        
+
         context = {
             'period': period,
             'total_admissions': total_admissions,
@@ -342,8 +362,10 @@ class AnalyticsView(View):
             'avg_length_of_stay': avg_length_of_stay,
             'admission_by_type': admission_by_type,
             'staff_on_duty': staff_on_duty,
-            'monthly_admissions': monthly_admissions,
-            'department_stats': department_stats,
+            'monthly_admissions': monthly_admissions_chart,
+            'department_stats': department_stats_chart,
+            'monthly_admissions_json': json.dumps(monthly_admissions_chart),
+            'department_stats_json': json.dumps(department_stats_chart),
         }
 
         return render(request, self.template_name, context)
