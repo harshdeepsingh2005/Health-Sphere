@@ -65,7 +65,7 @@ def _get_diagnostic_suggestions(symptoms: list, vital_signs: dict) -> List[str]:
 def _assess_risk_factors(triage_data: dict) -> List[str]:
     """Identify patient risk factors from triage data."""
     risk_factors = []
-    age = triage_data.get('age', 0)
+    age = int(triage_data.get('age') or 0)  # guard None / missing
     medical_history = triage_data.get('medical_history', [])
 
     if age > 75:
