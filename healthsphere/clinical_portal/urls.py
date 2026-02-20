@@ -55,4 +55,10 @@ urlpatterns = [
     # TRIAGE
     # ==========================================================================
     path('triage/', views.TriageDashboardView.as_view(), name='triage'),
+
+    # ==========================================================================
+    # PATIENT EDIT & DISCHARGE
+    # ==========================================================================
+    path('patients/<int:patient_id>/edit/', views.EditPatientView.as_view(), name='edit_patient'),
+    path('patients/<int:patient_id>/discharge/', views.DischargePatientView.as_view(), name='discharge_patient'),
 ]

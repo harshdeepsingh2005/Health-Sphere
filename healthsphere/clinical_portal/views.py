@@ -672,3 +672,95 @@ class PatientVitalsView(View):
             'vitals': vitals,
         }
         return render(request, self.template_name, context)
+
+
+@method_decorator([login_required, clinical_staff_required], name='dispatch')
+class EditPatientView(View):
+    """
+    Edit Patient Details
+    ====================
+    Allows clinical staff to update a patient's core info (name, phone,
+    email) and their UserProfile (blood type, allergies, emergency contact).
+    Handles POST only; redirects back to patient_detail on success.
+    """
+
+    def post(self, request, patient_id):
+        patient = get_object_or_404(User, id=patient_id, role__name=Role.PATIENT)
+        profile, _ = patient.profile.__class__.objects.get_or_create(user=patient)
+
+        # -- User model fields --
+        patient.first_name = request.POST.get('first_name', patient.first_name).strip()
+        patient.last_name  = request.POST.get('last_name',  patient.last_name).strip()
+        patient.email      = request.POST.get('email',      patient.email).strip()
+        patient.phone      = request.POST.get('phone',      patient.phone or '').strip()
+        dob = request.POST.get('date_of_birth', '')
+        if dob:
+            patient.date_of_birth = dob
+        patient.save()
+
+        # -- UserProfile fields --
+        profile.blood_type              = request.POST.get('blood_type', profile.blood_type or '').strip()
+        profile.allergies               = request.POST.get('allergies',  profile.allergies or '').strip()
+        profile.emergency_contact_name  = request.POST.get('emergency_contact_name',  profile.emergency_contact_name or '').strip()
+        profile.emergency_contact_phone = request.POST.get('emergency_contact_phone', profile.emergency_contact_phone or '').strip()
+        profile.medical_notes           = request.POST.get('medical_notes', profile.medical_notes or '').strip()
+        profile.save()
+
+        messages.success(request, f"Patient details for {patient.get_full_name()} updated successfully.")
+        return redirect('clinical_portal:patient_detail', patient_id=patient_id)
+
+
+@method_decorator([login_required, clinical_staff_required], name='dispatch')
+class DischargePatientView(View):
+    """
+    Discharge Patient
+    =================
+    Marks the patient's active admission as discharged and auto-creates
+    a MedicalRecord of type 'discharge' with the doctor's summary.
+    """
+
+    def post(self, request, patient_id):
+        patient = get_object_or_404(User, id=patient_id, role__name=Role.PATIENT)
+
+        # Find the active admission (most recent 'admitted')
+        active_admission = patient.admissions.filter(status='admitted').order_by('-admission_date').first()
+
+        discharge_summary  = request.POST.get('discharge_summary', '').strip()
+        discharge_diagnosis = request.POST.get('discharge_diagnosis', '').strip()
+        follow_up_instructions = request.POST.get('follow_up_instructions', '').strip()
+        discharge_type = request.POST.get('discharge_type', 'discharged')  # discharged / transferred
+
+        if not discharge_summary:
+            messages.error(request, "Discharge summary is required.")
+            return redirect('clinical_portal:patient_detail', patient_id=patient_id)
+
+        if active_admission:
+            active_admission.status = discharge_type
+            active_admission.discharge_date = timezone.now()
+            active_admission.notes = (
+                f"Discharge summary: {discharge_summary}\n"
+                f"Follow-up: {follow_up_instructions}"
+            )
+            active_admission.save()
+
+        # Create a discharge MedicalRecord
+        MedicalRecord.objects.create(
+            patient=patient,
+            created_by=request.user,
+            record_type='discharge',
+            title=f"Discharge Summary — {timezone.now().strftime('%d %b %Y')}",
+            description=(
+                f"Primary Diagnosis: {discharge_diagnosis}\n\n"
+                f"Discharge Summary:\n{discharge_summary}\n\n"
+                f"Follow-up Instructions:\n{follow_up_instructions}"
+            ),
+            severity='low',
+        )
+
+        messages.success(
+            request,
+            f"{patient.get_full_name()} has been discharged successfully. "
+            "A discharge summary record has been created."
+        )
+        return redirect('clinical_portal:patient_detail', patient_id=patient_id)
+
