@@ -1,0 +1,274 @@
+{% comment %}
+  AI Loading Overlay — include at the top of any AI page that has server-side latency.
+  Usage: {% include "includes/ai_loader.html" with ai_label="Analysing your health data…" %}
+  The overlay auto-dismisses once the page finishes loading.
+{% endcomment %}
+
+<div id="ai-loader-overlay">
+  <div class="ai-loader-card">
+
+    <!-- Animated brain / pulse icon -->
+    <div class="ai-loader-icon">
+      <svg viewBox="0 0 80 80" class="brain-svg" aria-hidden="true">
+        <!-- outer glow rings -->
+        <circle cx="40" cy="40" r="36" class="ring ring-1"/>
+        <circle cx="40" cy="40" r="28" class="ring ring-2"/>
+        <!-- brain silhouette (simplified) -->
+        <path class="brain-path"
+          d="M40 22
+             C34 22 28 26 27 33
+             C24 33 21 36 22 39
+             C21 42 23 45 26 46
+             C26 50 29 53 33 53
+             C35 56 38 57 40 57
+             C42 57 45 56 47 53
+             C51 53 54 50 54 46
+             C57 45 59 42 58 39
+             C59 36 56 33 53 33
+             C52 26 46 22 40 22Z"/>
+        <!-- centre pulse dot -->
+        <circle cx="40" cy="40" r="4" class="pulse-dot"/>
+      </svg>
+    </div>
+
+    <div class="ai-loader-text">
+      <div class="ai-loader-title">
+        <span class="ai-loader-gradient">AI</span> is thinking…
+      </div>
+      <div class="ai-loader-sub">{{ ai_label|default:"Analysing your health data with Gemini AI" }}</div>
+    </div>
+
+    <!-- Progress bar shimmer -->
+    <div class="ai-loader-bar">
+      <div class="ai-loader-bar-fill"></div>
+    </div>
+
+    <!-- Skeleton cards -->
+    <div class="ai-loader-skeletons">
+      <div class="sk-row">
+        <div class="sk-block sk-w40 sk-tall"></div>
+        <div class="sk-col">
+          <div class="sk-block sk-full"></div>
+          <div class="sk-block sk-w70"></div>
+          <div class="sk-block sk-w50"></div>
+        </div>
+      </div>
+      <div class="sk-block sk-full sk-medium"></div>
+      <div class="sk-block sk-w80 sk-medium"></div>
+    </div>
+
+    <div class="ai-loader-tip">
+      <i class="fas fa-shield-alt"></i>
+      End-to-end encrypted · HIPAA compliant
+    </div>
+  </div>
+</div>
+
+<style>
+/* ─── Overlay ────────────────────────────────────────────────── */
+#ai-loader-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(135deg, #0f0c29 0%, #1a103a 50%, #24243e 100%);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .55s cubic-bezier(.4,0,.2,1), visibility .55s;
+  overflow: hidden;
+}
+/* animated starfield background */
+#ai-loader-overlay::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 15%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 70%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 25%, rgba(255,255,255,.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 35% 55%, rgba(167,139,250,.5) 0%, transparent 100%),
+    radial-gradient(2px 2px at 70% 40%, rgba(139,92,246,.4) 0%, transparent 100%);
+  animation: starDrift 12s ease-in-out infinite alternate;
+}
+@keyframes starDrift {
+  from { transform: translate(0,0); }
+  to   { transform: translate(-8px, -12px); }
+}
+
+/* ─── Card ───────────────────────────────────────────────────── */
+.ai-loader-card {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(167,139,250,.2);
+  border-radius: 28px;
+  padding: 44px 48px;
+  max-width: 420px; width: 90%;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 24px 64px rgba(0,0,0,.4), 0 0 0 1px rgba(167,139,250,.1);
+  display: flex; flex-direction: column; align-items: center; gap: 22px;
+  animation: cardIn .5s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes cardIn {
+  from { opacity:0; transform: scale(.88) translateY(24px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Brain SVG ──────────────────────────────────────────────── */
+.ai-loader-icon {
+  position: relative;
+  width: 100px; height: 100px;
+  display: flex; align-items: center; justify-content: center;
+}
+.brain-svg { width: 100px; height: 100px; overflow: visible; }
+
+.ring {
+  fill: none;
+  stroke: rgba(167,139,250,.15);
+  stroke-width: 1.5;
+  animation: ringPulse 2.4s ease-in-out infinite;
+}
+.ring-1 { animation-delay: 0s; }
+.ring-2 { animation-delay: .4s; stroke: rgba(167,139,250,.25); }
+@keyframes ringPulse {
+  0%,100% { r: 36; opacity: .5; }
+  50%      { r: 38; opacity: 1; }
+}
+
+.brain-path {
+  fill: none;
+  stroke: url(#brain-grad);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 220;
+  stroke-dashoffset: 220;
+  animation: drawBrain 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(167,139,250,.8));
+}
+@keyframes drawBrain {
+  0%   { stroke-dashoffset: 220; opacity: .4; }
+  50%  { stroke-dashoffset: 0;   opacity: 1; }
+  100% { stroke-dashoffset: 220; opacity: .4; }
+}
+
+.pulse-dot {
+  fill: #a78bfa;
+  animation: dotPulse 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px #a78bfa);
+}
+@keyframes dotPulse {
+  0%,100% { r: 4; opacity: .7; }
+  50%      { r: 6; opacity: 1; }
+}
+
+/* SVG gradient def — must be inline */
+.brain-svg defs { display: block; }
+
+/* ─── Text ───────────────────────────────────────────────────── */
+.ai-loader-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 1.4rem; font-weight: 800;
+  color: #fff; text-align: center;
+}
+.ai-loader-gradient {
+  background: linear-gradient(90deg, #a78bfa, #f472b6);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.ai-loader-sub {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: .85rem; color: rgba(255,255,255,.5);
+  text-align: center; line-height: 1.5;
+}
+
+/* ─── Progress bar ───────────────────────────────────────────── */
+.ai-loader-bar {
+  width: 100%; height: 3px;
+  background: rgba(255,255,255,.08); border-radius: 99px;
+  overflow: hidden;
+}
+.ai-loader-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa, #f472b6);
+  border-radius: 99px;
+  animation: barFill 2.5s ease-in-out infinite;
+}
+@keyframes barFill {
+  0%   { width: 0%;   margin-left: 0; }
+  50%  { width: 80%;  margin-left: 0; }
+  100% { width: 0%;   margin-left: 100%; }
+}
+
+/* ─── Skeleton rows ──────────────────────────────────────────── */
+.ai-loader-skeletons {
+  width: 100%;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sk-row { display: flex; gap: 12px; align-items: center; }
+.sk-col { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+.sk-block {
+  border-radius: 8px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,.05) 0%,
+    rgba(167,139,250,.12) 50%,
+    rgba(255,255,255,.05) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  height: 12px;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.sk-w40  { width: 40%; }
+.sk-w50  { width: 50%; }
+.sk-w70  { width: 70%; }
+.sk-w80  { width: 80%; }
+.sk-full { width: 100%; }
+.sk-tall   { height: 48px; border-radius: 12px; }
+.sk-medium { height: 16px; }
+
+/* ─── Tip ─────────────────────────────────────────────────────── */
+.ai-loader-tip {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: .75rem; color: rgba(255,255,255,.3);
+  display: flex; align-items: center; gap: 6px;
+}
+.ai-loader-tip i { color: rgba(167,139,250,.6); }
+
+/* ─── Hide state ─────────────────────────────────────────────── */
+#ai-loader-overlay.ai-loader-hidden {
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+</style>
+
+<!-- Inline SVG gradient (defs can't be in <style>) -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="brain-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<script>
+(function () {
+  var overlay = document.getElementById('ai-loader-overlay');
+  function dismiss() {
+    if (overlay) {
+      overlay.classList.add('ai-loader-hidden');
+      // Remove from DOM after transition to avoid blocking clicks
+      setTimeout(function () { if (overlay) overlay.remove(); }, 600);
+    }
+  }
+  // Dismiss when the page has fully loaded (images, fonts, etc.)
+  if (document.readyState === 'complete') {
+    setTimeout(dismiss, 400);
+  } else {
+    window.addEventListener('load', function () {
+      setTimeout(dismiss, 400);
+    });
+  }
+  // Safety fallback — never block the user more than 8 seconds
+  setTimeout(dismiss, 8000);
+})();
+</script>
