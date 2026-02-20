@@ -90,14 +90,14 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',           # Security enhancements
-    'whitenoise.middleware.WhiteNoiseMiddleware',              # Static file serving (Vercel)
+    'whitenoise.middleware.WhiteNoiseMiddleware',              # Static file serving
     'django.contrib.sessions.middleware.SessionMiddleware',    # Session management
     'django.middleware.common.CommonMiddleware',               # Common HTTP features
     'django.middleware.csrf.CsrfViewMiddleware',              # CSRF protection
     'django.contrib.auth.middleware.AuthenticationMiddleware', # Authentication
+    'django.contrib.messages.middleware.MessageMiddleware',    # Flash messages (must be before custom MW)
     'users.middleware.AuditLogMiddleware',                     # Audit logging
     'users.middleware.TwoFactorAuthMiddleware',                # 2FA enforcement
-    'django.contrib.messages.middleware.MessageMiddleware',    # Flash messages
     'django.middleware.clickjacking.XFrameOptionsMiddleware', # Clickjacking protection
 ]
 
