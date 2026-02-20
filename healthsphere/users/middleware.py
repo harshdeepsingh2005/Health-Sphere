@@ -51,7 +51,7 @@ class TwoFactorAuthMiddleware(MiddlewareMixin):
                         request,
                         'Two-factor authentication is required. Please verify your identity.'
                     )
-                    return redirect('users:2fa-verify')
+                    return redirect('users:2fa_verify')
         
         return None
 
