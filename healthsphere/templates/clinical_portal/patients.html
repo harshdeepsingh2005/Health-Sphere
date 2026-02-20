@@ -64,6 +64,7 @@
 }
 .patient-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
 .patient-card:hover::before { opacity: 1; }
+.patient-card:hover .patient-name .fa-arrow-right { opacity: .5 !important; }
 
 .patient-card-top { display: flex; align-items: center; gap: .875rem; margin-bottom: .875rem; }
 .patient-avatar {
@@ -154,13 +155,19 @@
 {% if patient_data %}
 <div class="patients-grid">
     {% for item in patient_data %}
-    <div class="patient-card">
+    <div class="patient-card" style="cursor:pointer;" onclick="window.location='{% url 'clinical_portal:patient_detail' item.patient.id %}'">
         <div class="patient-card-top">
             <div class="patient-avatar">
                 {{ item.patient.first_name|first|upper }}{{ item.patient.last_name|first|upper }}
             </div>
             <div style="flex: 1; min-width: 0;">
-                <div class="patient-name">{{ item.patient.get_full_name|default:item.patient.username }}</div>
+                <a href="{% url 'clinical_portal:patient_detail' item.patient.id %}"
+                   class="patient-name"
+                   style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:.35rem;"
+                   onclick="event.stopPropagation()">
+                    {{ item.patient.get_full_name|default:item.patient.username }}
+                    <i class="fas fa-arrow-right" style="font-size:.6rem;opacity:0;transition:opacity .15s;" class="name-arrow"></i>
+                </a>
                 <div class="patient-meta">{{ item.patient.email }}</div>
             </div>
             {% if item.is_admitted %}
