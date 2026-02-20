@@ -160,11 +160,11 @@
         <div class="metric-icon gradient-chart">
             <i class="fas fa-users"></i>
         </div>
-        <div class="metric-value" data-target="2847">0</div>
+        <div class="metric-value">{{ total_patients }}</div>
         <div class="metric-label">Total Patients</div>
         <div class="metric-trend">
-            <i class="fas fa-arrow-up"></i>
-            <span>+12%</span>
+            <i class="fas fa-database"></i>
+            <span>Live count</span>
         </div>
     </div>
 
@@ -174,11 +174,11 @@
         <div class="metric-icon gradient-stats">
             <i class="fas fa-calendar-check"></i>
         </div>
-        <div class="metric-value" data-target="143">0</div>
-        <div class="metric-label">Appointments Today</div>
+        <div class="metric-value">{{ today_admissions }}</div>
+        <div class="metric-label">Admissions Today</div>
         <div class="metric-trend">
-            <i class="fas fa-arrow-up"></i>
-            <span>+8%</span>
+            <i class="fas fa-bed"></i>
+            <span>Live count</span>
         </div>
     </div>
 
@@ -188,11 +188,11 @@
         <div class="metric-icon gradient-time">
             <i class="fas fa-bed"></i>
         </div>
-        <div class="metric-value">78%</div>
+        <div class="metric-value">{{ bed_occupancy_rate }}%</div>
         <div class="metric-label">Bed Occupancy</div>
         <div class="metric-trend">
-            <i class="fas fa-arrow-up"></i>
-            <span>+5%</span>
+            <i class="fas fa-database"></i>
+            <span>{{ available_beds }} free</span>
         </div>
     </div>
 
@@ -230,45 +230,24 @@
         <div class="card-glow"></div>
         <div class="card-title">
             <i class="fas fa-building"></i>
-            Department Performance
+            Ward Performance
         </div>
         <div class="bento-list">
+            {% for dept in department_stats %}
             <div class="bento-list-item">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <div style="font-weight: 600; color: #2D3748;">Cardiology</div>
-                        <div style="font-size: 13px; color: #718096;">285 patients</div>
+                        <div style="font-weight: 600; color: #2D3748;">{{ dept.department }}</div>
+                        <div style="font-size: 13px; color: #718096;">{{ dept.patients }} patient{{ dept.patients|pluralize }}</div>
                     </div>
-                    <div style="font-size: 18px; font-weight: 700; color: #48bb78;">92%</div>
+                    <div style="font-size: 18px; font-weight: 700; color: #48bb78;">{{ dept.patients }}</div>
                 </div>
             </div>
+            {% empty %}
             <div class="bento-list-item">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600; color: #2D3748;">Emergency</div>
-                        <div style="font-size: 13px; color: #718096;">412 patients</div>
-                    </div>
-                    <div style="font-size: 18px; font-weight: 700; color: #48bb78;">88%</div>
-                </div>
+                <div style="color:#718096; text-align:center;">No ward data available</div>
             </div>
-            <div class="bento-list-item">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600; color: #2D3748;">Pediatrics</div>
-                        <div style="font-size: 13px; color: #718096;">198 patients</div>
-                    </div>
-                    <div style="font-size: 18px; font-weight: 700; color: #f0ad4e;">85%</div>
-                </div>
-            </div>
-            <div class="bento-list-item">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 600; color: #2D3748;">Orthopedics</div>
-                        <div style="font-size: 13px; color: #718096;">156 patients</div>
-                    </div>
-                    <div style="font-size: 18px; font-weight: 700; color: #48bb78;">90%</div>
-                </div>
-            </div>
+            {% endfor %}
         </div>
     </div>
 

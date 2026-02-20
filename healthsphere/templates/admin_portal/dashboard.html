@@ -480,10 +480,10 @@
                 <span class="card-badge" style="background: rgba(232, 155, 135, 0.15); color: #E89B87;">Urgent</span>
             </div>
             <div class="metric-content">
-                <h3 class="metric-value count-up">{{ stats.critical_alerts|default:"8" }}</h3>
-                <p class="metric-label">Critical Alerts</p>
+                <h3 class="metric-value count-up">{{ active_admissions }}</h3>
+                <p class="metric-label">Active Admissions</p>
                 <div class="metric-footer">
-                    <span class="metric-change up"><i class="fas fa-arrow-up"></i> +3 today</span>
+                    <span class="metric-change up"><i class="fas fa-bed"></i> currently admitted</span>
                     <button class="quick-btn"><i class="fas fa-eye"></i></button>
                 </div>
             </div>
@@ -497,10 +497,10 @@
                 </div>
             </div>
             <div class="metric-content">
-                <h3 class="metric-value count-up">{{ stats.total_patients|default:"1,248" }}</h3>
+                <h3 class="metric-value count-up">{{ total_patients }}</h3>
                 <p class="metric-label">Total Patients</p>
                 <div class="metric-footer">
-                    <span class="metric-change up"><i class="fas fa-arrow-up"></i> +12 this week</span>
+                    <span class="metric-change up"><i class="fas fa-database"></i> live DB count</span>
                     <button class="quick-btn"><i class="fas fa-arrow-right"></i></button>
                 </div>
             </div>
@@ -551,24 +551,22 @@
                 <span class="card-badge" style="background: rgba(168, 197, 232, 0.15); color: #A8C5E8;">Today</span>
             </div>
             <div class="metric-content">
-                <h3 class="metric-value count-up">{{ stats.appointments|default:"18" }}</h3>
-                <p class="metric-label">Appointments</p>
+                <h3 class="metric-value count-up">{{ today_admissions }}</h3>
+                <p class="metric-label">Admissions Today</p>
             </div>
             <div class="appointment-list">
+                {% for adm in recent_admissions|slice:":3" %}
                 <div class="mini-appointment">
-                    <div class="apt-time">10:30 AM</div>
-                    <div class="apt-info">Dr. Smith - Cardiology</div>
+                    <div class="apt-time">{{ adm.admission_date|date:"H:i" }}</div>
+                    <div class="apt-info">{{ adm.patient.get_full_name }} — {{ adm.ward|default:"General" }}</div>
                 </div>
+                {% empty %}
                 <div class="mini-appointment">
-                    <div class="apt-time">2:00 PM</div>
-                    <div class="apt-info">Dr. Jones - Neurology</div>
+                    <div class="apt-info">No admissions today</div>
                 </div>
-                <div class="mini-appointment">
-                    <div class="apt-time">4:30 PM</div>
-                    <div class="apt-info">Dr. Lee - Pediatrics</div>
-                </div>
+                {% endfor %}
             </div>
-            <button class="card-action-btn">View Schedule <i class="fas fa-arrow-right"></i></button>
+            <a href="{% url 'admin_portal:admissions' %}" class="card-action-btn">View Admissions <i class="fas fa-arrow-right"></i></a>
         </div>
 
         <!-- AI Analytics Card (2x2) - Large Feature -->
@@ -619,17 +617,11 @@
                 <span class="status-dot online"></span>
             </div>
             <div class="metric-content">
-                <h3 class="metric-value count-up">{{ stats.active_staff|default:"24" }}</h3>
-                <p class="metric-label">Active Staff</p>
+                <h3 class="metric-value count-up">{{ total_staff }}</h3>
+                <p class="metric-label">Total Staff</p>
                 <div class="metric-footer">
-                    <span class="metric-change"><i class="fas fa-circle" style="color: #48bb78;"></i> 18 online</span>
+                    <span class="metric-change"><i class="fas fa-user-md" style="color:#A8C5E8;"></i> {{ total_doctors }} doctors · {{ total_nurses }} nurses</span>
                 </div>
-            </div>
-            <div class="staff-avatars">
-                <div class="avatar">JS</div>
-                <div class="avatar">MK</div>
-                <div class="avatar">AL</div>
-                <div class="avatar more">+15</div>
             </div>
         </div>
 
@@ -641,15 +633,11 @@
                 </div>
             </div>
             <div class="metric-content">
-                <h3 class="metric-value">{{ stats.bed_occupancy|default:"78" }}%</h3>
+                <h3 class="metric-value">{{ bed_occupancy_rate }}%</h3>
                 <p class="metric-label">Bed Occupancy</p>
-            </div>
-            <div class="radial-progress" data-progress="78">
-                <svg viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#E2E8F0" stroke-width="8" />
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#A8C5A8" stroke-width="8"
-                        stroke-dasharray="195, 251" stroke-linecap="round" transform="rotate(-90 50 50)" />
-                </svg>
+                <div class="metric-footer">
+                    <span class="metric-change">{{ available_beds }} of {{ total_beds }} available</span>
+                </div>
             </div>
         </div>
     </div>
