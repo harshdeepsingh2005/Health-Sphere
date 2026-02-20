@@ -496,12 +496,12 @@ class DiagnosticAI:
                 risk_factors.append(f'History of {condition}')
                 risk_score += 1
         
-        # Vital signs risk
-        if vital_signs.get('systolic_bp', 120) > 180:
+        # Vital signs risk (use 'or default' to coerce None values stored in DB)
+        if (vital_signs.get('systolic_bp') or 120) > 180:
             risk_factors.append('Severe hypertension')
             risk_score += 2
         
-        if vital_signs.get('heart_rate', 70) > 120:
+        if (vital_signs.get('heart_rate') or 70) > 120:
             risk_factors.append('Severe tachycardia')
             risk_score += 2
         
@@ -671,7 +671,7 @@ class DiagnosticAI:
         vital_signs = patient_data.get('vital_signs', {})
         
         # Cardiovascular red flags
-        if 'chest pain' in symptoms and vital_signs.get('systolic_bp', 120) < 90:
+        if 'chest pain' in symptoms and (vital_signs.get('systolic_bp') or 120) < 90:
             red_flags.append('Chest pain with hypotension - consider cardiogenic shock')
         
         # Neurological red flags
@@ -679,12 +679,12 @@ class DiagnosticAI:
             red_flags.append('Neurological symptoms - consider meningitis or intracranial pathology')
         
         # Respiratory red flags
-        if vital_signs.get('oxygen_saturation', 100) < 90:
+        if (vital_signs.get('oxygen_saturation') or 100) < 90:
             red_flags.append('Severe hypoxemia - immediate oxygen therapy required')
         
         # Sepsis red flags
-        temp = vital_signs.get('temperature', 37)
-        hr = vital_signs.get('heart_rate', 70)
+        temp = vital_signs.get('temperature') or 37
+        hr = vital_signs.get('heart_rate') or 70
         if temp > 38 and hr > 100:
             red_flags.append('SIRS criteria - consider sepsis screening')
         
