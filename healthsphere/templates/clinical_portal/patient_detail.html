@@ -421,9 +421,16 @@ a.item-link{text-decoration:none;color:inherit;}
             <label>Blood Type</label>
             <select name="blood_type">
               <option value="">— Select —</option>
-              {% for bt in "A+ A- B+ B- AB+ AB- O+ O-"|split:" " %}
-              <option value="{{ bt }}" {% if patient.profile.blood_type == bt %}selected{% endif %}>{{ bt }}</option>
-              {% endfor %}
+              {% with bt=patient.profile.blood_type %}
+              <option value="A+"  {% if bt == "A+"  %}selected{% endif %}>A+</option>
+              <option value="A-"  {% if bt == "A-"  %}selected{% endif %}>A-</option>
+              <option value="B+"  {% if bt == "B+"  %}selected{% endif %}>B+</option>
+              <option value="B-"  {% if bt == "B-"  %}selected{% endif %}>B-</option>
+              <option value="AB+" {% if bt == "AB+" %}selected{% endif %}>AB+</option>
+              <option value="AB-" {% if bt == "AB-" %}selected{% endif %}>AB-</option>
+              <option value="O+"  {% if bt == "O+"  %}selected{% endif %}>O+</option>
+              <option value="O-"  {% if bt == "O-"  %}selected{% endif %}>O-</option>
+              {% endwith %}
             </select>
           </div>
         </div>
