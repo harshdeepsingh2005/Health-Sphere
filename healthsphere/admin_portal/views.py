@@ -208,13 +208,6 @@ class PatientManagementView(View):
         age_31_50 = pct(sum(1 for a in ages if 31 <= a <= 50))
         age_51_plus = pct(sum(1 for a in ages if a > 50))
 
-        # Gender split
-        male   = all_patients.filter(gender='male').count()
-        female = all_patients.filter(gender='female').count()
-        other  = total_patients - male - female
-        gender_pct_male   = pct(male)
-        gender_pct_female = pct(female)
-
         # New patients this month
         first_of_month = today.replace(day=1)
         new_this_month = all_patients.filter(created_at__date__gte=first_of_month).count()
@@ -229,8 +222,6 @@ class PatientManagementView(View):
                 'age_18_30': age_18_30,
                 'age_31_50': age_31_50,
                 'age_51_plus': age_51_plus,
-                'gender_pct_male': gender_pct_male,
-                'gender_pct_female': gender_pct_female,
             },
         }
 
