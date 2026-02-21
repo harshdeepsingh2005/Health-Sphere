@@ -61,4 +61,9 @@ urlpatterns = [
     # ==========================================================================
     path('patients/<int:patient_id>/edit/', views.EditPatientView.as_view(), name='edit_patient'),
     path('patients/<int:patient_id>/discharge/', views.DischargePatientView.as_view(), name='discharge_patient'),
+
+    # ==========================================================================
+    # ADMISSIONS (doctors & nurses)
+    # ==========================================================================
+    path('admissions/', views.AdmissionsView.as_view(), name='admissions'),
 ]
