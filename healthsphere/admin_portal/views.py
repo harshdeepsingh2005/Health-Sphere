@@ -117,6 +117,16 @@ class DashboardView(View):
         total_doctors = User.objects.filter(role__name=Role.DOCTOR).count()
         total_nurses  = User.objects.filter(role__name=Role.NURSE).count()
 
+        from appointments.models import Appointment
+        from analytics.models import ClinicalOutcomePrediction
+
+        consultations_today = Appointment.objects.filter(
+            scheduled_time__date=today,
+            status__in=['confirmed', 'completed']
+        ).count()
+
+        predictions_count = ClinicalOutcomePrediction.objects.count()
+
         context = {
             'total_patients': total_patients,
             'total_staff': total_staff,
@@ -133,34 +143,10 @@ class DashboardView(View):
             'today_staff': today_staff,
             'department_stats': department_stats,
             'weekly_admissions': weekly_admissions,
+            'consultations_today': consultations_today,
+            'predictions_count': predictions_count,
         }
-        
-        return render(request, self.template_name, context)
-        
-        # Today's schedules
-        today = timezone.now().date()
-        todays_schedules = StaffSchedule.objects.filter(
-            date=today
-        ).select_related('staff_member')[:10]
-        
-        # Resources needing attention (maintenance due)
-        maintenance_due = HospitalResource.objects.filter(
-            next_maintenance__lte=today
-        ).count()
-        
-        context = {
-            'total_patients': total_patients,
-            'total_doctors': total_doctors,
-            'total_nurses': total_nurses,
-            'active_admissions': active_admissions,
-            'total_beds': total_beds,
-            'available_beds': available_beds,
-            'bed_occupancy_rate': round((total_beds - available_beds) / total_beds * 100, 1) if total_beds > 0 else 0,
-            'recent_admissions': recent_admissions,
-            'todays_schedules': todays_schedules,
-            'maintenance_due': maintenance_due,
-        }
-        
+
         return render(request, self.template_name, context)
 
 

@@ -465,7 +465,7 @@
                 <p class="greeting-subtitle">Here's your health platform overview for today</p>
                 <div class="date-badge">
                     <i class="fas fa-calendar"></i>
-                    <span>Wednesday, February 19, 2026</span>
+                    <span>{% now "l, F j, Y" %}</span>
                 </div>
             </div>
             <div class="card-particles"></div>
@@ -522,9 +522,9 @@
                         <i class="fas fa-clipboard-check"></i>
                     </div>
                     <div>
-                        <h3 class="metric-value count-up">{{ stats.consultations|default:"324" }}</h3>
+                        <h3 class="metric-value count-up">{{ consultations_today }}</h3>
                         <p class="metric-label">Consultations Today</p>
-                        <span class="metric-subtitle">↑ 75% completion rate</span>
+                        <span class="metric-subtitle">↑ from appointments DB</span>
                     </div>
                 </div>
                 <div class="right-section">
@@ -587,19 +587,19 @@
             </div>
             <div class="ai-stats-grid">
                 <div class="ai-stat">
-                    <div class="ai-stat-value">92</div>
-                    <div class="ai-stat-label">Rush Score</div>
-                    <div class="trend-indicator up">↑ 8%</div>
+                    <div class="ai-stat-value">{{ bed_occupancy_rate }}%</div>
+                    <div class="ai-stat-label">Bed Occupancy</div>
+                    <div class="trend-indicator">{{ available_beds }} free</div>
                 </div>
                 <div class="ai-stat">
-                    <div class="ai-stat-value">85</div>
-                    <div class="ai-stat-label">Health Score</div>
-                    <div class="trend-indicator up">↑ 5%</div>
+                    <div class="ai-stat-value">{{ total_staff }}</div>
+                    <div class="ai-stat-label">Staff on Record</div>
+                    <div class="trend-indicator up">{{ total_doctors }}D / {{ total_nurses }}N</div>
                 </div>
                 <div class="ai-stat">
-                    <div class="ai-stat-value">12</div>
-                    <div class="ai-stat-label">Predictions</div>
-                    <div class="trend-indicator">New</div>
+                    <div class="ai-stat-value">{{ predictions_count }}</div>
+                    <div class="ai-stat-label">AI Predictions</div>
+                    <div class="trend-indicator">Total</div>
                 </div>
             </div>
             <div class="chart-container">
