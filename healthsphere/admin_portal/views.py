@@ -588,22 +588,57 @@ class StaffScheduleView(View):
     Staff Schedule Calendar View
     ============================
     Visual weekly schedule overview for all staff.
+    Queries StaffSchedule model and groups by date for the calendar.
     """
 
     template_name = 'admin_portal/staff_schedule.html'
 
     def get(self, request):
+        from collections import defaultdict
         today = timezone.now().date()
-        # Show a 7-day window
-        week_dates = [today + timezone.timedelta(days=i) for i in range(7)]
+
+        # Allow week navigation via ?offset=N (N days from today)
+        try:
+            offset = int(request.GET.get('offset', 0))
+        except ValueError:
+            offset = 0
+
+        week_start = today + timezone.timedelta(days=offset)
+        week_dates = [week_start + timezone.timedelta(days=i) for i in range(7)]
 
         schedules = StaffSchedule.objects.filter(
             date__in=week_dates
-        ).select_related('staff_member').order_by('date', 'start_time')
+        ).select_related('staff_member', 'staff_member__role').order_by('date', 'start_time')
+
+        # Group by date for easy template iteration
+        by_date = defaultdict(list)
+        for s in schedules:
+            by_date[s.date].append(s)
+
+        # Stats
+        total_today       = StaffSchedule.objects.filter(date=today, status='scheduled').count()
+        total_on_duty     = schedules.filter(status='scheduled').count()
+        doctors_today     = StaffSchedule.objects.filter(
+            date=today, status='scheduled', staff_member__role__name='doctor'
+        ).count()
+        nurses_today      = StaffSchedule.objects.filter(
+            date=today, status='scheduled', staff_member__role__name='nurse'
+        ).count()
 
         context = {
-            'week_dates': week_dates,
-            'schedules': schedules,
-            'today': today,
+            'week_dates':    week_dates,
+            'schedules':     schedules,
+            'by_date':       dict(by_date),
+            'today':         today,
+            'offset':        offset,
+            'prev_offset':   offset - 7,
+            'next_offset':   offset + 7,
+            'stats': {
+                'total_today':   total_today,
+                'total_on_duty': total_on_duty,
+                'doctors_today': doctors_today,
+                'nurses_today':  nurses_today,
+            },
         }
         return render(request, self.template_name, context)
+
