@@ -127,7 +127,8 @@
             </div>
         </div>
         <div class="day-shifts">
-            {% for shift in schedules %}
+            {% with day_shifts=schedules %}
+            {% for shift in day_shifts %}
             {% if shift.date == date %}
             <div class="shift-card {% if shift.staff_member.role.name == 'nurse' %}nurse-shift{% elif shift.shift == 'night' %}night-shift{% endif %}">
                 <div class="shift-role">{{ shift.staff_member.role.name|capfirst }}</div>
@@ -139,12 +140,7 @@
                 </div>
             </div>
             {% endif %}
-            {% empty %}
             {% endfor %}
-
-            {# Empty state — count shifts for this day #}
-            {% with has_any=False %}
-            {% for shift in schedules %}{% if shift.date == date %}{% endfor %}
             {% endwith %}
         </div>
     </div>
