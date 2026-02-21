@@ -217,7 +217,7 @@ if not DEBUG:
 # =============================================================================
 
 # URL prefix for user-uploaded files
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 
 # Directory to store uploaded files
 MEDIA_ROOT = BASE_DIR / 'media'

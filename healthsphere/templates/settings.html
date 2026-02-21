@@ -296,7 +296,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 
                 {% if two_factor_auth and two_factor_auth.qr_code %}
                 <div class="qr-section">
-                    <img src="data:image/png;base64,{{ two_factor_auth.qr_code }}" alt="2FA QR Code" class="qr-img">
+                    <img src="{{ two_factor_auth.qr_code.url }}" alt="2FA QR Code" class="qr-img">
                     <div class="qr-instructions">
                         <h4>Set up your authenticator</h4>
                         <ol>
