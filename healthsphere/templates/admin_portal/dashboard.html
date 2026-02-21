@@ -524,18 +524,20 @@
                     <div>
                         <h3 class="metric-value count-up">{{ consultations_today }}</h3>
                         <p class="metric-label">Consultations Today</p>
-                        <span class="metric-subtitle">↑ from appointments DB</span>
+                        <span class="metric-subtitle">{{ consultations_completion_pct }}% completion rate</span>
                     </div>
                 </div>
                 <div class="right-section">
                     <div class="circular-progress">
                         <svg viewBox="0 0 120 120">
                             <circle cx="60" cy="60" r="50" fill="none" stroke="#E2E8F0" stroke-width="8" />
-                            <circle cx="60" cy="60" r="50" fill="none" stroke="#A8C5A8" stroke-width="8"
-                                stroke-dasharray="235, 314" stroke-linecap="round" transform="rotate(-90 60 60)" />
+                            <circle id="donut-arc" cx="60" cy="60" r="50" fill="none" stroke="#A8C5A8" stroke-width="8"
+                                stroke-dasharray="0, 314" stroke-linecap="round" transform="rotate(-90 60 60)"
+                                data-pct="{{ consultations_completion_pct }}"
+                                style="transition: stroke-dasharray 1.2s ease-in-out;" />
                         </svg>
                         <div class="progress-label">
-                            <span class="big-percent">75%</span>
+                            <span class="big-percent" id="donut-label">{{ consultations_completion_pct }}%</span>
                         </div>
                     </div>
                 </div>
@@ -644,6 +646,25 @@
 </div>
 
 <script>
+    // Donut arc animation — driven by data-pct from DB
+    document.addEventListener('DOMContentLoaded', function () {
+        const arc = document.getElementById('donut-arc');
+        if (arc) {
+            const pct = parseFloat(arc.dataset.pct) || 0;
+            const circumference = 2 * Math.PI * 50; // r=50 → ≈314
+            const target = (pct / 100) * circumference;
+            const start = performance.now();
+            const dur = 1200;
+            const ease = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+            function animateArc(now) {
+                const t = Math.min((now - start) / dur, 1);
+                arc.setAttribute('stroke-dasharray', `${(ease(t)*target).toFixed(1)}, ${circumference.toFixed(1)}`);
+                if (t < 1) requestAnimationFrame(animateArc);
+            }
+            requestAnimationFrame(animateArc);
+        }
+    });
+
     // Number counting animation
     document.addEventListener('DOMContentLoaded', function () {
         const counters = document.querySelectorAll('.count-up');

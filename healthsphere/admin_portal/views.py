@@ -121,9 +121,18 @@ class DashboardView(View):
         from analytics.models import ClinicalOutcomePrediction
 
         consultations_today = Appointment.objects.filter(
-            scheduled_time__date=today,
+            scheduled_date=today,
             status__in=['confirmed', 'completed']
         ).count()
+
+        # Total appointments today (denominator for completion rate)
+        total_appts_today = Appointment.objects.filter(
+            scheduled_date=today
+        ).count()
+        consultations_completion_pct = (
+            round(consultations_today * 100 / total_appts_today)
+            if total_appts_today > 0 else 0
+        )
 
         predictions_count = ClinicalOutcomePrediction.objects.count()
 
@@ -144,6 +153,7 @@ class DashboardView(View):
             'department_stats': department_stats,
             'weekly_admissions': weekly_admissions,
             'consultations_today': consultations_today,
+            'consultations_completion_pct': consultations_completion_pct,
             'predictions_count': predictions_count,
         }
 
