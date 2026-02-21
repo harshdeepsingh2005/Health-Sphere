@@ -358,10 +358,17 @@
 
 /* --- Tables: always scrollable, never clip --- */
 .table-wrap,
-.table-responsive,
-[class*="table"] {
+.table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+/* Table itself can be wider than its wrapper (that's how horizontal scroll works) */
+.table-wrap table,
+.table-responsive table {
+    min-width: 600px;
+    width: 100%;
 }
 
 /* --- Bento grids: clamp min column size on small screens --- */
@@ -391,16 +398,18 @@
 }
 
 /* --- Prevent any fixed-width element from breaking out --- */
-.page-content *,
-.content-container * {
+/* Tables are excluded — they must be allowed wider than container for scroll to work */
+.page-content *:not(table):not(thead):not(tbody):not(tr):not(th):not(td):not(pre):not(code),
+.content-container *:not(table):not(thead):not(tbody):not(tr):not(th):not(td):not(pre):not(code) {
     max-width: 100%;
 }
 
-/* Exception: allow dropdowns/modals to overflow their parent */
+/* Exception: allow dropdowns/modals/tables to overflow their parent */
 .modal-overlay,
 .notif-panel,
 .user-menu-panel,
-[class*="dropdown"] {
+[class*="dropdown"],
+table {
     max-width: none;
 }
 
