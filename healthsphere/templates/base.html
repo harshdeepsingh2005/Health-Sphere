@@ -192,6 +192,14 @@ Soft Glass Dashboard | Healthcare Command Center Design
                         </a>
                     </li>
                     <li class="nav-item" role="none">
+                        <a href="{% url 'clinical_portal:admissions' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'admissions' and 'clinical_portal' in request.resolver_match.namespace %}active{% endif %}"
+                            role="menuitem">
+                            <span class="nav-icon"><i class="fas fa-bed"></i></span>
+                            <span class="nav-text">Admissions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="none">
                         <a href="{% url 'clinical_portal:records' %}"
                             class="nav-link {% if 'records' in request.resolver_match.url_name|default:'' %}active{% endif %}"
                             role="menuitem">

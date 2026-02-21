@@ -781,3 +781,115 @@ class DischargePatientView(View):
         )
         return redirect('clinical_portal:patient_detail', patient_id=patient_id)
 
+
+@method_decorator([login_required, clinical_staff_required], name='dispatch')
+class AdmissionsView(View):
+    """
+    Admissions Management (Clinical Portal)
+    ========================================
+    Doctors and nurses can view all admissions and admit new patients.
+    When the logged-in user is a doctor they are pre-set as the attending
+    physician. Nurses must pick a doctor from the dropdown.
+    """
+
+    template_name = 'clinical_portal/admissions.html'
+
+    def _get_context(self, request, status_filter='', admission_type='', search='', my_patients_only=False):
+        user = request.user
+        today = timezone.now().date()
+
+        admissions = AdmissionRecord.objects.select_related(
+            'patient', 'attending_doctor'
+        ).order_by('-admission_date')
+
+        if my_patients_only and user.is_doctor:
+            admissions = admissions.filter(attending_doctor=user)
+        if status_filter:
+            admissions = admissions.filter(status=status_filter)
+        if admission_type:
+            admissions = admissions.filter(admission_type=admission_type)
+        if search:
+            admissions = admissions.filter(
+                Q(patient__first_name__icontains=search) |
+                Q(patient__last_name__icontains=search) |
+                Q(diagnosis__icontains=search) |
+                Q(ward__icontains=search)
+            )
+
+        stats = {
+            'total': AdmissionRecord.objects.filter(status='admitted').count(),
+            'today': AdmissionRecord.objects.filter(admission_date__date=today).count(),
+            'discharged_today': AdmissionRecord.objects.filter(discharge_date__date=today).count(),
+            'my_patients': AdmissionRecord.objects.filter(
+                attending_doctor=user, status='admitted'
+            ).count() if user.is_doctor else 0,
+        }
+
+        return {
+            'admissions': admissions[:80],
+            'stats': stats,
+            'status_choices': AdmissionRecord.STATUS_CHOICES,
+            'admission_types': AdmissionRecord.ADMISSION_TYPES,
+            'selected_status': status_filter,
+            'selected_type': admission_type,
+            'search_query': search,
+            'my_patients_only': my_patients_only,
+            'all_patients': User.objects.filter(role__name=Role.PATIENT).order_by('last_name', 'first_name'),
+            'all_doctors': User.objects.filter(role__name=Role.DOCTOR).order_by('last_name', 'first_name'),
+            'current_user_is_doctor': user.is_doctor,
+        }
+
+    def get(self, request):
+        context = self._get_context(
+            request,
+            status_filter=request.GET.get('status', ''),
+            admission_type=request.GET.get('type', ''),
+            search=request.GET.get('search', ''),
+            my_patients_only=request.GET.get('mine', '') == '1',
+        )
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        patient_id = request.POST.get('patient')
+        doctor_id = request.POST.get('attending_doctor')
+        admission_type = request.POST.get('admission_type', 'scheduled')
+        diagnosis = request.POST.get('diagnosis', '').strip()
+        notes = request.POST.get('notes', '').strip()
+        ward = request.POST.get('ward', '').strip()
+        room_number = request.POST.get('room_number', '').strip()
+        bed_number = request.POST.get('bed_number', '').strip()
+
+        if not patient_id:
+            messages.error(request, 'Please select a patient.')
+            return render(request, self.template_name, self._get_context(request))
+
+        try:
+            patient = User.objects.get(id=patient_id, role__name=Role.PATIENT)
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid patient selected.')
+            return render(request, self.template_name, self._get_context(request))
+
+        # Determine attending doctor: logged-in doctor OR chosen from dropdown
+        attending_doctor = None
+        if request.user.is_doctor:
+            attending_doctor = request.user
+        elif doctor_id:
+            try:
+                attending_doctor = User.objects.get(id=doctor_id, role__name=Role.DOCTOR)
+            except User.DoesNotExist:
+                pass
+
+        AdmissionRecord.objects.create(
+            patient=patient,
+            attending_doctor=attending_doctor,
+            admission_type=admission_type,
+            diagnosis=diagnosis,
+            notes=notes,
+            ward=ward,
+            room_number=room_number,
+            bed_number=bed_number,
+            status='admitted',
+        )
+
+        messages.success(request, f'{patient.get_full_name()} has been admitted successfully.')
+        return redirect('clinical_portal:admissions')
