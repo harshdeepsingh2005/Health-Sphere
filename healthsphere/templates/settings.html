@@ -1,7 +1,389 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Settings | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item breadcrumb-current">Settings</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Layout ─────────────────────────────────────────────── */
+.settings-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+}
+@media (max-width: 768px) { .settings-layout { grid-template-columns: 1fr; } }
+
+/* ── Sidebar nav ─────────────────────────────────────────── */
+.settings-nav {
+    background: white;
+    border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-xl);
+    padding: .5rem;
+    height: fit-content;
+    box-shadow: 0 1px 5px rgba(0,0,0,.04);
+}
+.settings-nav a {
+    display: flex; align-items: center; gap: .625rem;
+    padding: .625rem .875rem; border-radius: var(--radius-lg);
+    text-decoration: none; font-size: .875rem; font-weight: 500;
+    color: var(--neutral-600); transition: all .18s;
+}
+.settings-nav a:hover, .settings-nav a.active {
+    background: rgba(59,130,246,.07); color: var(--healthcare-primary);
+}
+.settings-nav a i { width: 16px; text-align: center; }
+
+/* ── Cards ───────────────────────────────────────────────── */
+.settings-card {
+    background: white; border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-xl); overflow: hidden;
+    box-shadow: 0 1px 5px rgba(0,0,0,.04); margin-bottom: 1.25rem;
+}
+.settings-card-header {
+    padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--neutral-100);
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.settings-card-title { font-size: 1rem; font-weight: 700; color: var(--neutral-900); display: flex; align-items: center; gap: .5rem; }
+.settings-card-body { padding: 1.5rem; }
+
+/* ── 2FA toggle switch ───────────────────────────────────── */
+.twofa-status-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;
+}
+.twofa-status-badge {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .375rem .875rem; border-radius: 999px; font-size: .8125rem; font-weight: 700;
+}
+.twofa-status-badge.on  { background: rgba(16,185,129,.12); color: #059669; }
+.twofa-status-badge.off { background: var(--neutral-100); color: var(--neutral-500); }
+
+/* Toggle switch */
+.toggle-wrap { display: flex; align-items: center; gap: .75rem; }
+.toggle-label { font-size: .875rem; font-weight: 600; color: var(--neutral-700); }
+.toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; cursor: pointer; }
+.toggle-switch input { opacity:0; width:0; height:0; }
+.slider {
+    position: absolute; inset: 0; border-radius: 999px;
+    background: var(--neutral-200); transition: .3s;
+}
+.slider:before {
+    content: ''; position: absolute; height: 20px; width: 20px;
+    left: 3px; bottom: 3px; border-radius: 50%; background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: .3s;
+}
+input:checked + .slider { background: #10b981; }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* QR code section */
+.qr-section {
+    background: var(--neutral-50); border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-lg); padding: 1.25rem; margin-top: 1rem;
+    display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap;
+}
+.qr-img { width: 140px; height: 140px; border-radius: var(--radius-md); border: 3px solid var(--healthcare-primary); }
+.qr-instructions h4 { font-size: .9375rem; font-weight: 700; color: var(--neutral-900); margin-bottom: .5rem; }
+.qr-instructions ol { padding-left: 1.25rem; color: var(--neutral-600); font-size: .8375rem; line-height: 1.8; }
+.otp-input-row { display: flex; gap: .5rem; margin-top: .875rem; flex-wrap: wrap; }
+.otp-input {
+    width: 160px; padding: .5rem .875rem; border: 1.5px solid var(--neutral-200);
+    border-radius: var(--radius-lg); font-size: 1rem; font-weight: 600;
+    letter-spacing: .15em; text-align: center; outline: none;
+    transition: border-color .2s;
+}
+.otp-input:focus { border-color: var(--healthcare-primary); }
+.btn-enable {
+    padding: .5rem 1.25rem; background: #10b981; color: white; border: none;
+    border-radius: var(--radius-lg); font-weight: 600; font-size: .875rem;
+    cursor: pointer; transition: all .2s;
+}
+.btn-enable:hover { background: #059669; transform: translateY(-1px); }
+
+/* Backup codes */
+.backup-codes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .5rem; margin-top: .875rem; }
+.backup-code {
+    background: var(--neutral-100); font-family: 'Courier New', monospace;
+    font-size: .8125rem; font-weight: 700; padding: .4rem .625rem;
+    border-radius: var(--radius-md); text-align: center; letter-spacing: .08em;
+    color: var(--neutral-800); user-select: all;
+}
+.backup-code.used { opacity: .35; text-decoration: line-through; }
+
+/* Danger zone */
+.btn-danger {
+    padding: .5rem 1.125rem; background: rgba(239,68,68,.08); color: #dc2626;
+    border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius-lg);
+    font-weight: 600; font-size: .875rem; cursor: pointer; transition: all .2s;
+}
+.btn-danger:hover { background: #dc2626; color: white; }
+
+/* Profile section */
+.profile-row { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+.avatar-circle {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--healthcare-primary), var(--healthcare-accent));
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.25rem; flex-shrink: 0;
+}
+.field-group { margin-bottom: 1rem; }
+.field-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--neutral-500); margin-bottom: .375rem; }
+.field-value { font-size: .9375rem; font-weight: 600; color: var(--neutral-800); }
+.field-sub { font-size: .8125rem; color: var(--neutral-500); }
+
+/* Role badge */
+.role-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .75rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+.role-badge.admin    { background: rgba(239,68,68,.1); color: #dc2626; }
+.role-badge.doctor   { background: rgba(59,130,246,.1); color: var(--healthcare-primary); }
+.role-badge.nurse    { background: rgba(16,185,129,.1); color: #059669; }
+.role-badge.patient  { background: rgba(139,92,246,.1); color: #7c3aed; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="content-container">
-    <h2>Settings</h2>
-    <p>Account and application settings placeholder.</p>
+<div style="margin: 0 auto; max-width: 960px; padding-bottom: 3rem;">
+
+<div style="margin-bottom: 1.75rem;">
+    <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--neutral-900); margin: 0;">
+        <i class="fas fa-cog" style="color: var(--healthcare-primary); margin-right: .5rem;"></i>Settings
+    </h1>
+    <p style="color: var(--neutral-500); margin: .25rem 0 0; font-size: .875rem;">Manage your account preferences and security settings</p>
 </div>
+
+<div class="settings-layout">
+
+    <!-- Sidebar nav -->
+    <nav class="settings-nav">
+        <a href="#account" class="active"><i class="fas fa-user"></i> Account</a>
+        <a href="#security"><i class="fas fa-shield-alt"></i> Security</a>
+        <a href="#2fa"><i class="fas fa-mobile-alt"></i> Two-Factor Auth</a>
+        <a href="#notifications"><i class="fas fa-bell"></i> Notifications</a>
+    </nav>
+
+    <!-- Main content -->
+    <div>
+
+        <!-- ── Account Info ── -->
+        <div class="settings-card" id="account">
+            <div class="settings-card-header">
+                <span class="settings-card-title"><i class="fas fa-user" style="color: var(--healthcare-primary);"></i> Account</span>
+                {% if user.role %}<span class="role-badge {{ user.role.name }}"><i class="fas fa-circle" style="font-size:.45rem;"></i> {{ user.role.name|capfirst }}</span>{% endif %}
+            </div>
+            <div class="settings-card-body">
+                <div class="profile-row">
+                    <div class="avatar-circle">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 1.0625rem; color: var(--neutral-900);">{{ user.get_full_name|default:user.username }}</div>
+                        <div style="font-size: .8375rem; color: var(--neutral-500);">{{ user.email }}</div>
+                        {% if user.phone %}<div style="font-size: .8375rem; color: var(--neutral-500);">{{ user.phone }}</div>{% endif %}
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .5rem;">
+                    <div class="field-group">
+                        <div class="field-label">Username</div>
+                        <div class="field-value">{{ user.username }}</div>
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label">Member Since</div>
+                        <div class="field-value">{{ user.date_joined|date:"M Y" }}</div>
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label">Last Login</div>
+                        <div class="field-value">{{ user.last_login|date:"M d, Y g:i A"|default:"—" }}</div>
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label">2FA Status</div>
+                        <div class="field-value">{% if two_factor_auth and two_factor_auth.is_enabled %}<span style="color:#059669;">✔ Enabled</span>{% else %}<span style="color:var(--neutral-500);">Not enabled</span>{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Security ── -->
+        <div class="settings-card" id="security">
+            <div class="settings-card-header">
+                <span class="settings-card-title"><i class="fas fa-lock" style="color: var(--healthcare-primary);"></i> Security</span>
+            </div>
+            <div class="settings-card-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--neutral-800);">Password</div>
+                        <div style="font-size: .8125rem; color: var(--neutral-500);">Last changed: unknown • Use a strong password</div>
+                    </div>
+                    <a href="{% url 'users:password_reset' %}" style="padding: .5rem 1.125rem; background: var(--neutral-100); color: var(--neutral-700); border-radius: var(--radius-lg); text-decoration: none; font-weight: 600; font-size: .875rem;">
+                        Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Two-Factor Auth ── -->
+        <div class="settings-card" id="2fa">
+            <div class="settings-card-header">
+                <span class="settings-card-title"><i class="fas fa-mobile-alt" style="color: var(--healthcare-primary);"></i> Two-Factor Authentication</span>
+                {% if two_factor_auth and two_factor_auth.is_enabled %}
+                <span class="twofa-status-badge on"><i class="fas fa-check-circle"></i> Enabled</span>
+                {% else %}
+                <span class="twofa-status-badge off"><i class="fas fa-times-circle"></i> Disabled</span>
+                {% endif %}
+            </div>
+            <div class="settings-card-body">
+
+                <p style="font-size: .875rem; color: var(--neutral-600); margin-bottom: 1.25rem; max-width: 520px;">
+                    Two-factor authentication adds an extra layer of security to your account.
+                    When enabled, you'll need both your password and a time-based code from your authenticator app to log in.
+                </p>
+
+                {% if two_factor_auth and two_factor_auth.is_enabled %}
+                <!-- ── 2FA IS ON ── -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem; background: rgba(16,185,129,.06); border: 1px solid rgba(16,185,129,.2); border-radius: var(--radius-lg);">
+                    <div style="display: flex; align-items: center; gap: .75rem;">
+                        <div style="width: 40px; height: 40px; background: rgba(16,185,129,.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #059669; font-size: 1.1rem;">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: #059669;">Your account is protected</div>
+                            <div style="font-size: .8125rem; color: var(--neutral-500);">Authenticator app 2FA is active</div>
+                        </div>
+                    </div>
+
+                    <form method="post" action="{% url 'users:2fa_setup' %}" onsubmit="return confirm('Are you sure you want to disable 2FA? This reduces your account security.');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="disable">
+                        <button type="submit" class="btn-danger"><i class="fas fa-shield-virus"></i> Disable 2FA</button>
+                    </form>
+                </div>
+
+                <!-- Backup codes section -->
+                {% if backup_codes %}
+                <div style="margin-top: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: .625rem;">
+                        <div style="font-weight: 600; font-size: .9375rem; color: var(--neutral-800);">Backup Codes</div>
+                        <form method="post" action="{% url 'users:2fa_setup' %}" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="regenerate_codes">
+                            <button type="submit" style="background: none; border: none; color: var(--healthcare-primary); font-size: .8125rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
+                                Regenerate codes
+                            </button>
+                        </form>
+                    </div>
+                    <p style="font-size: .8125rem; color: var(--neutral-500); margin-bottom: .625rem;">
+                        Save these backup codes in a safe place. Each can only be used once.
+                    </p>
+                    <div class="backup-codes-grid">
+                        {% for code in backup_codes %}
+                        <div class="backup-code">{{ code }}</div>
+                        {% empty %}
+                        <div style="color: var(--neutral-500); font-size: .8125rem; grid-column: 1/-1;">No backup codes. Regenerate to create new ones.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <!-- ── 2FA IS OFF — show enable flow ── -->
+                <div style="padding: 1rem; background: rgba(245,158,11,.05); border: 1px solid rgba(245,158,11,.2); border-radius: var(--radius-lg); margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: .75rem;">
+                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-top: .15rem;"></i>
+                    <div style="font-size: .8375rem; color: var(--neutral-700);">
+                        <strong>2FA is not enabled.</strong> We strongly recommend enabling it, especially for clinical and admin accounts.
+                    </div>
+                </div>
+
+                {% if two_factor_auth and two_factor_auth.qr_code %}
+                <div class="qr-section">
+                    <img src="data:image/png;base64,{{ two_factor_auth.qr_code }}" alt="2FA QR Code" class="qr-img">
+                    <div class="qr-instructions">
+                        <h4>Set up your authenticator</h4>
+                        <ol>
+                            <li>Download <strong>Google Authenticator</strong> or <strong>Authy</strong></li>
+                            <li>Scan the QR code with the app</li>
+                            <li>Enter the 6-digit code below to confirm</li>
+                        </ol>
+                        <form method="post" action="{% url 'users:2fa_setup' %}" class="otp-input-row">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="enable">
+                            <input type="text" name="token" class="otp-input" maxlength="6" placeholder="000000" inputmode="numeric" autocomplete="one-time-code" required>
+                            <button type="submit" class="btn-enable"><i class="fas fa-check"></i> Enable 2FA</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 2rem;">
+                    <a href="{% url 'users:2fa_setup' %}" style="display: inline-flex; align-items: center; gap: .5rem; padding: .75rem 1.5rem; background: var(--healthcare-primary); color: white; border-radius: var(--radius-lg); font-weight: 700; text-decoration: none; font-size: .9375rem; transition: all .2s;">
+                        <i class="fas fa-mobile-alt"></i> Set Up 2FA
+                    </a>
+                </div>
+                {% endif %}
+                {% endif %}
+
+            </div>
+        </div>
+
+        <!-- ── Notifications (placeholder) ── -->
+        <div class="settings-card" id="notifications">
+            <div class="settings-card-header">
+                <span class="settings-card-title"><i class="fas fa-bell" style="color: var(--healthcare-primary);"></i> Notifications</span>
+            </div>
+            <div class="settings-card-body">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: .875rem 0; border-bottom: 1px solid var(--neutral-50);">
+                    <div>
+                        <div style="font-weight: 600; color: var(--neutral-800); font-size: .9375rem;">Email notifications</div>
+                        <div style="font-size: .8125rem; color: var(--neutral-500);">Appointment reminders and alerts</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: .875rem 0;">
+                    <div>
+                        <div style="font-weight: 600; color: var(--neutral-800); font-size: .9375rem;">System alerts</div>
+                        <div style="font-size: .8125rem; color: var(--neutral-500);">Critical health and security alerts</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p style="font-size: .75rem; color: var(--neutral-400); margin-top: .75rem;">Notification preferences coming soon.</p>
+            </div>
+        </div>
+
+    </div><!-- /main content -->
+</div><!-- /layout -->
+</div>
+
+<script>
+// Auto-scroll to #2fa anchor if clicked in nav
+document.querySelectorAll('.settings-nav a').forEach(link => {
+    link.addEventListener('click', function(e) {
+        const hash = this.getAttribute('href');
+        if (hash.startsWith('#')) {
+            e.preventDefault();
+            document.querySelectorAll('.settings-nav a').forEach(a => a.classList.remove('active'));
+            this.classList.add('active');
+            const target = document.querySelector(hash);
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+// Highlight nav item based on scroll
+const sections = document.querySelectorAll('.settings-card');
+const navLinks = document.querySelectorAll('.settings-nav a[href^="#"]');
+window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 120) current = '#' + s.id;
+    });
+    navLinks.forEach(l => {
+        l.classList.toggle('active', l.getAttribute('href') === current);
+    });
+}, { passive: true });
+</script>
+
 {% endblock %}
