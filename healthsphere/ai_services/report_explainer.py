@@ -16,6 +16,32 @@ from .gemini_client import generate_text, is_available
 logger = logging.getLogger(__name__)
 
 
+def extract_pdf_text(file_obj) -> str:
+    """
+    Extract plain text from an uploaded PDF file.
+
+    Args:
+        file_obj: Django InMemoryUploadedFile or any file-like object.
+
+    Returns:
+        Extracted text string, or empty string if extraction fails.
+    """
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(file_obj)
+        text_parts = []
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text_parts.append(page_text)
+        return "\n".join(text_parts).strip()
+    except Exception as exc:
+        logger.warning(f"PDF extraction failed: {exc}")
+        return ""
+
+
+
+
 def explain_report(report_text: str) -> dict:
     """
     Generate a patient-friendly explanation of a medical report using Gemini.

@@ -480,6 +480,11 @@ class PatientDetailView(View):
         }
         diagnostic_result = generate_diagnostic_suggestions(patient_data)
 
+        lab_results = MedicalRecord.objects.filter(
+            patient=patient,
+            record_type__in=['lab_result', 'imaging']
+        ).select_related('created_by').order_by('-record_date')
+
         context = {
             'patient': patient,
             'records': records,
@@ -487,6 +492,7 @@ class PatientDetailView(View):
             'vitals': vitals,
             'admissions': admissions,
             'diagnostic_ai': diagnostic_result,
+            'lab_results': lab_results,
         }
         return render(request, self.template_name, context)
 
@@ -893,3 +899,108 @@ class AdmissionsView(View):
 
         messages.success(request, f'{patient.get_full_name()} has been admitted successfully.')
         return redirect('clinical_portal:admissions')
+
+
+# ==============================================================================
+# LAB RESULTS UPLOAD (Doctor / Nurse)
+# ==============================================================================
+
+@method_decorator([login_required, clinical_staff_required], name='dispatch')
+class LabResultUploadView(View):
+    """
+    Lab Result Upload View
+    ======================
+    Allows clinical staff to upload lab result files (PDF, images, etc.)
+    for a specific patient. Stored as MedicalRecord(record_type='lab_result')
+    so they automatically surface on the patient detail page and patient portal.
+    """
+    template_name = 'clinical_portal/lab_results.html'
+
+    def _all_patients(self):
+        return User.objects.filter(role__name=Role.PATIENT).order_by('last_name', 'first_name')
+
+    def _recent_results(self):
+        return MedicalRecord.objects.filter(
+            record_type__in=['lab_result', 'imaging']
+        ).select_related('patient', 'created_by').order_by('-record_date')[:50]
+
+    def get(self, request):
+        patient_id = request.GET.get('patient_id')
+        selected_patient = None
+        patient_results = []
+        if patient_id:
+            try:
+                selected_patient = User.objects.get(id=patient_id, role__name=Role.PATIENT)
+                patient_results = MedicalRecord.objects.filter(
+                    patient=selected_patient,
+                    record_type__in=['lab_result', 'imaging']
+                ).select_related('created_by').order_by('-record_date')
+            except User.DoesNotExist:
+                pass
+
+        return render(request, self.template_name, {
+            'patients': self._all_patients(),
+            'selected_patient': selected_patient,
+            'patient_results': patient_results,
+            'recent_results': self._recent_results(),
+        })
+
+    def post(self, request):
+        patient_id = request.POST.get('patient_id')
+        title = request.POST.get('title', '').strip()
+        severity = request.POST.get('severity', 'low')
+        record_type = request.POST.get('record_type', 'lab_result')
+        notes = request.POST.get('notes', '').strip()
+        result_file = request.FILES.get('result_file')
+
+        if not patient_id:
+            messages.error(request, 'Please select a patient.')
+            return redirect('clinical_portal:lab_results')
+
+        try:
+            patient = User.objects.get(id=patient_id, role__name=Role.PATIENT)
+        except User.DoesNotExist:
+            messages.error(request, 'Patient not found.')
+            return redirect('clinical_portal:lab_results')
+
+        if not title and result_file:
+            title = result_file.name
+
+        if not title:
+            messages.error(request, 'Please provide a title for the lab result.')
+            return redirect(f'clinical_portal:lab_results')
+
+        record = MedicalRecord.objects.create(
+            patient=patient,
+            created_by=request.user,
+            record_type=record_type,
+            title=title,
+            description=notes,
+            severity=severity,
+        )
+        if result_file:
+            record.attachments.save(result_file.name, result_file, save=True)
+
+        messages.success(
+            request,
+            f'Lab result "{title}" uploaded successfully for {patient.get_full_name()}.'
+        )
+        return redirect(f'{request.path}?patient_id={patient_id}')
+
+
+@method_decorator([login_required, clinical_staff_required], name='dispatch')
+class LabResultDeleteView(View):
+    """Delete a lab result record (doctor/nurse only)."""
+
+    def post(self, request, pk):
+        record = MedicalRecord.objects.filter(
+            pk=pk,
+            record_type__in=['lab_result', 'imaging']
+        ).first()
+        if record:
+            patient_id = record.patient_id
+            record.delete()
+            messages.success(request, 'Lab result deleted.')
+            return redirect(f'/clinical/lab-results/?patient_id={patient_id}')
+        messages.error(request, 'Record not found.')
+        return redirect('clinical_portal:lab_results')

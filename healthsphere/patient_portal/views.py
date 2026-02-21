@@ -22,7 +22,7 @@ from prescriptions.models import Prescription
 
 # Import AI services (Gemini-powered)
 from ai_services.risk_service import predict_risk, get_risk_factors
-from ai_services.report_explainer import explain_report, simplify_medical_terms
+from ai_services.report_explainer import explain_report, simplify_medical_terms, extract_pdf_text
 from ai_services.journey_service import get_patient_journey_summary, get_patient_ai_insights
 
 
@@ -239,30 +239,74 @@ class DashboardView(View):
 class ReportUploadView(View):
     template_name = 'patient_portal/report.html'
 
+    def _get_uploaded_records(self, user):
+        """Fetch lab/imaging records visible to this patient (self-uploaded + doctor-uploaded)."""
+        return MedicalRecord.objects.filter(
+            patient=user,
+            record_type__in=['lab_result', 'imaging']
+        ).select_related('created_by').order_by('-record_date')[:20]
+
     def get(self, request):
         from .forms import ReportUploadForm
-        uploaded_records = MedicalRecord.objects.filter(
-            patient=request.user,
-            record_type__in=['lab_result', 'imaging']
-        ).order_by('-record_date')[:10]
         form = ReportUploadForm()
-        return render(request, self.template_name, {'form': form, 'uploaded_records': uploaded_records})
+        return render(request, self.template_name, {
+            'form': form,
+            'uploaded_records': self._get_uploaded_records(request.user),
+        })
 
     def post(self, request):
         from .forms import ReportUploadForm
+        from django.utils import timezone as tz
         form = ReportUploadForm(request.POST, request.FILES)
         if form.is_valid():
+            report_file = request.FILES.get('report_file')
             report_text = form.cleaned_data.get('report_text', '')
-            explanation = explain_report(report_text)
-            simplified_terms = simplify_medical_terms(report_text)
-            messages.success(request, 'Your report has been analyzed successfully.')
+
+            # --- If a file was uploaded, extract text from it ---
+            extracted_text = ''
+            if report_file:
+                extracted_text = extract_pdf_text(report_file)
+                # Fall back to pasted text if extraction fails or file isn't a PDF
+                if not extracted_text:
+                    extracted_text = report_text
+            else:
+                extracted_text = report_text
+
+            # --- Save as MedicalRecord so it persists ---
+            title = (
+                report_file.name if report_file
+                else (extracted_text[:60].strip() + '…' if len(extracted_text) > 60 else extracted_text[:60])
+            ) or 'Uploaded Report'
+
+            saved_record = MedicalRecord.objects.create(
+                patient=request.user,
+                created_by=request.user,
+                record_type='lab_result',
+                title=title,
+                description=extracted_text[:5000],
+                severity='low',
+            )
+            if report_file:
+                # Reset file pointer after pypdf read
+                report_file.seek(0)
+                saved_record.attachments.save(report_file.name, report_file, save=True)
+
+            # --- AI analysis ---
+            explanation = explain_report(extracted_text)
+            simplified_terms = simplify_medical_terms(extracted_text)
+            messages.success(request, 'Your report has been uploaded and analyzed successfully.')
             return render(request, self.template_name, {
                 'form': ReportUploadForm(),
                 'explanation': explanation,
                 'simplified_terms': simplified_terms,
-                'original_text': report_text,
+                'original_text': extracted_text,
+                'uploaded_records': self._get_uploaded_records(request.user),
+                'saved_record': saved_record,
             })
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {
+            'form': form,
+            'uploaded_records': self._get_uploaded_records(request.user),
+        })
 
 
 # ---------------------------------------------------------------------------

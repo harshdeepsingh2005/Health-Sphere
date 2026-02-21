@@ -66,4 +66,10 @@ urlpatterns = [
     # ADMISSIONS (doctors & nurses)
     # ==========================================================================
     path('admissions/', views.AdmissionsView.as_view(), name='admissions'),
+
+    # ==========================================================================
+    # LAB RESULTS UPLOAD (doctors & nurses)
+    # ==========================================================================
+    path('lab-results/', views.LabResultUploadView.as_view(), name='lab_results'),
+    path('lab-results/<int:pk>/delete/', views.LabResultDeleteView.as_view(), name='lab_result_delete'),
 ]

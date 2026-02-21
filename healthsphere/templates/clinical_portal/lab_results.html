@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Lab Results Upload — HealthSphere{% endblock %}
+
+{% block content %}
+<style>
+:root {
+    --accent: #6C8EBF;
+    --accent-light: #e8f0fb;
+    --danger: #E05C5C;
+    --success: #4CAF82;
+    --card-bg: rgba(255,255,255,0.06);
+    --border: rgba(255,255,255,0.10);
+}
+.lab-page {
+    padding: 2rem;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+.lab-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.lab-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6C8EBF, #A8C5A8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.lab-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 900px) { .lab-grid { grid-template-columns: 1fr; } }
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(12px);
+}
+.card h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    font-size: .82rem;
+    font-weight: 600;
+    opacity: .7;
+    margin-bottom: .4rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+.form-control {
+    width: 100%;
+    padding: .6rem .9rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: inherit;
+    font-size: .92rem;
+    transition: border .2s;
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.file-drop {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 1.8rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border .2s, background .2s;
+    position: relative;
+}
+.file-drop:hover { border-color: var(--accent); background: rgba(108,142,191,.05); }
+.file-drop input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+.file-drop-icon { font-size: 2rem; opacity: .4; margin-bottom: .5rem; }
+.file-drop p { font-size: .85rem; opacity: .6; margin: 0; }
+#file-name-display { font-size: .82rem; color: var(--accent); margin-top: .5rem; }
+.btn-upload {
+    width: 100%;
+    padding: .8rem;
+    background: linear-gradient(135deg, #6C8EBF, #5a80b5);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s, opacity .15s;
+    margin-top: .5rem;
+}
+.btn-upload:hover { opacity: .9; transform: translateY(-1px); }
+
+/* Patient selector pills */
+.patient-search-wrap { position: relative; }
+#patient-search {
+    width: 100%;
+    padding: .6rem .9rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: inherit;
+    font-size: .92rem;
+}
+.patient-select { margin-top: .5rem; }
+
+/* Results table */
+.results-table { width: 100%; border-collapse: collapse; }
+.results-table thead tr { border-bottom: 1px solid var(--border); }
+.results-table th {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    opacity: .55;
+    padding: .5rem .8rem;
+    text-align: left;
+    font-weight: 600;
+}
+.results-table td {
+    padding: .75rem .8rem;
+    font-size: .9rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+}
+.results-table tr:hover td { background: rgba(255,255,255,.03); }
+.badge {
+    display: inline-block;
+    padding: .2rem .6rem;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+}
+.badge-low { background: rgba(76,175,130,.15); color: #4CAF82; }
+.badge-medium { background: rgba(255,193,7,.15); color: #FFC107; }
+.badge-high { background: rgba(255,152,0,.15); color: #FF9800; }
+.badge-critical { background: rgba(224,92,92,.15); color: #E05C5C; }
+.badge-lab { background: rgba(108,142,191,.15); color: #6C8EBF; }
+.badge-imaging { background: rgba(156,39,176,.15); color: #ab47bc; }
+.btn-sm {
+    padding: .25rem .7rem;
+    border-radius: 6px;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity .15s;
+}
+.btn-download { background: rgba(76,175,130,.15); color: #4CAF82; text-decoration: none; }
+.btn-delete { background: rgba(224,92,92,.12); color: #E05C5C; }
+.btn-sm:hover { opacity: .8; }
+.empty-state {
+    padding: 3rem;
+    text-align: center;
+    opacity: .45;
+}
+.empty-state i { font-size: 3rem; display: block; margin-bottom: .8rem; }
+.alerts { margin-bottom: 1.5rem; }
+.alert {
+    padding: .8rem 1.2rem;
+    border-radius: 10px;
+    margin-bottom: .5rem;
+    font-size: .9rem;
+}
+.alert-success { background: rgba(76,175,130,.12); color: #4CAF82; border: 1px solid rgba(76,175,130,.2); }
+.alert-error { background: rgba(224,92,92,.12); color: #E05C5C; border: 1px solid rgba(224,92,92,.2); }
+.patient-name-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: rgba(108,142,191,.15);
+    border: 1px solid rgba(108,142,191,.25);
+    border-radius: 20px;
+    padding: .3rem .9rem;
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 1rem;
+}
+</style>
+
+<div class="lab-page">
+    <div class="lab-header">
+        <i class="fas fa-flask" style="font-size:1.8rem;color:var(--accent)"></i>
+        <h1>Lab Results Upload</h1>
+    </div>
+
+    {% if messages %}
+    <div class="alerts">
+        {% for msg in messages %}
+        <div class="alert {% if msg.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
+            <i class="fas fa-{% if msg.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+            {{ msg }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="lab-grid">
+        <!-- ── UPLOAD FORM ── -->
+        <div class="card">
+            <h2><i class="fas fa-upload"></i> Upload Lab Result</h2>
+
+            <form method="post" enctype="multipart/form-data" action="{% url 'clinical_portal:lab_results' %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>Patient *</label>
+                    <select name="patient_id" class="form-control" required id="patient-select" onchange="updatePatient(this.value)">
+                        <option value="">— Select patient —</option>
+                        {% for p in patients %}
+                        <option value="{{ p.id }}"
+                            {% if selected_patient and selected_patient.id == p.id %}selected{% endif %}>
+                            {{ p.get_full_name|default:p.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Result Title *</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. CBC Panel – Feb 2026" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Type</label>
+                    <select name="record_type" class="form-control">
+                        <option value="lab_result">Lab Result</option>
+                        <option value="imaging">Imaging Report</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Severity</label>
+                    <select name="severity" class="form-control">
+                        <option value="low">Low (Normal)</option>
+                        <option value="medium">Medium (Monitor)</option>
+                        <option value="high">High (Follow-up)</option>
+                        <option value="critical">Critical (Immediate)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Attach File (PDF, image, etc.)</label>
+                    <div class="file-drop" id="file-drop-zone">
+                        <input type="file" name="result_file" id="result-file-input"
+                            accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx"
+                            onchange="showFileName(this)">
+                        <div class="file-drop-icon">📎</div>
+                        <p>Click or drag & drop a file here</p>
+                        <div id="file-name-display"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <textarea name="notes" class="form-control" rows="3"
+                        placeholder="Additional observations or context…"></textarea>
+                </div>
+
+                <button type="submit" class="btn-upload">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Lab Result
+                </button>
+            </form>
+        </div>
+
+        <!-- ── RESULTS PANEL ── -->
+        <div>
+            {% if selected_patient %}
+            <div class="card" style="margin-bottom:1.5rem;">
+                <h2><i class="fas fa-user-circle"></i> Results for Patient</h2>
+                <div class="patient-name-badge">
+                    <i class="fas fa-id-badge"></i>
+                    {{ selected_patient.get_full_name|default:selected_patient.username }}
+                </div>
+                <a href="{% url 'clinical_portal:patient_detail' selected_patient.id %}"
+                   style="font-size:.83rem;color:var(--accent);text-decoration:none;">
+                    <i class="fas fa-external-link-alt"></i> View Patient Detail →
+                </a>
+
+                {% if patient_results %}
+                <table class="results-table" style="margin-top:1rem;">
+                    <thead><tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Severity</th>
+                        <th>Date</th>
+                        <th>Uploaded by</th>
+                        <th>File</th>
+                        <th>Actions</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for r in patient_results %}
+                    <tr>
+                        <td><strong>{{ r.title }}</strong>
+                            {% if r.description %}<br><span style="font-size:.8rem;opacity:.6;">{{ r.description|truncatechars:60 }}</span>{% endif %}
+                        </td>
+                        <td><span class="badge {% if r.record_type == 'imaging' %}badge-imaging{% else %}badge-lab{% endif %}">
+                            {{ r.get_record_type_display }}</span></td>
+                        <td><span class="badge badge-{{ r.severity }}">{{ r.get_severity_display }}</span></td>
+                        <td>{{ r.record_date|date:"d M Y" }}</td>
+                        <td>{% if r.created_by %}{{ r.created_by.get_full_name|default:r.created_by.username }}{% else %}—{% endif %}</td>
+                        <td>
+                            {% if r.attachments %}
+                            <a href="{{ r.attachments.url }}" target="_blank" class="btn-sm btn-download">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'clinical_portal:lab_result_delete' r.pk %}"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Delete this lab result?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-sm btn-delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-flask"></i>
+                    <p>No lab results for this patient yet.</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Recent uploads across all patients -->
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Recent Uploads (All Patients)</h2>
+                {% if recent_results %}
+                <table class="results-table">
+                    <thead><tr>
+                        <th>Patient</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Severity</th>
+                        <th>Date</th>
+                        <th>File</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for r in recent_results %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'clinical_portal:lab_results' %}?patient_id={{ r.patient.id }}"
+                               style="color:var(--accent);text-decoration:none;">
+                                {{ r.patient.get_full_name|default:r.patient.username }}
+                            </a>
+                        </td>
+                        <td>{{ r.title|truncatechars:40 }}</td>
+                        <td><span class="badge {% if r.record_type == 'imaging' %}badge-imaging{% else %}badge-lab{% endif %}">
+                            {{ r.get_record_type_display }}</span></td>
+                        <td><span class="badge badge-{{ r.severity }}">{{ r.severity|capfirst }}</span></td>
+                        <td>{{ r.record_date|date:"d M Y" }}</td>
+                        <td>
+                            {% if r.attachments %}
+                            <a href="{{ r.attachments.url }}" target="_blank" class="btn-sm btn-download">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-flask"></i>
+                    <p>No lab results uploaded yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showFileName(input) {
+    const display = document.getElementById('file-name-display');
+    if (input.files && input.files[0]) {
+        display.textContent = '📄 ' + input.files[0].name;
+    }
+}
+
+function updatePatient(id) {
+    if (id) {
+        window.location.href = '{% url "clinical_portal:lab_results" %}?patient_id=' + id;
+    }
+}
+
+// Drag & drop visual feedback
+const dropZone = document.getElementById('file-drop-zone');
+if (dropZone) {
+    dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--accent)';
+        dropZone.style.background = 'rgba(108,142,191,.08)';
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '';
+        dropZone.style.background = '';
+    });
+    dropZone.addEventListener('drop', () => {
+        dropZone.style.borderColor = '';
+        dropZone.style.background = '';
+    });
+}
+</script>
+{% endblock %}
