@@ -1,96 +1,175 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block title %}Doctor Schedules | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'appointments:list' %}" class="breadcrumb-link">Appointments</a></li>
+<li class="breadcrumb-item breadcrumb-current">Doctor Schedules</li>
+{% endblock %}
+
 {% block extra_css %}
 <style>
-    .schedule-container {
-        max-width: 1200px;
-        margin: 24px auto;
-        padding: 0 24px;
-    }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.page-header p { color: var(--neutral-500); font-size: .875rem; margin: .25rem 0 0; }
+.btn-add {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: var(--healthcare-primary); color: white; border: none;
+    border-radius: var(--radius-lg); padding: .65rem 1.25rem;
+    font-size: .875rem; font-weight: 600; cursor: pointer; text-decoration: none;
+    transition: background .2s, transform .15s;
+}
+.btn-add:hover { background: #1a6fb3; transform: translateY(-1px); }
 
-    .schedule-card {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        padding: 28px;
-        margin-bottom: 20px;
-    }
+.filter-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+.filter-select { padding: .5rem .875rem; border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); background: white; color: var(--neutral-700); font-size: .875rem; }
+.btn-filt { padding: .5rem 1rem; border-radius: var(--radius-lg); border: none; cursor: pointer; font-size: .875rem; font-weight: 500; }
+.btn-clear { background: var(--neutral-100); color: var(--neutral-700); text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; }
 
-    .schedule-item {
-        display: grid;
-        grid-template-columns: 120px 1fr 1fr 100px;
-        gap: 16px;
-        align-items: center;
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 10px;
-        background: rgba(168, 197, 232, 0.04);
-        transition: all 0.3s;
-    }
+.doctor-block { background: white; border-radius: var(--radius-xl); border: 1px solid var(--neutral-100); overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.04); margin-bottom: 1.5rem; }
+.doctor-block-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.5rem; background: var(--neutral-50); border-bottom: 1px solid var(--neutral-100); flex-wrap: wrap; }
+.doctor-meta { display: flex; align-items: center; gap: .875rem; }
+.doctor-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--healthcare-primary), var(--healthcare-accent)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0; }
+.doctor-name { font-size: 1rem; font-weight: 700; color: var(--neutral-900); }
+.doctor-email { font-size: .8125rem; color: var(--neutral-500); }
+.stat-pill { background: rgba(59,130,246,.08); color: var(--healthcare-primary); font-size: .75rem; font-weight: 600; padding: .25rem .75rem; border-radius: 999px; }
 
-    .schedule-item:hover {
-        background: rgba(168, 197, 232, 0.1);
-        transform: translateX(4px);
-    }
+/* Schedule rows table */
+.sched-table { width: 100%; border-collapse: collapse; }
+.sched-table thead { background: var(--neutral-50); }
+.sched-table th { padding: .625rem 1rem; text-align: left; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--neutral-500); border-bottom: 1px solid var(--neutral-100); }
+.sched-table td { padding: .875rem 1rem; border-bottom: 1px solid var(--neutral-50); font-size: .875rem; color: var(--neutral-700); vertical-align: middle; }
+.sched-table tr:last-child td { border-bottom: none; }
+.sched-table tr:hover td { background: var(--neutral-50); }
 
-    .day-badge {
-        padding: 8px 14px;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 14px;
-        text-align: center;
-        background: linear-gradient(135deg, #A8C5E8, #b8d4f0);
-        color: white;
-    }
+.day-badge { display: inline-flex; align-items: center; justify-content: center; width: 80px; padding: .3rem .6rem; border-radius: var(--radius-md); font-size: .75rem; font-weight: 700; background: linear-gradient(135deg, rgba(59,130,246,.12), rgba(139,92,246,.08)); color: var(--healthcare-primary); }
+.time-chip { background: var(--neutral-100); padding: .2rem .5rem; border-radius: var(--radius-sm); font-size: .8125rem; font-weight: 600; color: var(--neutral-800); }
+.break-badge { background: rgba(245,158,11,.1); color: #92400e; font-size: .7rem; padding: .15rem .5rem; border-radius: 999px; }
+.active-badge { background: rgba(16,185,129,.1); color: #059669; font-size: .7rem; padding: .15rem .5rem; border-radius: 999px; }
+.inactive-badge { background: var(--neutral-100); color: var(--neutral-500); font-size: .7rem; padding: .15rem .5rem; border-radius: 999px; }
+.action-link { padding: .3rem .6rem; border-radius: var(--radius-sm); font-size: .75rem; text-decoration: none; display: inline-flex; align-items: center; gap: .25rem; }
+.action-edit { background: rgba(59,130,246,.08); color: var(--healthcare-primary); }
+.action-del { background: rgba(239,68,68,.08); color: #dc2626; }
+
+.empty-state { text-align: center; padding: 4rem 2rem; color: var(--neutral-500); }
+.empty-state i { font-size: 3rem; color: var(--neutral-300); display: block; margin-bottom: 1rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="schedule-container">
-    <div class="schedule-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2 style="font-size: 24px; font-weight: 700; color: #2D3748;">
-                <i class="fas fa-calendar-week" style="color: #A8C5E8;"></i> Doctor Schedules
-            </h2>
-            <a href="{% url 'appointments:schedule_create' %}"
-                style="padding: 10px 20px; background: #A8C5E8; color: white; border-radius: 10px; text-decoration: none; font-weight: 600;">
-                <i class="fas fa-plus"></i> Add Schedule
-            </a>
-        </div>
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-calendar-week" style="color: var(--healthcare-primary); margin-right: .5rem;"></i>Doctor Schedules</h1>
+        <p>{{ schedules.count }} schedule slot{{ schedules.count|pluralize }} configured across all doctors</p>
+    </div>
+    {% if can_edit %}
+    <a href="{% url 'appointments:schedule_create' %}" class="btn-add">
+        <i class="fas fa-plus"></i> Add Schedule
+    </a>
+    {% endif %}
+</div>
 
-        {% for schedule in schedules %}
-        <div class="schedule-item">
-            <div class="day-badge">{{ schedule.get_day_of_week_display|default:schedule.day_of_week }}</div>
-            <div>
-                <div style="font-weight: 600; color: #2D3748;">Dr. {{
-                    schedule.doctor.get_full_name|default:schedule.doctor.username }}</div>
-                <div style="font-size: 13px; color: #718096;">{{ schedule.doctor.email|default:"" }}</div>
-            </div>
-            <div>
-                <div style="font-size: 14px; color: #4A5568;">
-                    <i class="fas fa-clock"></i> {{ schedule.start_time|time:"g:i A" }} – {{ schedule.end_time|time:"g:i
-                    A" }}
-                </div>
-                <div style="font-size: 12px; color: #718096;">Max {{ schedule.max_appointments }} appointments</div>
-            </div>
-            <div style="display: flex; gap: 8px;">
-                <a href="{% url 'appointments:schedule_update' schedule.pk %}"
-                    style="padding: 6px 12px; background: rgba(168,197,232,0.1); border-radius: 6px; color: #4A90D9; text-decoration: none; font-size: 13px;"><i
-                        class="fas fa-edit"></i></a>
-                <a href="{% url 'appointments:schedule_delete' schedule.pk %}"
-                    style="padding: 6px 12px; background: rgba(232,155,135,0.1); border-radius: 6px; color: #E89B87; text-decoration: none; font-size: 13px;"><i
-                        class="fas fa-trash"></i></a>
-            </div>
-        </div>
-        {% empty %}
-        <div style="text-align: center; padding: 60px; color: #718096;">
-            <i class="fas fa-calendar-week"
-                style="font-size: 48px; opacity: 0.3; margin-bottom: 16px; display: block;"></i>
-            <p style="font-weight: 600;">No schedules configured</p>
-            <p>Add doctor schedules to enable appointment booking.</p>
-        </div>
+<!-- Doctor filter (admin / clinical staff) -->
+{% if all_doctors %}
+<form method="get" class="filter-row">
+    <select name="doctor" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Doctors</option>
+        {% for doc in all_doctors %}
+        <option value="{{ doc.id }}" {% if selected_doctor == doc.id|stringformat:"s" %}selected{% endif %}>
+            Dr. {{ doc.get_full_name|default:doc.username }}
+        </option>
         {% endfor %}
+    </select>
+    {% if selected_doctor %}
+    <a href="{% url 'appointments:schedule' %}" class="btn-filt btn-clear"><i class="fas fa-times"></i> Show All</a>
+    {% endif %}
+</form>
+{% endif %}
+
+{% if schedules_by_doctor %}
+{% for doctor, slots in schedules_by_doctor.items %}
+<div class="doctor-block">
+    <div class="doctor-block-header">
+        <div class="doctor-meta">
+            <div class="doctor-avatar">{{ doctor.first_name|first|upper }}{{ doctor.last_name|first|upper }}</div>
+            <div>
+                <div class="doctor-name">Dr. {{ doctor.get_full_name|default:doctor.username }}</div>
+                <div class="doctor-email">{{ doctor.email }}</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+            <span class="stat-pill"><i class="fas fa-calendar-check"></i> {{ slots|length }} working day{{ slots|length|pluralize }}</span>
+            {% with slots|first as s %}
+            <span class="stat-pill"><i class="fas fa-clock"></i> {{ s.start_time|time:"g:i A" }} – {{ s.end_time|time:"g:i A" }}</span>
+            {% endwith %}
+        </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="sched-table">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Working Hours</th>
+                    <th>Lunch Break</th>
+                    <th>Max Appointments</th>
+                    <th>Status</th>
+                    {% if can_edit %}<th></th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in slots %}
+                <tr>
+                    <td><span class="day-badge">{{ s.get_day_of_week_display }}</span></td>
+                    <td>
+                        <span class="time-chip">{{ s.start_time|time:"g:i A" }}</span>
+                        <span style="color:var(--neutral-400); margin: 0 .25rem;">→</span>
+                        <span class="time-chip">{{ s.end_time|time:"g:i A" }}</span>
+                    </td>
+                    <td>
+                        {% if s.break_start_time and s.break_end_time %}
+                        <span class="break-badge"><i class="fas fa-coffee"></i> {{ s.break_start_time|time:"g:i A" }} – {{ s.break_end_time|time:"g:i A" }}</span>
+                        {% else %}
+                        <span style="color:var(--neutral-400); font-size:.8125rem;">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-weight:600;">{{ s.max_appointments }} / day</td>
+                    <td>
+                        {% if s.is_active %}
+                        <span class="active-badge"><i class="fas fa-circle" style="font-size:.45rem;"></i> Active</span>
+                        {% else %}
+                        <span class="inactive-badge">Inactive</span>
+                        {% endif %}
+                    </td>
+                    {% if can_edit %}
+                    <td>
+                        <div style="display:flex; gap:.375rem;">
+                            <a href="{% url 'appointments:schedule_update' s.pk %}" class="action-link action-edit"><i class="fas fa-pen"></i> Edit</a>
+                            <a href="{% url 'appointments:schedule_delete' s.pk %}" class="action-link action-del"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+{% endfor %}
+
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-calendar-week"></i>
+    <p style="font-weight: 700; font-size: 1.1rem; margin-bottom: .5rem;">No schedules found</p>
+    {% if can_edit %}
+    <p>Add doctor availability schedules to enable appointment booking.</p>
+    <a href="{% url 'appointments:schedule_create' %}" class="btn-add" style="margin-top: 1rem; display: inline-flex;">
+        <i class="fas fa-plus"></i> Add First Schedule
+    </a>
+    {% else %}
+    <p>No schedules have been configured yet. Contact your administrator.</p>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

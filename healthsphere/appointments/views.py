@@ -253,22 +253,46 @@ class AppointmentDeleteView(LoginRequiredMixin, DeleteView):
 
 # Doctor Schedule Views
 class DoctorScheduleView(LoginRequiredMixin, ListView):
-    """List view for doctor schedules."""
-    
+    """List view for doctor schedules — supports all clinical roles."""
+
     model = DoctorSchedule
     template_name = 'appointments/doctor_schedule_list.html'
     context_object_name = 'schedules'
-    
+
     def get_queryset(self):
-        """Get schedules based on user role."""
         user = self.request.user
-        
+        qs = DoctorSchedule.objects.select_related('doctor').order_by('doctor__last_name', 'day_of_week')
+
         if user.is_doctor:
-            return DoctorSchedule.objects.filter(doctor=user)
-        elif user.is_admin:
-            return DoctorSchedule.objects.all().select_related('doctor')
+            qs = qs.filter(doctor=user)
+        elif user.is_admin or user.is_clinical_staff:
+            # Admin and nurses see all schedules; admin can filter by doctor
+            doctor_id = self.request.GET.get('doctor')
+            if doctor_id:
+                qs = qs.filter(doctor_id=doctor_id)
         else:
-            return DoctorSchedule.objects.none()
+            qs = qs.none()
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Provide list of doctors for filter dropdown (admin/clinical staff)
+        if user.is_admin or user.is_clinical_staff:
+            context['all_doctors'] = User.objects.filter(role__name='doctor').order_by('last_name', 'first_name')
+            context['selected_doctor'] = self.request.GET.get('doctor', '')
+
+        # Group schedules by doctor for grouped display
+        from collections import defaultdict
+        grouped = defaultdict(list)
+        for s in context['schedules']:
+            grouped[s.doctor].append(s)
+        context['schedules_by_doctor'] = dict(grouped)
+        context['can_edit'] = user.is_doctor or user.is_admin
+
+        return context
 
 
 class DoctorScheduleCreateView(LoginRequiredMixin, CreateView):
