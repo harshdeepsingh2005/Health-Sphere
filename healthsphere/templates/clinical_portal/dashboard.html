@@ -352,11 +352,11 @@
                     <i class="fas fa-users"></i>
                 </div>
             </div>
-            <div class="metric-value">{{ my_patients|length|default:"24" }}</div>
+            <div class="metric-value">{{ my_patients|length }}</div>
             <div class="metric-label">My Patients</div>
             <div class="metric-trend">
-                <i class="fas fa-arrow-up"></i>
-                2 new this week
+                <i class="fas fa-user-check"></i>
+                Currently admitted
             </div>
         </div>
 
@@ -368,11 +368,11 @@
                 </div>
                 <span class="card-badge urgent">Urgent</span>
             </div>
-            <div class="metric-value">{{ critical_alerts|length|default:"5" }}</div>
+            <div class="metric-value">{{ critical_alerts|length }}</div>
             <div class="metric-label">Critical Alerts</div>
             <div class="metric-trend" style="color: #E89B87;">
                 <i class="fas fa-exclamation-circle"></i>
-                Requires attention
+                {% if critical_alerts %}Requires attention{% else %}All clear{% endif %}
             </div>
         </div>
 
@@ -383,27 +383,20 @@
                 Today's Schedule
             </h3>
             <div class="appointment-timeline">
+                {% for appt in todays_appointments_list %}
                 <div class="timeline-item">
-                    <div class="timeline-time">9:00 AM</div>
+                    <div class="timeline-time">{{ appt.scheduled_time|time:"g:i A" }}</div>
                     <div class="timeline-content">
-                        <div class="timeline-patient">Sarah Johnson</div>
-                        <div class="timeline-type">Annual Checkup</div>
+                        <div class="timeline-patient">{{ appt.patient.get_full_name }}</div>
+                        <div class="timeline-type">{{ appt.appointment_type.get_name_display|default:appt.reason|truncatechars:40 }}</div>
                     </div>
                 </div>
-                <div class="timeline-item">
-                    <div class="timeline-time">10:30 AM</div>
-                    <div class="timeline-content">
-                        <div class="timeline-patient">Michael Brown</div>
-                        <div class="timeline-type">Follow-up - Hypertension</div>
-                    </div>
+                {% empty %}
+                <div style="text-align:center; padding: 1.5rem; color: #718096; font-size: .875rem;">
+                    <i class="fas fa-calendar-check" style="font-size:1.5rem; opacity:.4; display:block; margin-bottom:.5rem;"></i>
+                    No appointments scheduled for today
                 </div>
-                <div class="timeline-item">
-                    <div class="timeline-time">2:00 PM</div>
-                    <div class="timeline-content">
-                        <div class="timeline-patient">Emily Davis</div>
-                        <div class="timeline-type">Lab Review</div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
 
@@ -423,27 +416,9 @@
                     <div class="patient-details">Risk Score: {{ patient.risk_level }} • Last login: {{ patient.user.last_login|date:"M d"|default:"N/A" }}</div>
                 </div>
                 {% empty %}
-                <div class="patient-item critical">
-                    <div class="patient-header">
-                        <span class="patient-name">Robert Anderson</span>
-                        <span class="patient-status critical">Critical</span>
-                    </div>
-                    <div class="patient-details">Cardiac episode • BP: 185/110</div>
-                </div>
-                <div class="patient-item critical">
-                    <div class="patient-header">
-                        <span class="patient-name">Maria Garcia</span>
-                        <span class="patient-status critical">Critical</span>
-                    </div>
-                    <div class="patient-details">Diabetic crisis • Glucose: 350</div>
-                </div>
-                <div class="patient-item">
-                    <div class="patient-header">
-                        <span class="patient-name">John Smith</span>
-                        <span class="patient-status"
-                            style="background: rgba(237, 137, 54, 0.1); color: #ed8936;">Monitoring</span>
-                    </div>
-                    <div class="patient-details">Post-surgery • Day 3 recovery</div>
+                <div style="text-align:center; padding: 1.5rem; color: #718096; font-size: .875rem;">
+                    <i class="fas fa-shield-alt" style="font-size:1.5rem; opacity:.4; display:block; margin-bottom:.5rem;"></i>
+                    No high-risk patients flagged
                 </div>
                 {% endfor %}
             </div>
@@ -474,41 +449,9 @@
                     </div>
                 </div>
                 {% empty %}
-                <div class="patient-item">
-                    <div class="patient-header">
-                        <span class="patient-name">Sarah Miller</span>
-                        <span class="patient-status">Stable</span>
-                    </div>
-                    <div class="patient-details">Diabetes Type 2 • Last HbA1c: 6.5%</div>
-                </div>
-                <div class="patient-item">
-                    <div class="patient-header">
-                        <span class="patient-name">James Wilson</span>
-                        <span class="patient-status">Stable</span>
-                    </div>
-                    <div class="patient-details">Hypertension • BP: 130/85 mmHg</div>
-                </div>
-                <div class="patient-item">
-                    <div class="patient-header">
-                        <span class="patient-name">Lisa Anderson</span>
-                        <span class="patient-status"
-                            style="background: rgba(72, 187, 120, 0.1); color: #48bb78;">Improving</span>
-                    </div>
-                    <div class="patient-details">Post-MI recovery • Week 4 cardiac rehab</div>
-                </div>
-                <div class="patient-item">
-                    <div class="patient-header">
-                        <span class="patient-name">David Chen</span>
-                        <span class="patient-status">Stable</span>
-                    </div>
-                    <div class="patient-details">COPD management • SpO2: 94%</div>
-                </div>
-                <div class="patient-item">
-                    <div class="patient-header">
-                        <span class="patient-name">Emma Thompson</span>
-                        <span class="patient-status">Stable</span>
-                    </div>
-                    <div class="patient-details">Asthma • No recent exacerbations</div>
+                <div style="text-align:center; padding: 1.5rem; color: #718096; font-size: .875rem;">
+                    <i class="fas fa-user-plus" style="font-size:1.5rem; opacity:.4; display:block; margin-bottom:.5rem;"></i>
+                    No patients currently assigned
                 </div>
                 {% endfor %}
             </div>
@@ -521,11 +464,11 @@
                     <i class="fas fa-clipboard-list"></i>
                 </div>
             </div>
-            <div class="metric-value">{{ recent_records|length|default:"12" }}</div>
+            <div class="metric-value">{{ recent_records|length }}</div>
             <div class="metric-label">Pending Reviews</div>
             <div class="metric-trend" style="color: #ed8936;">
                 <i class="fas fa-clock"></i>
-                3 high priority
+                {% if recent_records %}Awaiting review{% else %}All reviewed{% endif %}
             </div>
         </div>
 
@@ -534,20 +477,20 @@
             <h3 style="font-size: 16px; font-weight: 700; color: #2D3748; margin-bottom: 16px;">Quick Stats</h3>
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="stat-value">{{ recent_vitals|length|default:"45" }}</div>
+                    <div class="stat-value">{{ recent_vitals|length }}</div>
                     <div class="stat-label">Vitals Today</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">{{ todays_appointments_list|length|default:"18" }}</div>
+                    <div class="stat-value">{{ todays_appointments_list|length }}</div>
                     <div class="stat-label">Appointments</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">8</div>
-                    <div class="stat-label">Lab Results</div>
+                    <div class="stat-value">{{ stats.appointments_today|default:0 }}</div>
+                    <div class="stat-label">Appts Total</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">3</div>
-                    <div class="stat-label">Referrals</div>
+                    <div class="stat-value">{{ active_plans|length }}</div>
+                    <div class="stat-label">Active Plans</div>
                 </div>
             </div>
         </div>

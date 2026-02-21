@@ -176,14 +176,15 @@ class PatientManagementView(View):
     template_name = 'admin_portal/patients.html'
     
     def get(self, request):
-        """Display patient list."""
-        # Get all patients with their admission status
-        patients = User.objects.filter(
-            role__name=Role.PATIENT
-        ).select_related('role').order_by('-created_at')
-        
+        """Display patient list with real demographics from DB."""
+        from django.utils import timezone as tz
+
+        # Get all patients
+        all_patients = User.objects.filter(role__name=Role.PATIENT).select_related('role')
+
         # Search functionality
         search_query = request.GET.get('search', '')
+        patients = all_patients.order_by('-created_at')
         if search_query:
             patients = patients.filter(
                 Q(first_name__icontains=search_query) |
@@ -191,20 +192,52 @@ class PatientManagementView(View):
                 Q(email__icontains=search_query) |
                 Q(phone__icontains=search_query)
             )
-        
-        # Get admission counts
-        total_patients = patients.count()
+
+        # Admission stats
+        total_patients = all_patients.count()
         currently_admitted = AdmissionRecord.objects.filter(
             status='admitted'
         ).values('patient').distinct().count()
-        
+
+        # Real age demographics
+        today = tz.now().date()
+        ages = [
+            (today - p.date_of_birth).days // 365
+            for p in all_patients
+            if p.date_of_birth
+        ]
+        patients_with_dob = len(ages)
+        def pct(n): return round(n * 100 / patients_with_dob) if patients_with_dob else 0
+        age_18_30 = pct(sum(1 for a in ages if 18 <= a <= 30))
+        age_31_50 = pct(sum(1 for a in ages if 31 <= a <= 50))
+        age_51_plus = pct(sum(1 for a in ages if a > 50))
+
+        # Gender split
+        male   = all_patients.filter(gender='male').count()
+        female = all_patients.filter(gender='female').count()
+        other  = total_patients - male - female
+        gender_pct_male   = pct(male)
+        gender_pct_female = pct(female)
+
+        # New patients this month
+        first_of_month = today.replace(day=1)
+        new_this_month = all_patients.filter(created_at__date__gte=first_of_month).count()
+
         context = {
             'patients': patients,
             'search_query': search_query,
             'total_patients': total_patients,
             'currently_admitted': currently_admitted,
+            'new_this_month': new_this_month,
+            'demographics': {
+                'age_18_30': age_18_30,
+                'age_31_50': age_31_50,
+                'age_51_plus': age_51_plus,
+                'gender_pct_male': gender_pct_male,
+                'gender_pct_female': gender_pct_female,
+            },
         }
-        
+
         return render(request, self.template_name, context)
 
 
