@@ -290,3 +290,123 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* =============================================
+   Responsive Viewport Fixes
+   Addresses clipping on smaller laptops
+   (1024px – 1366px screens, e.g. 13"/14" laptops)
+   ============================================= */
+
+/* --- Shrink sidebar to 240px on 1024–1280px screens --- */
+@media (max-width: 1280px) and (min-width: 1025px) {
+    :root {
+        --sidebar-width: 240px;
+    }
+
+    .app-main {
+        max-width: calc(100vw - 240px);
+        width: calc(100vw - 240px);
+    }
+
+    .app-main.sidebar-collapsed {
+        max-width: calc(100vw - var(--sidebar-width-collapsed));
+        width: calc(100vw - var(--sidebar-width-collapsed));
+    }
+
+    .page-content {
+        padding: 1.25rem;
+    }
+
+    /* Hide topbar action button labels to save space */
+    .topbar-action-btn span {
+        display: none;
+    }
+
+    .topbar-action-btn {
+        padding: 8px 10px;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        justify-content: center;
+    }
+
+    /* Shrink search bar */
+    .navbar-center {
+        max-width: 240px;
+    }
+
+    .search-container {
+        max-width: 220px;
+    }
+}
+
+/* --- 1024px and below: collapse sidebar fully --- */
+@media (max-width: 1024px) {
+    :root {
+        --sidebar-width: 220px;
+    }
+
+    .app-main {
+        max-width: calc(100vw - 220px);
+        width: calc(100vw - 220px);
+    }
+
+    .page-content {
+        padding: 1rem;
+    }
+}
+
+/* --- Tables: always scrollable, never clip --- */
+.table-wrap,
+.table-responsive,
+[class*="table"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* --- Bento grids: clamp min column size on small screens --- */
+@media (max-width: 1280px) {
+    .bento-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .bento-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .bento-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* --- Metric grid: safer min at 1024–1280px --- */
+@media (max-width: 1280px) and (min-width: 1025px) {
+    .metric-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+}
+
+/* --- Prevent any fixed-width element from breaking out --- */
+.page-content *,
+.content-container * {
+    max-width: 100%;
+}
+
+/* Exception: allow dropdowns/modals to overflow their parent */
+.modal-overlay,
+.notif-panel,
+.user-menu-panel,
+[class*="dropdown"] {
+    max-width: none;
+}
+
+/* --- Stats rows used in portal pages --- */
+@media (max-width: 1280px) {
+    .stats-row {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+}
