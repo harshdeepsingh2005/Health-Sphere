@@ -356,20 +356,41 @@
     }
 }
 
-/* --- Tables: always scrollable, never clip --- */
-.table-wrap,
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
+/* -------------------------------------------------------
+   TABLE HORIZONTAL SCROLL — COMPREHENSIVE FIX
+   Root cause: .page-content has overflow-x:hidden (components.css)
+   which blocks ALL child elements from scrolling horizontally.
+   We override it here (this file loads last).
+------------------------------------------------------- */
+
+/* 1. Allow page-content to pass through horizontal scroll */
+.page-content {
+    overflow-x: visible !important;
 }
 
-/* Table itself can be wider than its wrapper (that's how horizontal scroll works) */
-.table-wrap table,
-.table-responsive table {
-    min-width: 600px;
+/* 2. Target every table wrapper variant used across templates */
+.table-wrap,
+.table-responsive,
+.data-table-wrap,
+.records-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
     width: 100%;
+    display: block;
+    /* must be block, not inline, for overflow to work */
 }
+
+/* 3. Tables inside those wrappers: allow wider than wrapper */
+.table-wrap table,
+.table-responsive table,
+.data-table-wrap table,
+.records-table-wrap table {
+    min-width: 640px;
+    /* forces scroll when viewport < this */
+    width: 100%;
+    max-width: none !important;
+}
+
 
 /* --- Bento grids: clamp min column size on small screens --- */
 @media (max-width: 1280px) {
