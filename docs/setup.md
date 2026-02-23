@@ -60,13 +60,11 @@ DATABASE_URL=sqlite:///db.sqlite3
 
 # Google Gemini AI
 GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.0-flash
 
-# Optional: Email (for appointment reminders)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your@email.com
+# Email Configuration (for appointment reminders and test emails)
+EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your_app_password
-EMAIL_USE_TLS=True
 ```
 
 > **Get a Gemini API Key:** Go to [Google AI Studio](https://aistudio.google.com/) → Create API Key → copy into `.env`
@@ -92,13 +90,16 @@ Follow the prompts to set username, email, and password.
 
 ---
 
-## 7. (Optional) Load Sample Data
+## 7. Load Demo Data
 
-If a fixture file is provided:
+To populate the application with a rich dataset of patients, doctors, medical records, and AI-triage entries:
 
 ```bash
-python manage.py loaddata fixtures/sample_data.json
+python manage.py seed_demo_data
 ```
+
+This will create 60 patients, 5 doctors, 10 nurses, and a super admin. 
+**Note:** The global default password for all these seeded accounts is **`HealthSphere@2025`**.
 
 ---
 

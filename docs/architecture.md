@@ -61,6 +61,17 @@ Patient → POST /patient/ai-assistant/
   → JsonResponse streamed back to browser
 ```
 
+### Automated Lab Report Analysis
+```
+Patient → POST /patient/report/ (Uploads PDF/Image)
+  → patient_portal/views.py:upload_report()
+  → pypdf extracts raw text from PDF
+  → ai_services/gemini_client.py:GeminiClient.analyze_report()
+  → Google Gemini API (gemini-2.0-flash) parses and normalizes medical text
+  → MedicalRecord created with AI Findings
+  → Doctor alerted via Clinical Portal
+```
+
 ### FHIR Data Exchange
 ```
 External EHR → POST /interoperability/api/fhir/
@@ -123,8 +134,8 @@ Located in `ai_services/`:
 
 | File | Responsibility |
 |------|---------------|
-| `gemini_client.py` | Wraps Google Gemini API; `GeminiClient.chat()`, `GeminiClient.analyze_report()` |
-| `triage_service.py` | Symptom → urgency score + department recommendation |
+| `gemini_client.py` | Wraps Google Gemini API; Handles `chat()` and `analyze_report()` for interpreting complex lab PDFs |
+| `triage_service.py` | Calculates ESI (Emergency Severity Index) based on vitals and symptoms using Gemini |
 | `risk_service.py` | Patient data → risk score + risk factors |
 | `journey_service.py` | Patient health journey narrative generation |
 

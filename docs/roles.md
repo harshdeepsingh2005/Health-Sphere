@@ -12,6 +12,8 @@ HealthSphere uses a custom role-based access control (RBAC) system. Each `User` 
 | `patient` | Patient Portal | Self-service patient access |
 | `staff` | Admin Portal (limited) | Administrative/reception staff |
 
+> **Demo Credentials:** If you ran `python manage.py seed_demo_data`, you can log in as `admin`, `arjun.mehta` (Doctor), `anita.pillai` (Nurse), or `rahul.gupta` (Patient) using the universal password: **`HealthSphere@2025`**.
+
 ---
 
 ## Permission Matrix
