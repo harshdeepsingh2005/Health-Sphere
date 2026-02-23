@@ -327,8 +327,8 @@ Soft Glass Dashboard | Healthcare Command Center Design
                         </a>
                     </li>
                     <li class="nav-item" role="none">
-                        <a href="{% url 'admin_portal:analytics' %}"
-                            class="nav-link {% if request.resolver_match.url_name == 'analytics' and 'admin_portal' in request.resolver_match.namespace %}active{% endif %}"
+                        <a href="{% url 'analytics:dashboard' %}"
+                            class="nav-link {% if 'analytics' in request.resolver_match.namespace %}active{% endif %}"
                             role="menuitem">
                             <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
                             <span class="nav-text">Analytics</span>
@@ -351,14 +351,6 @@ Soft Glass Dashboard | Healthcare Command Center Design
                             role="menuitem">
                             <span class="nav-icon"><i class="fas fa-prescription-bottle-medical"></i></span>
                             <span class="nav-text">Prescriptions</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" role="none">
-                        <a href="{% url 'analytics:dashboard' %}"
-                            class="nav-link {% if 'analytics' in request.resolver_match.namespace %}active{% endif %}"
-                            role="menuitem">
-                            <span class="nav-icon"><i class="fas fa-chart-pie"></i></span>
-                            <span class="nav-text">Analytics</span>
                         </a>
                     </li>
                     <li class="nav-item" role="none">

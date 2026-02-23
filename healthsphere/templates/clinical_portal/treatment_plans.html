@@ -66,13 +66,63 @@ a.view-link { color: var(--healthcare-primary); font-size: .8125rem; font-weight
 a.view-link:hover { text-decoration: underline; }
 
 .empty-state { text-align: center; padding: 3rem; color: var(--neutral-500); }
+
+/* ---- Modal ---- */
+.modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.45); z-index: 1050;
+    align-items: flex-start; justify-content: center; padding-top: 60px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+    background: white; border-radius: 20px; padding: 2rem;
+    width: 100%; max-width: 640px; max-height: 86vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    animation: slideDown .25s ease;
+}
+@keyframes slideDown { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform:none; } }
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--neutral-100);
+}
+.modal-header h2 { font-size: 1.2rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--neutral-400); line-height: 1; padding: 0; }
+.modal-close:hover { color: var(--neutral-700); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: .35rem; }
+.form-group.full { grid-column: 1/-1; }
+.form-label { font-size: .8125rem; font-weight: 600; color: var(--neutral-700); }
+.form-label span { color: #ef4444; }
+.form-control {
+    padding: .6rem .875rem; border: 1.5px solid var(--neutral-200);
+    border-radius: var(--radius-lg); font-size: .875rem; color: var(--neutral-800);
+    outline: none; transition: all .15s; background: white;
+}
+.form-control:focus { border-color: var(--healthcare-primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.form-actions {
+    display: flex; justify-content: flex-end; gap: .75rem;
+    margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--neutral-100);
+}
+.btn-cancel, .btn-submit {
+    padding: .6rem 1.25rem; border-radius: var(--radius-lg);
+    font-size: .875rem; font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.btn-cancel { background: white; border: 1px solid var(--neutral-200); color: var(--neutral-600); }
+.btn-cancel:hover { background: var(--neutral-50); color: var(--neutral-900); border-color: var(--neutral-300); }
+.btn-submit { background: var(--healthcare-primary); border: none; color: white; display: inline-flex; align-items: center; gap: .4rem; }
+.btn-submit:hover { background: var(--healthcare-primary-dark); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="fas fa-clipboard-list" style="color: var(--healthcare-success); margin-right: .5rem;"></i>Treatment Plans</h1>
-    <p>Review and manage all patient treatment plans and care protocols</p>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1><i class="fas fa-clipboard-list" style="color: var(--healthcare-success); margin-right: .5rem;"></i>Treatment Plans</h1>
+        <p>Review and manage all patient treatment plans and care protocols</p>
+    </div>
+    <button id="openPlanModalBtn" class="btn-submit" style="padding: .6rem 1.25rem; border-radius: var(--radius-lg); font-size: .875rem; font-weight: 600; cursor: pointer; background: var(--healthcare-primary); border: none; color: white; display: inline-flex; align-items: center; gap: .4rem;">
+        <i class="fas fa-plus"></i> Add Plan
+    </button>
 </div>
 
 <!-- Stats -->
@@ -149,4 +199,114 @@ a.view-link:hover { text-decoration: underline; }
     <p>No treatment plans found.</p>
 </div>
 {% endif %}
+<!-- Add Treatment Plan Modal -->
+<div class="modal-overlay" id="planModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2><i class="fas fa-clipboard-list" style="color:var(--healthcare-primary);margin-right:.5rem;"></i>Create Treatment Plan</h2>
+            <button class="modal-close" id="closePlanModal">&times;</button>
+        </div>
+        <form method="post" action="{% url 'clinical_portal:treatment_plans' %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label class="form-label">Patient <span>*</span></label>
+                    <select name="patient" class="form-control" required>
+                        <option value="">— Select patient —</option>
+                        {% for p in patients %}
+                        <option value="{{ p.id }}">{{ p.get_full_name|default:p.username }} ({{ p.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Plan Title <span>*</span></label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g. Hypertension Management Plan" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Diagnosis <span>*</span></label>
+                    <input type="text" name="diagnosis" class="form-control" placeholder="Primary diagnosis being treated" required>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Description <span>*</span></label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Overview of the treatment plan" required></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Medications</label>
+                    <textarea name="medications" class="form-control" rows="2" placeholder="Prescribed medications with dosage"></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Procedures / Interventions</label>
+                    <textarea name="procedures" class="form-control" rows="2" placeholder="Scheduled medical procedures"></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Lifestyle Recommendations</label>
+                    <textarea name="lifestyle_recommendations" class="form-control" rows="2" placeholder="Diet, exercise, etc."></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label class="form-label">Follow-up Instructions</label>
+                    <textarea name="follow_up_instructions" class="form-control" rows="2" placeholder="Information for next visit"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-control">
+                        {% for val, label in status_choices %}
+                        <option value="{{ val }}" {% if val == 'active' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Expected End Date</label>
+                    <input type="date" name="end_date" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Next Review Date</label>
+                    <input type="date" name="next_review_date" class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" id="cancelPlanModal">Cancel</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Plan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('planModal');
+    const openBtn = document.getElementById('openPlanModalBtn');
+    const closeBtn = document.getElementById('closePlanModal');
+    const cancelBtn = document.getElementById('cancelPlanModal');
+
+    function openModal() { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function closeModal() { modal.classList.remove('open'); document.body.style.overflow = ''; }
+
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+    // Close on click outside
+    window.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+});
+</script>
 {% endblock %}

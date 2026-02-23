@@ -40,7 +40,7 @@
 /* Patient card grid */
 .patients-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
 }
 .patient-card {
@@ -52,6 +52,8 @@
     box-shadow: 0 1px 6px rgba(0,0,0,.04);
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 .patient-card::before {
     content: '';
@@ -73,22 +75,29 @@
     display: flex; align-items: center; justify-content: center;
     color: white; font-weight: 700; font-size: 1rem; flex-shrink: 0;
 }
-.patient-name { font-weight: 600; color: var(--neutral-900); font-size: .9375rem; }
-.patient-meta { font-size: .75rem; color: var(--neutral-500); margin-top: .125rem; }
+.patient-name { font-weight: 600; color: var(--neutral-900); font-size: .9375rem; overflow-wrap: break-word; word-break: break-word; }
+.patient-meta { font-size: .75rem; color: var(--neutral-500); margin-top: .125rem; overflow-wrap: anywhere; word-break: break-all; line-height: 1.3; }
 
 .badge {
     display: inline-flex; align-items: center; gap: .3rem;
     padding: .2rem .625rem; border-radius: 999px;
     font-size: .7rem; font-weight: 600; letter-spacing: .02em;
+    flex-shrink: 0;
 }
 .badge-admitted  { background: rgba(16,185,129,.12); color: #059669; }
 .badge-outpatient{ background: rgba(59,130,246,.12);  color: #2563eb; }
 .badge-discharged{ background: rgba(100,116,139,.1);  color: #64748b; }
 
-.patient-info-row { display: flex; justify-content: space-between; font-size: .8125rem; color: var(--neutral-600); margin-bottom: .35rem; }
-.patient-info-row strong { color: var(--neutral-800); }
+.patient-details-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .75rem 1rem;
+    margin-bottom: .875rem; background: var(--neutral-50);
+    padding: .875rem; border-radius: var(--radius-lg);
+}
+.patient-info-row { display: flex; flex-direction: column; gap: .15rem; }
+.patient-info-row span { font-size: .75rem; color: var(--neutral-500); }
+.patient-info-row strong { font-size: .8125rem; color: var(--neutral-800); font-weight: 600; }
 
-.card-actions { display: flex; gap: .5rem; margin-top: .875rem; padding-top: .875rem; border-top: 1px solid var(--neutral-100); }
+.card-actions { display: flex; gap: .5rem; margin-top: auto; padding-top: .875rem; border-top: 1px solid var(--neutral-100); }
 .btn-sm {
     flex: 1; padding: .4rem .75rem; border-radius: var(--radius-md);
     font-size: .8125rem; font-weight: 500; cursor: pointer;
@@ -179,26 +188,28 @@
             {% endif %}
         </div>
 
-        <div class="patient-info-row">
-            <span>Phone</span>
-            <strong>{{ item.patient.phone|default:"—" }}</strong>
+        <div class="patient-details-grid">
+            <div class="patient-info-row">
+                <span>Phone</span>
+                <strong>{{ item.patient.phone|default:"—" }}</strong>
+            </div>
+            {% if item.admission %}
+            <div class="patient-info-row">
+                <span>Admission Type</span>
+                <strong>{{ item.admission.get_admission_type_display }}</strong>
+            </div>
+            <div class="patient-info-row">
+                <span>Admitted</span>
+                <strong>{{ item.admission.admission_date }}</strong>
+            </div>
+            {% endif %}
+            {% if item.latest_record %}
+            <div class="patient-info-row">
+                <span>Last Record</span>
+                <strong>{{ item.latest_record.record_date|date:"M j, Y" }}</strong>
+            </div>
+            {% endif %}
         </div>
-        {% if item.admission %}
-        <div class="patient-info-row">
-            <span>Admission Type</span>
-            <strong>{{ item.admission.get_admission_type_display }}</strong>
-        </div>
-        <div class="patient-info-row">
-            <span>Admitted</span>
-            <strong>{{ item.admission.admission_date }}</strong>
-        </div>
-        {% endif %}
-        {% if item.latest_record %}
-        <div class="patient-info-row">
-            <span>Last Record</span>
-            <strong>{{ item.latest_record.record_date|date:"M j, Y" }}</strong>
-        </div>
-        {% endif %}
 
         <div class="card-actions">
             <a href="{% url 'clinical_portal:patient_detail' item.patient.id %}"

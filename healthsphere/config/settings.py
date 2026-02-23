@@ -16,8 +16,8 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
     # settings.py lives at healthsphere/config/settings.py
-    # .env lives at the project root (Health-Sphere/)
-    load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env')
+    # .env lives at the healthsphere/ root
+    load_dotenv(Path(__file__).resolve().parent.parent / '.env')
 except ImportError:
     pass  # python-dotenv not installed — use OS environment variables directly
 

@@ -284,111 +284,12 @@ class AnalyticsView(View):
     Analytics View
     ==============
     
-    Display hospital analytics and statistics.
-    Uses placeholder data for demonstration.
+    Redirects to the unified HealthSphere Analytics dashboard.
     """
     
-    template_name = 'admin_portal/analytics.html'
-    
     def get(self, request):
-        """Display analytics dashboard."""
-        # Time period filter
-        period = request.GET.get('period', 'month')
-        
-        # Calculate date range
-        today = timezone.now().date()
-        if period == 'week':
-            start_date = today - timezone.timedelta(days=7)
-        elif period == 'month':
-            start_date = today - timezone.timedelta(days=30)
-        elif period == 'year':
-            start_date = today - timezone.timedelta(days=365)
-        else:
-            start_date = today - timezone.timedelta(days=30)
-        
-        # Admission statistics
-        total_admissions = AdmissionRecord.objects.filter(
-            admission_date__date__gte=start_date
-        ).count()
-        
-        total_discharges = AdmissionRecord.objects.filter(
-            discharge_date__date__gte=start_date
-        ).count()
-        
-        # Calculate average length of stay
-        completed_stays = AdmissionRecord.objects.filter(
-            status='discharged',
-            discharge_date__isnull=False
-        )
-        
-        if completed_stays.exists():
-            total_days = sum(
-                (a.discharge_date - a.admission_date).days 
-                for a in completed_stays[:100]  # Limit for performance
-            )
-            avg_length_of_stay = round(total_days / min(completed_stays.count(), 100), 1)
-        else:
-            avg_length_of_stay = 0
-        
-        # Admission by type
-        admission_by_type = AdmissionRecord.objects.filter(
-            admission_date__date__gte=start_date
-        ).values('admission_type').annotate(count=Count('id'))
-        
-        # Staff statistics
-        staff_on_duty = StaffSchedule.objects.filter(
-            date=today,
-            status='scheduled'
-        ).count()
-        
-        # Real monthly admissions over last 6 months
-        from django.db.models.functions import TruncMonth
-        from django.db.models import Count as DbCount
-        import json
-        monthly_data = (
-            AdmissionRecord.objects
-            .filter(admission_date__date__gte=today - timezone.timedelta(days=180))
-            .annotate(month=TruncMonth('admission_date'))
-            .values('month')
-            .annotate(count=DbCount('id'))
-            .order_by('month')
-        )
-        monthly_admissions_chart = [
-            {
-                'month': row['month'].strftime('%b %Y') if row.get('month') else '—',
-                'count': row['count'],
-            }
-            for row in monthly_data
-        ]
-
-        # Real department stats from admissions ward field
-        ward_stats = (
-            AdmissionRecord.objects
-            .filter(admission_date__date__gte=start_date)
-            .exclude(ward='')
-            .values('ward')
-            .annotate(patients=DbCount('id'))
-            .order_by('-patients')[:8]
-        )
-        department_stats_chart = [
-            {'department': row['ward'], 'patients': row['patients']}
-            for row in ward_stats
-        ]
-
-        context = {
-            'period': period,
-            'total_admissions': total_admissions,
-            'total_discharges': total_discharges,
-            'avg_length_of_stay': avg_length_of_stay,
-            'admission_by_type': admission_by_type,
-            'staff_on_duty': staff_on_duty,
-            'monthly_admissions': monthly_admissions_chart,
-            'department_stats': department_stats_chart,
-            'monthly_admissions_json': json.dumps(monthly_admissions_chart),
-            'department_stats_json': json.dumps(department_stats_chart),
-        }
-
-        return render(request, self.template_name, context)
+        """Redirect to the unified analytics dashboard."""
+        return redirect('analytics:dashboard')
 
 
 # =============================================================================

@@ -11,7 +11,7 @@ Views for the analytics dashboard, connected to real application data:
 """
 
 from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import TemplateView, ListView, DetailView, View
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -26,14 +26,28 @@ from appointments.models import Appointment
 from admin_portal.models import AdmissionRecord, HospitalResource, StaffSchedule
 from clinical_portal.models import MedicalRecord, VitalRecord, TreatmentPlan
 
-# Analytics-specific models (kept for predictive features)
 from .models import (
     PredictiveModel, PatientFlowPrediction, ClinicalOutcomePrediction,
     AnalyticsReport, DataQualityMetric
 )
+from users.models import Role
 
 
-class AnalyticsDashboardView(LoginRequiredMixin, TemplateView):
+class AnalyticsAccessMixin(UserPassesTestMixin):
+    """Mixin to restrict access to Admins and Doctors only."""
+    def test_func(self):
+        if not self.request.user.is_authenticated:
+            return False
+        return self.request.user.role and self.request.user.role.name in [Role.ADMIN, Role.DOCTOR]
+
+    def handle_no_permission(self):
+        from django.contrib import messages
+        from django.shortcuts import redirect
+        messages.error(self.request, 'You do not have permission to access the analytics dashboard.')
+        return redirect('users:redirect_after_login')
+
+
+class AnalyticsDashboardView(AnalyticsAccessMixin, TemplateView):
     """Main analytics dashboard with real data metrics."""
 
     template_name = 'analytics/dashboard.html'
@@ -178,7 +192,7 @@ class AnalyticsDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class PatientFlowDashboardView(LoginRequiredMixin, TemplateView):
+class PatientFlowDashboardView(AnalyticsAccessMixin, TemplateView):
     """Patient flow analytics - admissions, discharges, appointments."""
 
     template_name = 'analytics/patient_flow_dashboard.html'
@@ -257,7 +271,7 @@ class PatientFlowDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ClinicalOutcomesDashboardView(LoginRequiredMixin, TemplateView):
+class ClinicalOutcomesDashboardView(AnalyticsAccessMixin, TemplateView):
     """Clinical outcomes analytics from real medical records."""
 
     template_name = 'analytics/clinical_outcomes_dashboard.html'
@@ -340,7 +354,7 @@ class ClinicalOutcomesDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ReportsDashboardView(LoginRequiredMixin, TemplateView):
+class ReportsDashboardView(AnalyticsAccessMixin, TemplateView):
     """Operational reports using real data."""
 
     template_name = 'analytics/reports_dashboard.html'
@@ -365,7 +379,7 @@ class ReportsDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class DataQualityDashboardView(LoginRequiredMixin, TemplateView):
+class DataQualityDashboardView(AnalyticsAccessMixin, TemplateView):
     """Data quality: checks for missing or incomplete data across the system."""
 
     template_name = 'analytics/data_quality_dashboard.html'
@@ -463,7 +477,7 @@ class DataQualityDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ModelsListView(LoginRequiredMixin, ListView):
+class ModelsListView(AnalyticsAccessMixin, ListView):
     """List of predictive models."""
     model = PredictiveModel
     template_name = 'analytics/models_list.html'
@@ -474,7 +488,7 @@ class ModelsListView(LoginRequiredMixin, ListView):
         return PredictiveModel.objects.select_related('created_by').order_by('-created_at')
 
 
-class ModelDetailView(LoginRequiredMixin, DetailView):
+class ModelDetailView(AnalyticsAccessMixin, DetailView):
     """Detailed view of a predictive model."""
     model = PredictiveModel
     template_name = 'analytics/model_detail.html'
@@ -490,7 +504,7 @@ class ModelDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class PatientFlowPredictionsView(LoginRequiredMixin, ListView):
+class PatientFlowPredictionsView(AnalyticsAccessMixin, ListView):
     model = PatientFlowPrediction
     template_name = 'analytics/patient_flow_predictions.html'
     context_object_name = 'predictions'
@@ -500,7 +514,7 @@ class PatientFlowPredictionsView(LoginRequiredMixin, ListView):
         return PatientFlowPrediction.objects.select_related('model').order_by('-prediction_date')
 
 
-class ClinicalOutcomePredictionsView(LoginRequiredMixin, ListView):
+class ClinicalOutcomePredictionsView(AnalyticsAccessMixin, ListView):
     model = ClinicalOutcomePrediction
     template_name = 'analytics/clinical_outcome_predictions.html'
     context_object_name = 'predictions'
@@ -510,13 +524,13 @@ class ClinicalOutcomePredictionsView(LoginRequiredMixin, ListView):
         return ClinicalOutcomePrediction.objects.select_related('model', 'patient').order_by('-created_at')
 
 
-class ReportDetailView(LoginRequiredMixin, DetailView):
+class ReportDetailView(AnalyticsAccessMixin, DetailView):
     model = AnalyticsReport
     template_name = 'analytics/report_detail.html'
     context_object_name = 'report'
 
 
-class ReportDownloadView(LoginRequiredMixin, View):
+class ReportDownloadView(AnalyticsAccessMixin, View):
     def get(self, request, pk):
         report = get_object_or_404(AnalyticsReport, pk=pk)
         content = json.dumps(report.data, indent=2)
@@ -526,17 +540,17 @@ class ReportDownloadView(LoginRequiredMixin, View):
 
 
 # API Views (kept for future predictive analytics integration)
-class PatientFlowPredictionAPIView(LoginRequiredMixin, View):
+class PatientFlowPredictionAPIView(AnalyticsAccessMixin, View):
     def post(self, request):
         return JsonResponse({'error': 'Predictive API not yet configured'}, status=501)
 
 
-class ClinicalOutcomePredictionAPIView(LoginRequiredMixin, View):
+class ClinicalOutcomePredictionAPIView(AnalyticsAccessMixin, View):
     def post(self, request):
         return JsonResponse({'error': 'Predictive API not yet configured'}, status=501)
 
 
-class GenerateReportAPIView(LoginRequiredMixin, View):
+class GenerateReportAPIView(AnalyticsAccessMixin, View):
     def post(self, request):
         try:
             data = json.loads(request.body)
@@ -560,6 +574,6 @@ class GenerateReportAPIView(LoginRequiredMixin, View):
             return JsonResponse({'error': str(e)}, status=500)
 
 
-class DataQualityAssessmentAPIView(LoginRequiredMixin, View):
+class DataQualityAssessmentAPIView(AnalyticsAccessMixin, View):
     def post(self, request):
         return JsonResponse({'success': True, 'message': 'Assessment not yet implemented'})

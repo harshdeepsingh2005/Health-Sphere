@@ -638,6 +638,55 @@ class TreatmentPlansView(View):
         }
         return render(request, self.template_name, context)
 
+    def post(self, request):
+        patient_id = request.POST.get('patient')
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        diagnosis = request.POST.get('diagnosis', '').strip()
+        medications = request.POST.get('medications', '').strip()
+        procedures = request.POST.get('procedures', '').strip()
+        lifestyle_recommendations = request.POST.get('lifestyle_recommendations', '').strip()
+        follow_up_instructions = request.POST.get('follow_up_instructions', '').strip()
+        status = request.POST.get('status', 'draft')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        next_review_date = request.POST.get('next_review_date')
+
+        if not patient_id or not title or not description or not diagnosis:
+            messages.error(request, 'Patient, title, diagnosis, and description are required.')
+            return redirect('clinical_portal:treatment_plans')
+
+        try:
+            patient = User.objects.get(id=patient_id, role__name=Role.PATIENT)
+        except User.DoesNotExist:
+            messages.error(request, 'Invalid patient selected.')
+            return redirect('clinical_portal:treatment_plans')
+
+        plan = TreatmentPlan(
+            patient=patient,
+            created_by=request.user,
+            title=title,
+            description=description,
+            diagnosis=diagnosis,
+            status=status,
+            medications=medications,
+            procedures=procedures,
+            lifestyle_recommendations=lifestyle_recommendations,
+            follow_up_instructions=follow_up_instructions,
+        )
+
+        if start_date:
+            plan.start_date = start_date
+        if end_date:
+            plan.end_date = end_date
+        if next_review_date:
+            plan.next_review_date = next_review_date
+
+        plan.save()
+
+        messages.success(request, f'Treatment plan "{title}" created for {patient.get_full_name()}.')
+        return redirect('clinical_portal:treatment_plans')
+
 
 @method_decorator([login_required, clinical_staff_required], name='dispatch')
 class TreatmentPlanDetailView(View):
