@@ -124,6 +124,17 @@ class UserRegistrationForm(UserCreationForm):
             'class': 'form-control',
             'placeholder': 'Confirm Password'
         })
+
+    def clean_role(self):
+        """Ensure the selected role exists in the database."""
+        role_name = self.cleaned_data.get('role')
+        if not role_name:
+            raise forms.ValidationError('Please select a role.')
+
+        if not Role.objects.filter(name=role_name).exists():
+            raise forms.ValidationError('Selected role is not available.')
+
+        return role_name
     
     def save(self, commit=True):
         """Save the user with additional fields."""
@@ -134,11 +145,8 @@ class UserRegistrationForm(UserCreationForm):
         user.phone = self.cleaned_data.get('phone', '')
 
         # Look up the Role object by its name string (e.g. 'patient', 'doctor')
-        role_name = self.cleaned_data.get('role', 'patient')
-        try:
-            user.role = Role.objects.get(name=role_name)
-        except Role.DoesNotExist:
-            user.role = None
+        role_name = self.cleaned_data['role']
+        user.role = Role.objects.get(name=role_name)
 
         if commit:
             user.save()
