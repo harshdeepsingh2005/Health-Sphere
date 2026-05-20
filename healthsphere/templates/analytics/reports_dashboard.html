@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+<style>
+    .an-theme {
+        padding: 28px 32px;
+    }
+
+    .an-theme .bento-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .item-row {
+        padding: 14px;
+        border-radius: 12px;
+        background: rgba(200, 180, 232, 0.04);
+        margin-bottom: 10px;
+        transition: all .3s;
+        border-left: 4px solid #C8B4E8;
+    }
+
+    .item-row:hover {
+        background: rgba(200, 180, 232, 0.1);
+        transform: translateX(4px);
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="an-theme">
+    <div class="bento-grid">
+        <div class="bento-card bento-wide" data-tilt>
+            <div class="card-glow"></div>
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="metric-icon" style="background:linear-gradient(135deg,#C8B4E8,#d8c4f8)"><i
+                            class="fas fa-file-alt"></i></div>Analytics Reports
+                </div>
+            </div>
+        </div>
+        <div class="bento-card bento-small interactive">
+            <div class="card-glow"></div>
+            <div class="metric-icon" style="background:linear-gradient(135deg,#C8B4E8,#d8c4f8)"><i
+                    class="fas fa-file-chart-line"></i></div>
+            <div class="metric-value">{{ reports|length|default:"0" }}</div>
+            <div class="metric-label">Total Reports</div>
+        </div>
+        <div class="bento-card bento-featured" data-hover-lift>
+            <div class="card-glow"></div>
+            <div class="card-title"><i class="fas fa-list"></i> Report History</div>
+            <div style="margin-top:16px">{% for report in reports %}<div class="item-row">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <div style="font-weight:700;color:#2D3748">{{ report.name|default:"Analytics Report" }}</div>
+                            <div style="font-size:13px;color:#718096;margin-top:4px">{{ report.generated_at|date:"M d, Y g:i A" }} • {{ report.get_report_type_display|default:"General" }}</div>
+                        </div><a href="{% url 'analytics:report_detail' report.pk %}"
+                            style="padding:6px 14px;background:#C8B4E8;color:white;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">View</a>
+                    </div>
+                </div>{% empty %}<div style="text-align:center;padding:40px;color:#718096"><i class="fas fa-file-alt"
+                        style="font-size:48px;opacity:0.3;margin-bottom:16px;display:block"></i>
+                    <p>No reports generated yet</p>
+                </div>{% endfor %}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

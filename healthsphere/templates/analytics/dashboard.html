@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Analytics Dashboard | HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Nav ──────────────────────────── */
+.an-nav { display:flex; gap:.375rem; flex-wrap:wrap; background:white; border:1px solid #e2e8f0; border-radius:14px; padding:.75rem 1rem; margin-bottom:1.75rem; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+.an-pill { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:10px; text-decoration:none; font-weight:600; font-size:.8125rem; color:#64748b; transition:all .2s; }
+.an-pill:hover { background:#f1f5f9; color:#1e293b; }
+.an-pill.active { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:white; }
+
+/* ── KPI grid ─────────────────────── */
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:1.125rem; margin-bottom:1.75rem; }
+.kpi-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem 1.5rem; box-shadow:0 1px 4px rgba(0,0,0,.04); display:flex; align-items:center; gap:1rem; text-decoration:none; transition:all .2s ease; }
+.kpi-card:hover { border-color:#a5b4fc; box-shadow:0 4px 16px rgba(99,102,241,.1); transform:translateY(-2px); }
+.kpi-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.kpi-value { font-size:1.875rem; font-weight:800; color:#1e293b; line-height:1; }
+.kpi-label { font-size:.8125rem; color:#64748b; font-weight:500; margin-top:2px; }
+.kpi-sub { font-size:.72rem; color:#94a3b8; margin-top:1px; }
+
+/* ── Content grid ─────────────────── */
+.content-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.5rem; }
+@media(max-width:900px){ .content-grid{ grid-template-columns:1fr; } }
+.content-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; margin-bottom:1.5rem; }
+@media(max-width:900px){ .content-grid-3{ grid-template-columns:1fr; } }
+
+/* ── Panel ────────────────────────── */
+.panel { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+.panel-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.panel-title { font-size:1rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; }
+.panel-action { font-size:.8125rem; color:#6366f1; text-decoration:none; font-weight:600; }
+.panel-action:hover { text-decoration:underline; }
+
+/* ── Appointment Bar Chart ─────────── */
+.bar-chart { display:flex; align-items:flex-end; gap:6px; height:100px; }
+.bar-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.bar { width:100%; background:linear-gradient(180deg,#6366f1,#8b5cf6); border-radius:4px 4px 0 0; min-height:4px; transition:height .4s ease; }
+.bar-label { font-size:.65rem; color:#94a3b8; }
+.bar-count { font-size:.65rem; font-weight:700; color:#64748b; }
+
+/* ── Row items ────────────────────── */
+.item-row { display:flex; align-items:center; justify-content:space-between; padding:.75rem 0; border-bottom:1px solid #f1f5f9; }
+.item-row:last-child { border-bottom:none; }
+.item-main { font-size:.875rem; font-weight:600; color:#334155; }
+.item-sub { font-size:.75rem; color:#64748b; }
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:999px; font-size:.72rem; font-weight:600; }
+.badge-green { background:rgba(16,185,129,.1); color:#10b981; }
+.badge-blue { background:rgba(99,102,241,.1); color:#6366f1; }
+.badge-yellow { background:rgba(245,158,11,.1); color:#f59e0b; }
+.badge-red { background:rgba(239,68,68,.1); color:#ef4444; }
+.badge-gray { background:rgba(100,116,139,.1); color:#64748b; }
+
+/* ── Progress bars ────────────────── */
+.progress-row { display:flex; align-items:center; gap:.75rem; margin-bottom:.875rem; }
+.progress-label { font-size:.8125rem; color:#334155; min-width:130px; }
+.progress-bar-wrap { flex:1; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden; }
+.progress-bar-fill { height:100%; border-radius:999px; }
+.progress-val { font-size:.8125rem; font-weight:700; color:#1e293b; min-width:42px; text-align:right; }
+
+/* ── Donut numbers ────────────────── */
+.donut-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+.donut-item { background:#f8fafc; border-radius:12px; padding:.875rem; text-align:center; }
+.donut-num { font-size:1.5rem; font-weight:800; color:#1e293b; line-height:1; }
+.donut-lbl { font-size:.72rem; color:#64748b; margin-top:3px; }
+
+/* ── Empty ────────────────────────── */
+.empty-msg { text-align:center; padding:2rem; color:#94a3b8; font-size:.875rem; }
+.empty-msg i { display:block; font-size:2rem; margin-bottom:.5rem; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><span class="breadcrumb-current"><i class="fas fa-chart-pie"></i> Analytics</span></li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Navigation Pills -->
+<div class="an-nav">
+    <a href="{% url 'analytics:dashboard' %}" class="an-pill active"><i class="fas fa-th-large"></i> Overview</a>
+    <a href="{% url 'analytics:patient_flow_dashboard' %}" class="an-pill"><i class="fas fa-stream"></i> Patient Flow</a>
+    <a href="{% url 'analytics:clinical_outcomes_dashboard' %}" class="an-pill"><i class="fas fa-heartbeat"></i> Clinical Outcomes</a>
+    <a href="{% url 'analytics:reports_dashboard' %}" class="an-pill"><i class="fas fa-file-alt"></i> Reports</a>
+    <a href="{% url 'analytics:data_quality_dashboard' %}" class="an-pill"><i class="fas fa-shield-check"></i> Data Quality</a>
+    <a href="{% url 'analytics:models_list' %}" class="an-pill"><i class="fas fa-robot"></i> ML Models</a>
+</div>
+
+<!-- KPI Row 1 -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;"><i class="fas fa-users"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_patients }}</div>
+            <div class="kpi-label">Total Patients</div>
+            <div class="kpi-sub">{{ total_doctors }} doctors on staff</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#3b82f6,#60a5fa);color:white;"><i class="fas fa-calendar-check"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_appointments }}</div>
+            <div class="kpi-label">Total Appointments</div>
+            <div class="kpi-sub">{{ appointments_today }} today · {{ completion_rate }}% completion rate</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#f59e0b,#fcd34d);color:white;"><i class="fas fa-bed"></i></div>
+        <div>
+            <div class="kpi-value">{{ current_admissions }}</div>
+            <div class="kpi-label">Current Inpatients</div>
+            <div class="kpi-sub">{{ admissions_this_week }} admitted this week</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#10b981,#34d399);color:white;"><i class="fas fa-file-medical"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_records }}</div>
+            <div class="kpi-label">Medical Records</div>
+            <div class="kpi-sub">{{ records_this_week }} added this week</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#ef4444,#f87171);color:white;"><i class="fas fa-door-open"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_admissions }}</div>
+            <div class="kpi-label">Total Admissions</div>
+            <div class="kpi-sub">{{ discharges_this_week }} discharged this week</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#06b6d4,#22d3ee);color:white;"><i class="fas fa-procedures"></i></div>
+        <div>
+            <div class="kpi-value">{{ occupied_beds }}</div>
+            <div class="kpi-label">Beds Occupied</div>
+            <div class="kpi-sub">{{ available_beds }} available · {{ bed_occupancy_rate }}% occupancy</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts & Tables Row -->
+<div class="content-grid">
+    <!-- Appointments per day (bar chart) -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-chart-bar" style="color:#6366f1;"></i> Appointments (Last 7 Days)</div>
+            <a href="{% url 'analytics:patient_flow_dashboard' %}" class="panel-action">Full view →</a>
+        </div>
+        {% if appt_by_day %}
+        <div class="bar-chart">
+            {% for day in appt_by_day %}
+            <div class="bar-col">
+                <span class="bar-count">{{ day.count }}</span>
+                <div class="bar" style="height:{% if day.count %}{{ day.count|floatformat:0 }}0px{% else %}4px{% endif %};max-height:80px;"></div>
+                <span class="bar-label">{{ day.date }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-msg"><i class="fas fa-chart-bar"></i>No appointment data yet</div>
+        {% endif %}
+        <div style="display:flex;gap:1rem;margin-top:1.25rem;flex-wrap:wrap;">
+            <div style="text-align:center;">
+                <div style="font-size:1.25rem;font-weight:800;color:#6366f1;">{{ completed_appointments }}</div>
+                <div style="font-size:.72rem;color:#64748b;">Completed</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:1.25rem;font-weight:800;color:#f59e0b;">{{ pending_appointments }}</div>
+                <div style="font-size:.72rem;color:#64748b;">Pending</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:1.25rem;font-weight:800;color:#ef4444;">{{ cancelled_appointments }}</div>
+                <div style="font-size:.72rem;color:#64748b;">Cancelled</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:1.25rem;font-weight:800;color:#10b981;">{{ completion_rate }}%</div>
+                <div style="font-size:.72rem;color:#64748b;">Completion Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Admissions -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-bed" style="color:#f59e0b;"></i> Recent Admissions</div>
+            <a href="{% url 'analytics:patient_flow_dashboard' %}" class="panel-action">All admissions →</a>
+        </div>
+        {% if recent_admissions %}
+        {% for admission in recent_admissions %}
+        <div class="item-row">
+            <div>
+                <div class="item-main">{{ admission.patient.get_full_name }}</div>
+                <div class="item-sub">{{ admission.ward|default:"No ward" }} · {{ admission.admission_date|date:"M d, H:i" }}</div>
+            </div>
+            <span class="badge {% if admission.status == 'admitted' %}badge-yellow{% elif admission.status == 'discharged' %}badge-green{% else %}badge-gray{% endif %}">
+                {{ admission.get_status_display }}
+            </span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-msg"><i class="fas fa-bed"></i>No admissions yet</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Second Row -->
+<div class="content-grid">
+    <!-- Recent Appointments -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-calendar-check" style="color:#3b82f6;"></i> Recent Appointments</div>
+            <a href="{% url 'analytics:patient_flow_dashboard' %}" class="panel-action">Patient flow →</a>
+        </div>
+        {% if recent_appointments %}
+        {% for appt in recent_appointments %}
+        <div class="item-row">
+            <div>
+                <div class="item-main">{{ appt.patient.get_full_name }}</div>
+                <div class="item-sub">
+                    Dr. {{ appt.doctor.get_full_name }} · {{ appt.scheduled_date|date:"M d" }} {{ appt.scheduled_time|time:"H:i" }}
+                </div>
+            </div>
+            <span class="badge {% if appt.status == 'completed' %}badge-green{% elif appt.status == 'confirmed' %}badge-blue{% elif appt.status == 'cancelled' %}badge-red{% elif appt.status == 'no_show' %}badge-red{% else %}badge-yellow{% endif %}">
+                {{ appt.get_status_display }}
+            </span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-msg"><i class="fas fa-calendar"></i>No appointments yet</div>
+        {% endif %}
+    </div>
+
+    <!-- Resource & Data Quality Overview -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-tachometer-alt" style="color:#10b981;"></i> Hospital Snapshot</div>
+            <a href="{% url 'analytics:data_quality_dashboard' %}" class="panel-action">Data quality →</a>
+        </div>
+
+        <!-- Bed Occupancy -->
+        <div style="margin-bottom:1.25rem;">
+            <div style="font-size:.8125rem;font-weight:600;color:#334155;margin-bottom:.75rem;">Bed Occupancy</div>
+            <div class="progress-row">
+                <div class="progress-label">Occupied</div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill" style="width:{{ bed_occupancy_rate }}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div>
+                </div>
+                <div class="progress-val">{{ bed_occupancy_rate }}%</div>
+            </div>
+        </div>
+
+        <div class="donut-grid" style="margin-bottom:1.25rem;">
+            <div class="donut-item">
+                <div class="donut-num" style="color:#6366f1;">{{ total_vitals }}</div>
+                <div class="donut-lbl">Vital Readings</div>
+            </div>
+            <div class="donut-item">
+                <div class="donut-num" style="color:#10b981;">{{ total_treatment_plans }}</div>
+                <div class="donut-lbl">Treatment Plans</div>
+            </div>
+            <div class="donut-item">
+                <div class="donut-num" style="color:#f59e0b;">{{ avg_los }}</div>
+                <div class="donut-lbl">Avg Stay (days)</div>
+            </div>
+            <div class="donut-item">
+                <div class="donut-num" style="color:#3b82f6;">{{ appointments_this_week }}</div>
+                <div class="donut-lbl">Appts This Week</div>
+            </div>
+        </div>
+
+        {% if data_quality_alerts > 0 %}
+        <div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:.875rem;display:flex;align-items:center;gap:.75rem;">
+            <i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:1.25rem;"></i>
+            <div>
+                <div style="font-weight:700;color:#ef4444;font-size:.875rem;">{{ data_quality_alerts }} Data Quality Alert{{ data_quality_alerts|pluralize }}</div>
+                <a href="{% url 'analytics:data_quality_dashboard' %}" style="font-size:.75rem;color:#64748b;">Review issues →</a>
+            </div>
+        </div>
+        {% else %}
+        <div style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:.875rem;display:flex;align-items:center;gap:.75rem;">
+            <i class="fas fa-check-circle" style="color:#10b981;font-size:1.25rem;"></i>
+            <div style="font-weight:700;color:#10b981;font-size:.875rem;">All data quality checks passing</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Navigation Cards -->
+<div class="content-grid-3">
+    <a href="{% url 'analytics:patient_flow_dashboard' %}" class="panel" style="text-decoration:none;text-align:center;padding:2rem;">
+        <i class="fas fa-stream" style="font-size:2.5rem;color:#6366f1;margin-bottom:1rem;display:block;"></i>
+        <div style="font-weight:700;color:#1e293b;font-size:1rem;">Patient Flow</div>
+        <div style="color:#64748b;font-size:.8125rem;margin-top:4px;">Admissions, discharges & trends</div>
+    </a>
+    <a href="{% url 'analytics:clinical_outcomes_dashboard' %}" class="panel" style="text-decoration:none;text-align:center;padding:2rem;">
+        <i class="fas fa-heartbeat" style="font-size:2.5rem;color:#ef4444;margin-bottom:1rem;display:block;"></i>
+        <div style="font-weight:700;color:#1e293b;font-size:1rem;">Clinical Outcomes</div>
+        <div style="color:#64748b;font-size:.8125rem;margin-top:4px;">Records, vitals & treatment plans</div>
+    </a>
+    <a href="{% url 'analytics:data_quality_dashboard' %}" class="panel" style="text-decoration:none;text-align:center;padding:2rem;">
+        <i class="fas fa-database" style="font-size:2.5rem;color:#10b981;margin-bottom:1rem;display:block;"></i>
+        <div style="font-weight:700;color:#1e293b;font-size:1rem;">Data Quality</div>
+        <div style="color:#64748b;font-size:.8125rem;margin-top:4px;">Completeness & integrity checks</div>
+    </a>
+</div>
+{% endblock %}

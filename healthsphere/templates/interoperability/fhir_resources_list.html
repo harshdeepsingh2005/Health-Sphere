@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load static %}
+{% block content %}
+<div style="max-width:1200px;margin:24px auto;padding:0 24px">
+    <div style="background:white;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+            <h2 style="font-size:24px;font-weight:700;color:#2D3748"><i class="fas fa-fire" style="color:#A8C5A8"></i>
+                FHIR Resources</h2><a href="{% url 'interoperability:dashboard' %}"
+                style="padding:8px 16px;background:#f5f5f5;border-radius:8px;color:#4A5568;text-decoration:none;font-weight:500"><i
+                    class="fas fa-arrow-left"></i> Dashboard</a>
+        </div>
+        {% for resource in resources %}<div
+            style="padding:18px;border-radius:14px;background:rgba(168,197,168,0.04);border-left:4px solid #A8C5A8;margin-bottom:12px;transition:all .3s"
+            onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='none'">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                    <div style="font-weight:700;color:#2D3748">{{ resource.resource_type }} / {{
+                        resource.resource_id|truncatechars:20 }}</div>
+                    <div style="font-size:13px;color:#718096;margin-top:4px">Version: {{ resource.version_id|default:"1"
+                        }} • Updated: {{ resource.last_updated|date:"M d, Y" }}</div>
+                </div><a href="{% url 'interoperability:fhir_resource_detail' resource.id %}"
+                    style="padding:6px 14px;background:#A8C5A8;color:white;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">View</a>
+            </div>
+        </div>{% empty %}<div style="text-align:center;padding:60px;color:#718096"><i class="fas fa-fire"
+                style="font-size:48px;opacity:0.3;margin-bottom:16px;display:block"></i>
+            <p>No FHIR resources</p>
+        </div>{% endfor %}
+    </div>
+</div>
+{% endblock %}

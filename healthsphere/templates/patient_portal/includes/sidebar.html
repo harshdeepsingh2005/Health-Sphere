@@ -1,0 +1,103 @@
+{% comment %}
+Patient Portal Sidebar Navigation - Shared Include
+Include this in {% block sidebar_nav %} of all patient portal pages.
+Pass 'active_page' variable to highlight the current page.
+{% endcomment %}
+
+<div class="nav-section">
+    <div class="nav-section-title">Dashboard</div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:dashboard' %}"
+            class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span class="nav-link-text">Overview</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:appointments' %}"
+            class="nav-link {% if active_page == 'appointments' %}active{% endif %}">
+            <i class="fas fa-calendar-alt"></i>
+            <span class="nav-link-text">My Appointments</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:book_appointment' %}"
+            class="nav-link {% if active_page == 'book_appointment' %}active{% endif %}">
+            <i class="fas fa-calendar-plus"></i>
+            <span class="nav-link-text">Book Appointment</span>
+        </a>
+    </div>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Health</div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:health_details' %}"
+            class="nav-link {% if active_page == 'health_details' %}active{% endif %}">
+            <i class="fas fa-heartbeat"></i>
+            <span class="nav-link-text">Vitals &amp; Health</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:medications' %}"
+            class="nav-link {% if active_page == 'medications' %}active{% endif %}">
+            <i class="fas fa-pills"></i>
+            <span class="nav-link-text">Medications</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:health_records' %}"
+            class="nav-link {% if active_page == 'health_records' %}active{% endif %}">
+            <i class="fas fa-file-medical"></i>
+            <span class="nav-link-text">Health Records</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:lab_results' %}"
+            class="nav-link {% if active_page == 'lab_results' %}active{% endif %}">
+            <i class="fas fa-flask"></i>
+            <span class="nav-link-text">Lab Results</span>
+        </a>
+    </div>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">AI Services</div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:risk' %}" class="nav-link {% if active_page == 'risk' %}active{% endif %}">
+            <i class="fas fa-shield-alt"></i>
+            <span class="nav-link-text">Risk Score</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:report' %}" class="nav-link {% if active_page == 'report' %}active{% endif %}">
+            <i class="fas fa-file-upload"></i>
+            <span class="nav-link-text">Upload Report</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:assistant' %}"
+            class="nav-link {% if active_page == 'assistant' %}active{% endif %}">
+            <i class="fas fa-robot"></i>
+            <span class="nav-link-text">AI Assistant</span>
+        </a>
+    </div>
+</div>
+
+<div class="nav-section">
+    <div class="nav-section-title">Communication</div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:chat_doctor' %}"
+            class="nav-link {% if active_page == 'chat_doctor' %}active{% endif %}">
+            <i class="fas fa-comment-medical"></i>
+            <span class="nav-link-text">Chat with Doctor</span>
+        </a>
+    </div>
+    <div class="nav-item">
+        <a href="{% url 'patient_portal:emergency_contacts' %}"
+            class="nav-link {% if active_page == 'emergency_contacts' %}active{% endif %}">
+            <i class="fas fa-phone-alt"></i>
+            <span class="nav-link-text">Emergency Contacts</span>
+        </a>
+    </div>
+</div>

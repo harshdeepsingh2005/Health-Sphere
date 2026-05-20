@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Lab Results - HealthSphere AI{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/bento-grid.css' %}">
+<style>
+.gradient-cbc { background: linear-gradient(135deg, #E89B87, #f0b097); }
+.gradient-lipid { background: linear-gradient(135deg, #F0C3A0, #f8d3b0); }
+.gradient-glucose { background: linear-gradient(135deg, #A8C5A8, #b8d4b8); }
+.gradient-liver { background: linear-gradient(135deg, #A8C5E8, #b8d4f0); }
+
+.test-result {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.test-result:last-child {
+    border-bottom: none;
+}
+
+.badge-normal { background: rgba(72, 187, 120, 0.15); color: #48bb78; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+.badge-borderline { background: rgba(240, 173, 78, 0.15); color: #f0ad4e; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bento-grid">
+    <!-- Page Header -->
+    <div class="bento-card bento-wide" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <div class="metric-icon gradient-cbc">
+                    <i class="fas fa-flask"></i>
+                </div>
+                Lab Results
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <a href="{% url 'patient_portal:dashboard' %}" class="bento-btn bento-btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Back
+                </a>
+                <button class="bento-btn bento-btn-primary">
+                    <i class="fas fa-download"></i>
+                    Download Report
+                </button>
+            </div>
+        </div>
+        <p style="color: #718096; margin: 0;">View your laboratory test results and reports</p>
+    </div>
+
+    <!-- Results Overview -->
+    <div class="bento-card bento-wide" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-title">
+            <i class="fas fa-chart-pie"></i>
+            Results Summary
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px;">
+            <div style="text-align: center; padding: 12px; background: rgba(72, 187, 120, 0.05); border-radius: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: #48bb78;">6</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Normal</div>
+            </div>
+            <div style="text-align: center; padding: 12px; background: rgba(240, 173, 78, 0.05); border-radius: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: #f0ad4e;">1</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Borderline</div>
+            </div>
+            <div style="text-align: center; padding: 12px; background: rgba(168, 197, 232, 0.05); border-radius: 12px;">
+                <div style="font-size: 28px; font-weight: 700; color: var(--color-blue);">7</div>
+                <div style="font-size: 12px; color: #718096; margin-top: 4px;">Total Tests</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Blood Count -->
+    <div class="bento-card bento-wide interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <div class="metric-icon gradient-cbc" style="width: 48px; height: 48px; font-size: 20px;">
+                    <i class="fas fa-tint"></i>
+                </div>
+                Complete Blood Count
+            </div>
+            <span class="badge-normal">Normal</span>
+        </div>
+        <div style="margin-top: 16px;">
+            <div class="test-result">
+                <span style="color: #718096; font-size: 14px;">RBC Count</span>
+                <span style="font-weight: 600; color: #2D3748;">4.5 M/μL</span>
+            </div>
+            <div class="test-result">
+                <span style="color: #718096; font-size: 14px;">WBC Count</span>
+                <span style="font-weight: 600; color: #2D3748;">7.2 K/μL</span>
+            </div>
+            <div class="test-result">
+                <span style="color: #718096; font-size: 14px;">Platelets</span>
+                <span style="font-weight: 600; color: #2D3748;">280 K/μL</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lipid Panel -->
+    <div class="bento-card bento-wide interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <div class="metric-icon gradient-lipid" style="width: 48px; height: 48px; font-size: 20px;">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                Lipid Panel
+            </div>
+            <span class="badge-borderline">Borderline</span>
+        </div>
+        <div style="margin-top: 16px;">
+            <div class="test-result">
+                <span style="color: #718096; font-size: 14px;">Total Cholesterol</span>
+                <span style="font-weight: 600; color: #f0ad4e;">210 mg/dL</span>
+            </div>
+            <div class="test-result">
+                <span style="color: #718096; font-size: 14px;">HDL Cholesterol</span>
+                <span style="font-weight: 600; color: #2D3748;">45 mg/dL</span>
+            </div>
+            <div class="test-result">
+                <span style="color: #718096; font-size: 14px;">LDL Cholesterol</span>
+                <span style="font-weight: 600; color: #2D3748;">140 mg/dL</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blood Sugar -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-glucose">
+            <i class="fas fa-droplet"></i>
+        </div>
+        <div class="metric-value">95</div>
+        <div class="metric-label">Fasting Glucose (mg/dL)</div>
+        <span class="badge-normal" style="display: inline-block; margin-top: 8px;">Normal</span>
+    </div>
+
+    <!-- HbA1c -->
+    <div class="bento-card bento-small interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="metric-icon gradient-glucose">
+            <i class="fas fa-chart-simple"></i>
+        </div>
+        <div class="metric-value">5.4%</div>
+        <div class="metric-label">HbA1c</div>
+        <span class="badge-normal" style="display: inline-block; margin-top: 8px;">Normal</span>
+    </div>
+
+    <!-- Liver Function -->
+    <div class="bento-card bento-wide interactive" data-hover-lift>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <div class="metric-icon gradient-liver" style="width: 48px; height: 48px; font-size: 20px;">
+                    <i class="fas fa-liver"></i>
+                </div>
+                Liver Function Tests
+            </div>
+            <span class="badge-normal">Normal</span>
+        </div>
+        <div style="margin-top: 16px;">
+            <div class="test-result">
+                <span style="color: #718096; font-size: 14px;">ALT (Alanine Aminotransferase)</span>
+                <span style="font-weight: 600; color: #2D3748;">28 U/L</span>
+            </div>
+            <div class="test-result">
+                <span style="color: #718096; font-size: 14px;">AST (Aspartate Aminotransferase)</span>
+                <span style="font-weight: 600; color: #2D3748;">32 U/L</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Results Table -->
+    <div class="bento-card bento-full" data-tilt>
+        <div class="card-glow"></div>
+        <div class="card-header">
+            <div class="card-title">
+                <i class="fas fa-table"></i>
+                Detailed Lab Results
+            </div>
+            <span class="card-badge">Feb 15, 2026</span>
+        </div>
+        <div style="overflow-x: auto; margin-top: 16px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: rgba(168, 197, 232, 0.1);">
+                        <th style="padding: 12px; text-align: left; font-size: 13px; color: #718096;">Test</th>
+                        <th style="padding: 12px; text-align: left; font-size: 13px; color: #718096;">Result</th>
+                        <th style="padding: 12px; text-align: left; font-size: 13px; color: #718096;">Reference Range</th>
+                        <th style="padding: 12px; text-align: left; font-size: 13px; color: #718096;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #E2E8F0;">
+                        <td style="padding: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-tint" style="color: var(--color-coral);"></i>
+                                <span style="font-weight: 500;">Hemoglobin</span>
+                            </div>
+                        </td>
+                        <td style="padding: 12px; font-weight: 600;">14.2 g/dL</td>
+                        <td style="padding: 12px; color: #718096;">12.0 - 16.0 g/dL</td>
+                        <td style="padding: 12px;"><span class="badge-normal">Normal</span></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #E2E8F0;">
+                        <td style="padding: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-shield-virus" style="color: var(--color-blue);"></i>
+                                <span style="font-weight: 500;">White Blood Cells</span>
+                            </div>
+                        </td>
+                        <td style="padding: 12px; font-weight: 600;">7.2 K/μL</td>
+                        <td style="padding: 12px; color: #718096;">4.0 - 11.0 K/μL</td>
+                        <td style="padding: 12px;"><span class="badge-normal">Normal</span></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #E2E8F0;">
+                        <td style="padding: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-certificate" style="color: var(--color-peach);"></i>
+                                <span style="font-weight: 500;">Total Cholesterol</span>
+                            </div>
+                        </td>
+                        <td style="padding: 12px; font-weight: 600; color: #f0ad4e;">210 mg/dL</td>
+                        <td style="padding: 12px; color: #718096;">&lt; 200 mg/dL</td>
+                        <td style="padding: 12px;"><span class="badge-borderline">Borderline</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-droplet" style="color: var(--color-green);"></i>
+                                <span style="font-weight: 500;">Fasting Glucose</span>
+                            </div>
+                        </td>
+                        <td style="padding: 12px; font-weight: 600;">95 mg/dL</td>
+                        <td style="padding: 12px; color: #718096;">70 - 100 mg/dL</td>
+                        <td style="padding: 12px;"><span class="badge-normal">Normal</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

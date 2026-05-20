@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Audit Log{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-list-alt"></i>
+                        Audit Log
+                        {% if is_admin %}
+                            <small class="text-muted">(All Users)</small>
+                        {% else %}
+                            <small class="text-muted">(Your Activity)</small>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if audit_logs %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Resource</th>
+                                        <th>Description</th>
+                                        <th>IP Address</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in audit_logs %}
+                                    <tr>
+                                        <td>
+                                            <small>{{ log.timestamp|date:"M j, Y H:i:s" }}</small>
+                                        </td>
+                                        <td>
+                                            {% if log.user %}
+                                                <strong>{{ log.user.get_full_name|default:log.user.username }}</strong>
+                                                <br><small class="text-muted">{{ log.user.role.get_name_display|default:"N/A" }}</small>
+                                            {% else %}
+                                                <span class="text-muted">System</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-{% if log.action == 'LOGIN' %}success{% elif log.action == 'LOGOUT' %}info{% elif log.action == 'FAILED_LOGIN' %}danger{% elif log.action == 'CREATE' %}primary{% elif log.action == 'UPDATE' %}warning{% elif log.action == 'DELETE' %}danger{% else %}secondary{% endif %}">
+                                                {{ log.get_action_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if log.resource_type %}
+                                                <strong>{{ log.resource_type }}</strong>
+                                                {% if log.resource_id %}
+                                                    <br><small class="text-muted">ID: {{ log.resource_id }}</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ log.description|truncatechars:100 }}</small>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ log.ip_address|default:"Unknown" }}</small>
+                                        </td>
+                                        <td>
+                                            {% if log.success %}
+                                                <span class="badge badge-success">
+                                                    <i class="fas fa-check"></i>
+                                                    Success
+                                                </span>
+                                            {% else %}
+                                                <span class="badge badge-danger">
+                                                    <i class="fas fa-times"></i>
+                                                    Failed
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if is_admin %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Administrator Note:</strong> This log shows recent activity for all users. 
+                            Complete logs are stored in the database for compliance and audit purposes.
+                        </div>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Activity Found</h5>
+                            <p class="text-muted">No audit log entries are available at this time.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Security Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt"></i>
+                        About Audit Logging
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>What is logged?</h6>
+                            <ul>
+                                <li>Login and logout activities</li>
+                                <li>Data access and modifications</li>
+                                <li>Administrative actions</li>
+                                <li>Security events (2FA, password changes)</li>
+                                <li>Failed login attempts</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Why do we log activities?</h6>
+                            <ul>
+                                <li><strong>HIPAA Compliance:</strong> Required for healthcare data protection</li>
+                                <li><strong>Security:</strong> Monitor for unauthorized access</li>
+                                <li><strong>Accountability:</strong> Track who accessed what data</li>
+                                <li><strong>Troubleshooting:</strong> Help resolve technical issues</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+</style>
+{% endblock %}

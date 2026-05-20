@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% load static %}
+{% block content %}
+<div style="max-width:900px;margin:24px auto;padding:0 24px">
+    <div style="background:white;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:32px">
+        <a href="{% url 'interoperability:fhir_resources_list' %}"
+            style="color:#A8C5E8;text-decoration:none;font-weight:500;font-size:14px"><i class="fas fa-arrow-left"></i>
+            Back to FHIR Resources</a>
+        <h2 style="font-size:24px;font-weight:700;color:#2D3748;margin:16px 0"><i class="fas fa-fire"
+                style="color:#A8C5A8"></i> {{ resource.resource_type }} / {{ resource.resource_id }}</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px">
+            <div style="padding:16px;background:rgba(168,197,168,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096">Resource Type</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ resource.resource_type }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(168,197,168,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096">Version</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ resource.version_id|default:"1" }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(168,197,168,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096">Last Updated</div>
+                <div style="font-weight:600;color:#2D3748;margin-top:4px">{{ resource.last_updated|date:"M d, Y g:i A"
+                    }}</div>
+            </div>
+            <div style="padding:16px;background:rgba(168,197,168,0.04);border-radius:12px">
+                <div style="font-size:12px;text-transform:uppercase;color:#718096">Status</div>
+                <div style="font-weight:600;color:#48bb78;margin-top:4px">{{ resource.status|default:"Active"|capfirst
+                    }}</div>
+            </div>
+        </div>
+        {% if resource.resource_data %}<div style="margin-top:20px">
+            <div style="font-size:12px;text-transform:uppercase;color:#718096;margin-bottom:8px">Resource Data (JSON)
+            </div>
+            <pre
+                style="padding:16px;background:#1a1a2e;color:#e5e5e5;border-radius:12px;overflow-x:auto;font-size:13px;line-height:1.6">{{ resource.resource_data }}</pre>
+        </div>{% endif %}
+    </div>
+</div>
+{% endblock %}

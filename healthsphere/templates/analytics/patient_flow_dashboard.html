@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Patient Flow Analytics | HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.an-nav { display:flex; gap:.375rem; flex-wrap:wrap; background:white; border:1px solid #e2e8f0; border-radius:14px; padding:.75rem 1rem; margin-bottom:1.75rem; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+.an-pill { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:10px; text-decoration:none; font-weight:600; font-size:.8125rem; color:#64748b; transition:all .2s; }
+.an-pill:hover { background:#f1f5f9; color:#1e293b; }
+.an-pill.active { background:linear-gradient(135deg,#3b82f6,#60a5fa); color:white; }
+
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:1.125rem; margin-bottom:1.75rem; }
+.kpi-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem 1.5rem; box-shadow:0 1px 4px rgba(0,0,0,.04); display:flex; align-items:center; gap:1rem; }
+.kpi-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.kpi-value { font-size:1.875rem; font-weight:800; color:#1e293b; line-height:1; }
+.kpi-label { font-size:.8125rem; color:#64748b; font-weight:500; margin-top:2px; }
+
+.content-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.5rem; }
+@media(max-width:900px){ .content-grid{ grid-template-columns:1fr; } }
+.panel { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+.panel-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.panel-title { font-size:1rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; }
+.panel-action { font-size:.8125rem; color:#3b82f6; text-decoration:none; font-weight:600; }
+
+/* Bar chart */
+.bar-chart { display:flex; align-items:flex-end; gap:3px; height:120px; margin-bottom:.5rem; }
+.bar-col { display:flex; flex-direction:column; align-items:center; gap:2px; flex:1; }
+.bar { width:100%; border-radius:3px 3px 0 0; min-height:3px; }
+.bar.blue { background:linear-gradient(180deg,#3b82f6,#60a5fa); }
+.bar.green { background:linear-gradient(180deg,#10b981,#34d399); }
+.bar.purple { background:linear-gradient(180deg,#8b5cf6,#a78bfa); }
+.bar-label { font-size:.6rem; color:#94a3b8; white-space:nowrap; }
+
+.item-row { display:flex; align-items:flex-start; justify-content:space-between; padding:.75rem 0; border-bottom:1px solid #f1f5f9; gap:.75rem; }
+.item-row:last-child { border-bottom:none; }
+.item-main { font-size:.875rem; font-weight:600; color:#334155; }
+.item-sub { font-size:.75rem; color:#64748b; margin-top:2px; }
+.badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:.72rem; font-weight:600; flex-shrink:0; }
+.badge-yellow { background:rgba(245,158,11,.1); color:#f59e0b; }
+.badge-green { background:rgba(16,185,129,.1); color:#10b981; }
+.badge-blue { background:rgba(59,130,246,.1); color:#3b82f6; }
+.badge-gray { background:rgba(100,116,139,.1); color:#64748b; }
+
+.type-bar { display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem; }
+.type-bar-label { font-size:.8125rem; color:#334155; min-width:100px; }
+.type-bar-track { flex:1; height:8px; background:#f1f5f9; border-radius:99px; overflow:hidden; }
+.type-bar-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+.type-bar-count { font-size:.8125rem; font-weight:700; color:#1e293b; min-width:30px; text-align:right; }
+
+.empty-msg { text-align:center; padding:2rem; color:#94a3b8; font-size:.875rem; }
+.empty-msg i { display:block; font-size:2rem; margin-bottom:.5rem; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="{% url 'analytics:dashboard' %}" class="breadcrumb-link"><i class="fas fa-chart-pie"></i> Analytics</a></li>
+        <li class="breadcrumb-item"><span class="breadcrumb-current">Patient Flow</span></li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="an-nav">
+    <a href="{% url 'analytics:dashboard' %}" class="an-pill"><i class="fas fa-th-large"></i> Overview</a>
+    <a href="{% url 'analytics:patient_flow_dashboard' %}" class="an-pill active"><i class="fas fa-stream"></i> Patient Flow</a>
+    <a href="{% url 'analytics:clinical_outcomes_dashboard' %}" class="an-pill"><i class="fas fa-heartbeat"></i> Clinical Outcomes</a>
+    <a href="{% url 'analytics:reports_dashboard' %}" class="an-pill"><i class="fas fa-file-alt"></i> Reports</a>
+    <a href="{% url 'analytics:data_quality_dashboard' %}" class="an-pill"><i class="fas fa-database"></i> Data Quality</a>
+    <a href="{% url 'analytics:models_list' %}" class="an-pill"><i class="fas fa-robot"></i> ML Models</a>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#3b82f6,#60a5fa);color:white;"><i class="fas fa-door-open"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_admissions }}</div>
+            <div class="kpi-label">Total Admissions</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#10b981,#34d399);color:white;"><i class="fas fa-door-closed"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_discharges }}</div>
+            <div class="kpi-label">Total Discharges</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#f59e0b,#fcd34d);color:white;"><i class="fas fa-bed"></i></div>
+        <div>
+            <div class="kpi-value">{{ current_inpatients }}</div>
+            <div class="kpi-label">Current Inpatients</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:white;"><i class="fas fa-calendar-day"></i></div>
+        <div>
+            <div class="kpi-value">{{ todays_appts }}</div>
+            <div class="kpi-label">Today's Appointments</div>
+        </div>
+    </div>
+</div>
+
+<!-- Trend Charts -->
+<div class="content-grid">
+    <!-- Admissions trend -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-arrow-up" style="color:#3b82f6;"></i> Admissions (14 Days)</div>
+        </div>
+        {% if admissions_trend %}
+        <div class="bar-chart" id="admChart"></div>
+        <script>
+        (function(){
+            var data = JSON.parse('{{ admissions_trend|escapejs }}');
+            var max = Math.max.apply(null, data.map(d=>d.count)) || 1;
+            var wrap = document.getElementById('admChart');
+            data.forEach(function(d){
+                var col = document.createElement('div'); col.className='bar-col';
+                var cnt = document.createElement('div'); cnt.style.cssText='font-size:.6rem;font-weight:700;color:#64748b;'; cnt.textContent=d.count;
+                var bar = document.createElement('div'); bar.className='bar blue';
+                bar.style.height = Math.max(4, (d.count/max)*100)+'px';
+                var lbl = document.createElement('div'); lbl.className='bar-label'; lbl.textContent=d.date;
+                col.append(cnt, bar, lbl); wrap.append(col);
+            });
+        })();
+        </script>
+        {% else %}
+        <div class="empty-msg"><i class="fas fa-chart-bar"></i>No admission data yet</div>
+        {% endif %}
+    </div>
+
+    <!-- Appointments trend -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-calendar" style="color:#8b5cf6;"></i> Appointments (14 Days)</div>
+        </div>
+        {% if appointments_trend %}
+        <div class="bar-chart" id="apptChart"></div>
+        <script>
+        (function(){
+            var data = JSON.parse('{{ appointments_trend|escapejs }}');
+            var max = Math.max.apply(null, data.map(d=>d.count)) || 1;
+            var wrap = document.getElementById('apptChart');
+            data.forEach(function(d){
+                var col = document.createElement('div'); col.className='bar-col';
+                var cnt = document.createElement('div'); cnt.style.cssText='font-size:.6rem;font-weight:700;color:#64748b;'; cnt.textContent=d.count;
+                var bar = document.createElement('div'); bar.className='bar purple';
+                bar.style.height = Math.max(4, (d.count/max)*100)+'px';
+                var lbl = document.createElement('div'); lbl.className='bar-label'; lbl.textContent=d.date;
+                col.append(cnt, bar, lbl); wrap.append(col);
+            });
+        })();
+        </script>
+        {% else %}
+        <div class="empty-msg"><i class="fas fa-chart-bar"></i>No appointment data yet</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Detail tables -->
+<div class="content-grid">
+    <!-- Active Admissions -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-bed" style="color:#f59e0b;"></i> Current Inpatients</div>
+        </div>
+        {% if active_admissions %}
+        {% for adm in active_admissions %}
+        <div class="item-row">
+            <div>
+                <div class="item-main">{{ adm.patient.get_full_name }}</div>
+                <div class="item-sub">
+                    {{ adm.ward|default:"No ward" }} · Room {{ adm.room_number|default:"—" }}
+                    {% if adm.attending_doctor %} · Dr. {{ adm.attending_doctor.get_full_name }}{% endif %}
+                </div>
+                <div class="item-sub" style="margin-top:2px;">Admitted {{ adm.admission_date|date:"M d, Y" }} ({{ adm.length_of_stay }}d)</div>
+            </div>
+            <span class="badge badge-{{ adm.admission_type }}">{{ adm.get_admission_type_display }}</span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-msg"><i class="fas fa-bed"></i>No current inpatients</div>
+        {% endif %}
+    </div>
+
+    <!-- Today's Appointments + Admission type breakdown -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-calendar-day" style="color:#8b5cf6;"></i> Today's Appointments</div>
+        </div>
+        {% if todays_appointments %}
+        {% for appt in todays_appointments %}
+        <div class="item-row">
+            <div>
+                <div class="item-main">{{ appt.patient.get_full_name }}</div>
+                <div class="item-sub">Dr. {{ appt.doctor.get_full_name }} · {{ appt.scheduled_time|time:"H:i" }}</div>
+            </div>
+            <span class="badge {% if appt.status == 'completed' %}badge-green{% elif appt.status == 'confirmed' %}badge-blue{% elif appt.status == 'cancelled' %}badge-gray{% else %}badge-yellow{% endif %}">
+                {{ appt.get_status_display }}
+            </span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-msg"><i class="fas fa-calendar"></i>No appointments today</div>
+        {% endif %}
+
+        {% if admission_types %}
+        <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #f1f5f9;">
+            <div style="font-size:.875rem;font-weight:700;color:#1e293b;margin-bottom:.875rem;">Admission Types</div>
+            {% for item in admission_types %}
+            <div class="type-bar">
+                <div class="type-bar-label">{{ item.admission_type|capfirst }}</div>
+                <div class="type-bar-track">
+                    <div class="type-bar-fill" style="width:{% if total_admissions %}{{ item.count|floatformat:0 }}{% endif %}%;"></div>
+                </div>
+                <div class="type-bar-count">{{ item.count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

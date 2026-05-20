@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Clinical Outcomes | HealthSphere AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.an-nav { display:flex; gap:.375rem; flex-wrap:wrap; background:white; border:1px solid #e2e8f0; border-radius:14px; padding:.75rem 1rem; margin-bottom:1.75rem; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+.an-pill { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:10px; text-decoration:none; font-weight:600; font-size:.8125rem; color:#64748b; transition:all .2s; }
+.an-pill:hover { background:#f1f5f9; color:#1e293b; }
+.an-pill.active { background:linear-gradient(135deg,#ef4444,#f87171); color:white; }
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:1.125rem; margin-bottom:1.75rem; }
+.kpi-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.25rem 1.5rem; box-shadow:0 1px 4px rgba(0,0,0,.04); display:flex; align-items:center; gap:1rem; }
+.kpi-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.kpi-value { font-size:1.875rem; font-weight:800; color:#1e293b; line-height:1; }
+.kpi-label { font-size:.8125rem; color:#64748b; font-weight:500; margin-top:2px; }
+.kpi-sub { font-size:.72rem; color:#94a3b8; margin-top:1px; }
+.content-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.5rem; }
+@media(max-width:900px){ .content-grid{ grid-template-columns:1fr; } }
+.panel { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+.panel-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; }
+.panel-title { font-size:1rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px; }
+.item-row { display:flex; align-items:flex-start; justify-content:space-between; padding:.75rem 0; border-bottom:1px solid #f1f5f9; gap:.75rem; }
+.item-row:last-child { border-bottom:none; }
+.item-main { font-size:.875rem; font-weight:600; color:#334155; }
+.item-sub { font-size:.75rem; color:#64748b; margin-top:2px; }
+.badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:.72rem; font-weight:600; flex-shrink:0; }
+.badge-green { background:rgba(16,185,129,.1); color:#10b981; }
+.badge-blue { background:rgba(59,130,246,.1); color:#3b82f6; }
+.badge-yellow { background:rgba(245,158,11,.1); color:#f59e0b; }
+.badge-red { background:rgba(239,68,68,.1); color:#ef4444; }
+.badge-gray { background:rgba(100,116,139,.1); color:#64748b; }
+.stat-row { display:flex; align-items:center; justify-content:space-between; padding:.875rem; background:#f8fafc; border-radius:12px; margin-bottom:.5rem; }
+.stat-num { font-size:1.25rem; font-weight:800; color:#1e293b; }
+.stat-lbl { font-size:.8125rem; color:#64748b; }
+.empty-msg { text-align:center; padding:2rem; color:#94a3b8; font-size:.875rem; }
+.empty-msg i { display:block; font-size:2rem; margin-bottom:.5rem; }
+.progress-row { display:flex; align-items:center; gap:.75rem; margin-bottom:.875rem; }
+.progress-label { font-size:.8125rem; color:#334155; min-width:110px; }
+.progress-bar-wrap { flex:1; height:8px; background:#f1f5f9; border-radius:999px; overflow:hidden; }
+.progress-bar-fill { height:100%; border-radius:999px; }
+.progress-val { font-size:.8125rem; font-weight:700; color:#1e293b; min-width:40px; text-align:right; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <ol class="breadcrumb-list">
+        <li class="breadcrumb-item"><a href="{% url 'analytics:dashboard' %}" class="breadcrumb-link"><i class="fas fa-chart-pie"></i> Analytics</a></li>
+        <li class="breadcrumb-item"><span class="breadcrumb-current">Clinical Outcomes</span></li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="an-nav">
+    <a href="{% url 'analytics:dashboard' %}" class="an-pill"><i class="fas fa-th-large"></i> Overview</a>
+    <a href="{% url 'analytics:patient_flow_dashboard' %}" class="an-pill"><i class="fas fa-stream"></i> Patient Flow</a>
+    <a href="{% url 'analytics:clinical_outcomes_dashboard' %}" class="an-pill active"><i class="fas fa-heartbeat"></i> Clinical Outcomes</a>
+    <a href="{% url 'analytics:reports_dashboard' %}" class="an-pill"><i class="fas fa-file-alt"></i> Reports</a>
+    <a href="{% url 'analytics:data_quality_dashboard' %}" class="an-pill"><i class="fas fa-database"></i> Data Quality</a>
+    <a href="{% url 'analytics:models_list' %}" class="an-pill"><i class="fas fa-robot"></i> ML Models</a>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#ef4444,#f87171);color:white;"><i class="fas fa-file-medical"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_records }}</div>
+            <div class="kpi-label">Medical Records</div>
+            <div class="kpi-sub">{{ records_this_month }} this month</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:white;"><i class="fas fa-clipboard-list"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_plans }}</div>
+            <div class="kpi-label">Treatment Plans</div>
+            <div class="kpi-sub">{{ active_plans }} active · {{ completed_plans }} completed</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#06b6d4,#22d3ee);color:white;"><i class="fas fa-heartbeat"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_vitals }}</div>
+            <div class="kpi-label">Vital Readings</div>
+            <div class="kpi-sub">{{ vitals_this_week }} this week</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#10b981,#34d399);color:white;"><i class="fas fa-check-circle"></i></div>
+        <div>
+            <div class="kpi-value">{{ completion_rate }}%</div>
+            <div class="kpi-label">Appt Completion</div>
+            <div class="kpi-sub">{{ completed_appts }} of {{ total_appts }} appointments</div>
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <!-- Appointment outcome breakdown -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-chart-pie" style="color:#6366f1;"></i> Appointment Outcomes</div>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">Completed</div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:{{ completion_rate }}%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
+            <div class="progress-val">{{ completed_appts }}</div>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">No Shows</div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:{{ no_show_rate }}%;background:linear-gradient(90deg,#ef4444,#f87171);"></div></div>
+            <div class="progress-val">{{ no_show_appts }}</div>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">Cancelled</div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:{% if total_appts %}{{ cancelled_appts|floatformat:0 }}{% endif %}%;background:linear-gradient(90deg,#94a3b8,#cbd5e1);"></div></div>
+            <div class="progress-val">{{ cancelled_appts }}</div>
+        </div>
+
+        <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #f1f5f9;">
+            <div style="font-size:.875rem;font-weight:700;color:#1e293b;margin-bottom:.875rem;">Admission Outcomes</div>
+            <div class="stat-row">
+                <div><div class="stat-num" style="color:#f59e0b;">{{ admitted_count }}</div><div class="stat-lbl">Currently Admitted</div></div>
+                <div><div class="stat-num" style="color:#10b981;">{{ discharged_count }}</div><div class="stat-lbl">Discharged</div></div>
+                <div><div class="stat-num" style="color:#3b82f6;">{{ transferred_count }}</div><div class="stat-lbl">Transferred</div></div>
+            </div>
+        </div>
+
+        {% if appt_type_breakdown %}
+        <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #f1f5f9;">
+            <div style="font-size:.875rem;font-weight:700;color:#1e293b;margin-bottom:.875rem;">Appointment Types</div>
+            {% for item in appt_type_breakdown %}
+            <div class="progress-row">
+                <div class="progress-label">{{ item.appointment_type__name|default:"Unknown"|capfirst|truncatechars:16 }}</div>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:{% if total_appts %}{{ item.count|floatformat:0 }}{% endif %}%;background:linear-gradient(90deg,#6366f1,#8b5cf6);"></div></div>
+                <div class="progress-val">{{ item.count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Medical Records -->
+    <div class="panel">
+        <div class="panel-hd">
+            <div class="panel-title"><i class="fas fa-file-medical-alt" style="color:#ef4444;"></i> Recent Medical Records</div>
+        </div>
+        {% if recent_records %}
+        {% for record in recent_records %}
+        <div class="item-row">
+            <div>
+                <div class="item-main">{{ record.patient.get_full_name }}</div>
+                <div class="item-sub">
+                    {% if record.created_by %}{{ record.created_by.get_full_name }} · {% endif %}{{ record.created_at|date:"M d, Y" }}
+                </div>
+                {% if record.diagnosis %}<div class="item-sub" style="color:#334155;">{{ record.diagnosis|truncatechars:60 }}</div>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-msg"><i class="fas fa-file-medical"></i>No medical records yet</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Treatment Plans -->
+<div class="panel">
+    <div class="panel-hd">
+        <div class="panel-title"><i class="fas fa-clipboard-list" style="color:#8b5cf6;"></i> Recent Treatment Plans</div>
+    </div>
+    {% if recent_plans %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">
+    {% for plan in recent_plans %}
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;">
+        <div style="font-weight:700;color:#1e293b;font-size:.875rem;margin-bottom:4px;">{{ plan.patient.get_full_name }}</div>
+        <div style="font-size:.75rem;color:#64748b;margin-bottom:.5rem;">
+            {% if plan.created_by %}Created by {{ plan.created_by.get_full_name }}{% endif %}
+            · {{ plan.created_at|date:"M d, Y" }}
+        </div>
+        {% if plan.goals %}<div style="font-size:.75rem;color:#475569;">{{ plan.goals|truncatechars:80 }}</div>{% endif %}
+    </div>
+    {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-msg"><i class="fas fa-clipboard-list"></i>No treatment plans yet</div>
+    {% endif %}
+</div>
+{% endblock %}

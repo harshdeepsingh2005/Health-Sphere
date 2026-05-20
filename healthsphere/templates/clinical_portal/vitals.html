@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Vitals Monitor — Clinical Portal | HealthSphere AI{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'clinical_portal:dashboard' %}" class="breadcrumb-link">Dashboard</a></li>
+<li class="breadcrumb-item breadcrumb-current">Vitals</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header { margin-bottom: 1.5rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--neutral-900); margin: 0; }
+.page-header p { color: var(--neutral-500); margin: .25rem 0 0; }
+
+.filter-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+.filter-select { padding: .5rem .875rem; border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); background: white; color: var(--neutral-700); font-size: .875rem; }
+.btn-filter { padding: .5rem 1rem; border-radius: var(--radius-lg); border: none; cursor: pointer; font-size: .875rem; font-weight: 500; }
+.btn-apply { background: var(--healthcare-primary); color: white; }
+.btn-clear { background: var(--neutral-100); color: var(--neutral-700); text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; }
+
+.vitals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.vitals-card {
+    background: white; border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-xl); padding: 1.25rem;
+    box-shadow: 0 1px 5px rgba(0,0,0,.04); transition: all .2s;
+}
+.vitals-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+
+.vitals-card-header { display: flex; align-items: center; gap: .75rem; margin-bottom: .875rem; }
+.vitals-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #3b82f6);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: .875rem;
+}
+.vitals-patient { font-weight: 600; color: var(--neutral-900); font-size: .9rem; }
+.vitals-time { font-size: .75rem; color: var(--neutral-400); }
+
+.vitals-readings { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.vital-reading {
+    background: var(--neutral-50); border-radius: var(--radius-md);
+    padding: .5rem .75rem; text-align: center;
+}
+.vital-reading .v-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; color: var(--neutral-400); font-weight: 700; margin-bottom: .15rem; }
+.vital-reading .v-value { font-size: 1rem; font-weight: 700; color: var(--neutral-800); }
+.vital-reading .v-unit { font-size: .65rem; color: var(--neutral-500); }
+
+.vital-reading.alert-high .v-value { color: var(--healthcare-danger); }
+.vital-reading.alert-low  .v-value { color: var(--healthcare-warning); }
+
+.view-link-row { margin-top: .875rem; padding-top: .875rem; border-top: 1px solid var(--neutral-100); text-align: right; }
+a.view-link { color: var(--healthcare-primary); font-size: .8125rem; font-weight: 500; text-decoration: none; }
+a.view-link:hover { text-decoration: underline; }
+
+.empty-state { text-align: center; padding: 3rem; color: var(--neutral-500); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-heartbeat" style="color: var(--healthcare-danger); margin-right: .5rem;"></i>Vitals Monitor</h1>
+    <p>Recent vital sign recordings — {{ total_vitals }} total entries</p>
+</div>
+
+<!-- Filter -->
+<form method="get" class="filter-row">
+    <select name="patient_id" class="filter-select">
+        <option value="">All patients</option>
+        {% for p in patients %}
+        <option value="{{ p.id }}" {% if selected_patient == p.id|stringformat:"s" %}selected{% endif %}>
+            {{ p.get_full_name|default:p.username }}
+        </option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter btn-apply"><i class="fas fa-filter"></i> Filter</button>
+    {% if selected_patient %}
+    <a href="{% url 'clinical_portal:vitals' %}" class="btn-filter btn-clear"><i class="fas fa-times"></i> Clear</a>
+    {% endif %}
+</form>
+
+<!-- Vitals Grid -->
+{% if vitals %}
+<div class="vitals-grid">
+    {% for vital in vitals %}
+    <div class="vitals-card">
+        <div class="vitals-card-header">
+            <div class="vitals-avatar">
+                {{ vital.patient.first_name|first|upper }}{{ vital.patient.last_name|first|upper }}
+            </div>
+            <div>
+                <div class="vitals-patient">{{ vital.patient.get_full_name|default:vital.patient.username }}</div>
+                <div class="vitals-time">{{ vital.recorded_at|date:"M j, Y — g:i A" }}</div>
+            </div>
+        </div>
+        <div class="vitals-readings">
+            {% if vital.heart_rate %}
+            <div class="vital-reading {% if vital.heart_rate > 100 or vital.heart_rate < 60 %}alert-high{% endif %}">
+                <div class="v-label">Heart Rate</div>
+                <div class="v-value">{{ vital.heart_rate }}</div>
+                <div class="v-unit">bpm</div>
+            </div>
+            {% endif %}
+            {% if vital.temperature %}
+            <div class="vital-reading {% if vital.temperature > 38.0 %}alert-high{% endif %}">
+                <div class="v-label">Temperature</div>
+                <div class="v-value">{{ vital.temperature }}</div>
+                <div class="v-unit">°C</div>
+            </div>
+            {% endif %}
+            {% if vital.oxygen_saturation %}
+            <div class="vital-reading {% if vital.oxygen_saturation < 95 %}alert-high{% endif %}">
+                <div class="v-label">SpO₂</div>
+                <div class="v-value">{{ vital.oxygen_saturation }}</div>
+                <div class="v-unit">%</div>
+            </div>
+            {% endif %}
+            {% if vital.systolic_bp %}
+            <div class="vital-reading">
+                <div class="v-label">Blood Pressure</div>
+                <div class="v-value">{{ vital.systolic_bp }}/{{ vital.diastolic_bp }}</div>
+                <div class="v-unit">mmHg</div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="view-link-row">
+            <a href="{% url 'clinical_portal:patient_vitals' vital.patient.id %}" class="view-link">
+                Full Trend →
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-heartbeat" style="font-size: 2.5rem; color: var(--neutral-300); display: block; margin-bottom: 1rem;"></i>
+    <p>No vital records found.</p>
+</div>
+{% endif %}
+{% endblock %}
