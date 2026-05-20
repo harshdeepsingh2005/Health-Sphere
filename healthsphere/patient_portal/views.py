@@ -119,7 +119,7 @@ def patient_dashboard(request):
     try:
         patient_profile = request.user.patient_profile
     except PatientProfile.DoesNotExist:
-        patient_profile = PatientProfile.objects.create(user=request.user)
+        patient_profile = None
 
     current_time = timezone.now()
     hour = current_time.hour
@@ -619,7 +619,7 @@ def emergency_contacts_view(request):
     try:
         patient_profile = request.user.patient_profile
     except PatientProfile.DoesNotExist:
-        patient_profile = PatientProfile.objects.create(user=request.user)
+        patient_profile = None
     return render(request, 'patient_portal/emergency_contacts.html', {
         'patient_profile': patient_profile,
     })

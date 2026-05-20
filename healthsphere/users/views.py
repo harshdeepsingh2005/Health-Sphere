@@ -17,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
 from django.conf import settings as django_settings
+import logging
 import json
 import pyotp
 
@@ -26,6 +27,12 @@ from .models import Role, UserProfile, TwoFactorAuth, AuditLog
 
 def _send_welcome_email(user):
     """Send a welcome / account-verified email using Gmail SMTP."""
+    if not (django_settings.EMAIL_HOST_USER and django_settings.EMAIL_HOST_PASSWORD):
+        logging.getLogger(__name__).info(
+            'Skipping welcome email because SMTP credentials are not configured.'
+        )
+        return
+
     subject = '🎉 Welcome to HealthSphere AI!'
     message = (
         f'Hi {user.get_full_name()},\n\n'
@@ -72,7 +79,6 @@ def _send_welcome_email(user):
         )
     except Exception as e:
         # Log the error but don't crash registration
-        import logging
         logging.getLogger(__name__).warning('Welcome email failed: %s', e)
 
 
