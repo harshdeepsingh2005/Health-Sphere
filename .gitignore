@@ -37,3 +37,6 @@ ENV/
 # --- macOS ---
 .DS_Store
 Thumbs.db
+
+# --- Project archives ---
+Health-Sphere.zip
